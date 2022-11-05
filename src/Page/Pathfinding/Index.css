@@ -1,0 +1,31 @@
+.board-rows button {
+    width: 100%;
+    border-width: 1px;
+}
+
+.empty {
+    background-color: white;
+}
+
+.blockage {
+    background-color: red;
+}
+
+.end {
+    background: yellow;
+}
+
+.searching-path {
+    background: rgb(0, 200, 255);
+}
+.searching-path-current {
+    background: rgb(0,0 , 255);
+}
+
+.path {
+    background: black;
+}
+
+.start {
+    background: green;
+}

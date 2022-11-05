@@ -1,0 +1,15 @@
+.centeredGrid {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.blocked {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.blocked:hover {
+    background-color: aqua;
+}
