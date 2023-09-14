@@ -3,14 +3,14 @@ import "../Sudoku/index.css"
 export default function Sudoku() {
     const [board, SetBoard] = useState();
     const [numbers, setnumber] = useState();
-    const [size, setSize] = useState(2);
+    const [size, setSize] = useState(3);
     var SelectedNumberMain = null;
     function numberselected(SelectedNumber) {
         if (SelectedNumberMain === SelectedNumber) SelectedNumberMain = null;
         else SelectedNumberMain = SelectedNumber;
     }
-    function valid(NumberToBePlaced){
-        
+    function valid(NumberToBePlaced) {
+
     }
     function changeBlock(e) {
         if (SelectedNumberMain == null) return
@@ -36,15 +36,11 @@ export default function Sudoku() {
         SetBoard(
             <div className={`flex-col  border-2 border-black `}>{temp4}</div>);
     }, [size])
-    return <div className="h-screen flex-col">
-        <div className="flex centeredGrid">
-            Navbar
-            <input type="range" min={1} max={4} defaultValue={2} onChange={e => setTimeout(() => { setSize(e.target.value); console.log(e.target.value) }, 1000)} step={1} />
-        </div>
-        <div className="centeredGrid w-screen">
-            {numbers}
-        </div>
-        <div className="h-full centeredGrid">
+    return <div className="h-1/2 flex-col">
+        {/* <div className="flex centeredGrid">
+            <input type="range" min={2} max={4} defaultValue={2} onChange={e => setTimeout(() => { setSize(e.target.value); console.log(e.target.value) }, 1000)} step={1} />
+        </div> */}
+        <div className="h-1/2 centeredGrid">
             {board}
         </div>
     </div >;

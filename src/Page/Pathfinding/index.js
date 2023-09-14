@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import Select from "react-select";
 // import DropdownComponent from "./DropDown";
 import "./Index.css"
+import PriorityQueue from "js-priority-queue";
+
 // import axios from "axios";
 // import Token from "../../Actions/Token";
 // import { useCookies } from "react-cookie";
@@ -171,7 +173,7 @@ export default function PathFinding() {
                 val--;
             }
         } */
-        async function algo1() {
+        async function Dijkstra() {
             async function settospath(i, j, value) {
                 // console.log(j)
                 // console.log(document.getElementById(`j-${j}`))
@@ -208,16 +210,14 @@ export default function PathFinding() {
                 index++;
                 const SeacrhPath = document.getElementsByClassName("searching-path-current");
                 if (SeacrhPath.length === 0) { alert("No Path"); return; }
-                Array.from(SeacrhPath).forEach(async e => {
+                Array.from(SeacrhPath).forEach(e => {
                     if (parseInt(e.value) === index - 1) {
-                        settospathmain(parseInt(e.id.replace('i-', "")),
-                            parseInt(e.parentElement.id.replace('j-', "")),
-                            index);
+                        settospathmain(parseInt(e.id.replace('i-', "")), parseInt(e.parentElement.id.replace('j-', "")), index);
                     }
                 })
             }
         }
-        async function algo2() {
+        async function DFS() {
             async function SetToPath(i, j, value) {
                 await sleep(SleepTime)
                 const temp = document.getElementById(`j-${j}`).children;
@@ -253,28 +253,36 @@ export default function PathFinding() {
             await SetToPath(i, j, 0);
             if (!solved) alert("no path")
         }
-        async function algo3() {
+        async function A_Star() {
+            //drijska recursive...  get iside 1 indefinetly...  
+            //make a 2d vectpr based on distance from the end  .. min distance keeps on calling
+            // var mp = new Map();
+            // var value = Math.abs(ei - i) + Math.abs(ej - i);
+            // const dir={{-1,0},{1,0}}
+            // mp.set({})
+            // while (pq.length) {
+            //     console.log(pq.peek()); pq.dequeue ();
+            // }
 
         }
-
         switch (AlgoNum) {
             case 1:
-                console.log("algo1");
-                await algo1();
+                console.log("Dijkstra");
+                await Dijkstra();
                 break;
 
             case 2:
-                console.log("algo2");
-                await algo2();
+                console.log("DFS");
+                await DFS();
                 break;
             case 3:
-                console.log("algo3");
-                await algo3();
+                console.log("A*");
+                await A_Star();
                 break;
 
             default:
                 console.log("Default");
-                await algo1();
+                await Dijkstra();
                 break;
         }
         if (solved) PathFind(ei, ej, parseInt(end.value) - 1);
@@ -314,7 +322,7 @@ export default function PathFinding() {
                 <Select className="w-2/12" options={[
                     { Value: 1, label: 'Concurrent Dijkstra' },//Single Source Shortest Path
                     { Value: 2, label: 'DFS' },
-                    { Value: 3, label: 'BFS' }
+                    { Value: 3, label: 'A-Star' }
                 ]} onChange={handleChange} />
                 <input type="number" onChange={handleChangeSpeed} />
                 <button onClick={() => algoMain(AlgoNum)}> solve</button>
