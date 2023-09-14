@@ -6,6 +6,7 @@ import Sort from "./Page/Sort"
 import Home from "./Page/Home"
 import PathFinding from "./Page/Pathfinding"
 import Sudoku from './Page/Sudoku';
+import CellularAutomata from './Page/CellularAutomata';
 export default function App() {
   return (
     <BrowserRouter>
@@ -14,6 +15,7 @@ export default function App() {
         <Route exact path="/sort" element={<Sort />} />
         <Route exact path="/Sudoku" element={<Sudoku />} />
         <Route exact path="/PathFinding" element={<PathFinding />} />
+        <Route exact path="/CellularAutomata" element={<CellularAutomata />} />
         <Route path="/*" element={<Navigate to="/home" />} />
       </Routes>
     </BrowserRouter>

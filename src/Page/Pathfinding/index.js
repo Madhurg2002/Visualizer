@@ -105,8 +105,9 @@ export default function PathFinding() {
             // console.log(val)
             if ((document.getElementById(`j-${j}`).children)[i].className === "start")
                 return
-            if (!((document.getElementById(`j-${j}`).children)[i].className === "end"))
+            if (!((document.getElementById(`j-${j}`).children)[i].className === "end")) {
                 (document.getElementById(`j-${j}`).children)[i].className = "path"
+            }
             if (i > 0)
                 if (parseInt((document.getElementById(`j-${j}`).children)[i - 1].value) === val) {
                     return PathFind(i - 1, j, val - 1);
@@ -220,7 +221,7 @@ export default function PathFinding() {
             async function SetToPath(i, j, value) {
                 await sleep(SleepTime)
                 const temp = document.getElementById(`j-${j}`).children;
-                if (temp[i].className === "blockage" || solved || temp[i].className === "searching-path-current" || temp[i].className === "searching-path" ||(value !==0 &&temp[i].className === "start")) return;
+                if (temp[i].className === "blockage" || solved || temp[i].className === "searching-path-current" || temp[i].className === "searching-path" || (value !== 0 && temp[i].className === "start")) return;
                 if (temp[i].className === "end") { solved = true; temp[i].value = value; }
                 if (!solved) {
                     if (temp[i].className === "empty") {
@@ -246,6 +247,7 @@ export default function PathFinding() {
                 }
                 if (temp[i].className === "searching-path-current" && solved === false) {
                     temp[i].className = "searching-path";
+                    // temp[i].className = "searching";
                 }
             }
             await SetToPath(i, j, 0);
@@ -255,7 +257,6 @@ export default function PathFinding() {
 
         }
 
-        console.log(AlgoNum);
         switch (AlgoNum) {
             case 1:
                 console.log("algo1");
@@ -280,9 +281,7 @@ export default function PathFinding() {
     }
     function handleChange(a) {
         AlgoNum = a.Value
-        console.log(AlgoNum)
     }
-
     function handleChangeSpeed(a) {
         SleepTime = a.target.value
     }
@@ -319,16 +318,13 @@ export default function PathFinding() {
                 ]} onChange={handleChange} />
                 <input type="number" onChange={handleChangeSpeed} />
                 <button onClick={() => algoMain(AlgoNum)}> solve</button>
-                <div >
-                    <Select options={[
-                        { Value: 1, label: 'Blockage' },
-                        { Value: 2, label: 'ChangeStart' },
-                        { Value: 3, label: 'ChangeEnd' }
-                    ]} onChange={e => handleChangeSetBlock(e)} placeholder="Blockage" />
-                </div>
-
+                <Select options={[
+                    { Value: 1, label: 'Blockage' },
+                    { Value: 2, label: 'ChangeStart' },
+                    { Value: 3, label: 'ChangeEnd' }
+                ]} onChange={e => handleChangeSetBlock(e)} placeholder="Blockage" />
             </div >
             {Grid}
-        </div></>
-    );
+        </div>
+    </>);
 }
