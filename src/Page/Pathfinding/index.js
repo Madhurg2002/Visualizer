@@ -263,6 +263,7 @@ export default function PathFinding() {
             // while (pq.length) {
             //     console.log(pq.peek()); pq.dequeue ();
             // }
+<<<<<<< HEAD
             var PriorityQueue = [];
             const visited = new Array(2 * size).fill(0).map(() => new Array(size).fill(10000000));
             async function pushPQ(i, j, Gcost, value) {
@@ -323,6 +324,8 @@ export default function PathFinding() {
                 if (nj < size - 1) await pushPQ(ni, nj + 1, nGcost, value);
             }
 
+=======
+>>>>>>> 4d79dda404a740062c8687ac80b4345836cd8480
 
         }
         switch (AlgoNum) {
