@@ -29,7 +29,7 @@ export default function PathFinding() {
     //         e.target.style.background = "red"
     // }
     var md = false;
-    var SleepTime = 2;
+    var SleepTime = 500;
     function lcp() { md = false; }
     function lco() { md = true; }
     function resetpath() {
@@ -263,6 +263,66 @@ export default function PathFinding() {
             // while (pq.length) {
             //     console.log(pq.peek()); pq.dequeue ();
             // }
+            var PriorityQueue = [];
+            const visited = new Array(2 * size).fill(0).map(() => new Array(size).fill(10000000));
+            async function pushPQ(i, j, Gcost, value) {
+                const temp = (document.getElementById(`j-${j}`).children)[i];
+                if (
+                    solved
+                    || temp.className === "blockage"
+                    || (value >= visited[i][j])
+                    // || temp.className === "searching-path-current"
+                    // || temp.className === "searching-path"
+                    // || (value !== 0 && temp.className === "start")
+                ) return;
+                if (temp.className === "end") { solved = true; temp.value = value; return }
+                if (!solved) {
+                    if (temp.className === "empty" || temp.className === "searching-path-current") {
+                        temp.className = "searching-path-current";
+                        temp.value = value;
+                    }
+                    else if (temp.className === "start")
+                        temp.value = value;
+                }
+                var node = {
+                    Gcost: Gcost,
+                    Hcost: Math.abs(ej - j) + Math.abs(ei - i),
+                    Fcost: Math.abs(ei - i) + Math.abs(ej - j) + Gcost,
+                    i: i,
+                    j: j,
+                    value: value
+                };
+                let l = 0;
+                for (l = 0; l < PriorityQueue.length; l++)
+                    if (PriorityQueue[l].Fcost > node.Fcost ||
+                        (PriorityQueue[l].Fcost === node.Fcost && (
+                            PriorityQueue[l].Hcost > node.Hcost || (PriorityQueue[l].value > value)
+                        )))
+                        break;
+                PriorityQueue = [...PriorityQueue.slice(0, Math.max(l, 0)), node, ...PriorityQueue.slice(Math.max(l, 0))];
+                // console.log({
+                //     Gcost: node.Gcost,
+                //     Hcost: node.Hcost,
+                //     Fcost: node.Fcost,
+                //     i: node.i,
+                //     j: node.j,
+                // })
+                visited[i][j] = value;
+            }
+            pushPQ(i, j, 0, 0);
+            while (solved === false) {
+                await sleep(SleepTime);
+                if (PriorityQueue.length === 0) { alert("No Path"); return; }
+                var nGcost = PriorityQueue[0].Gcost + 1, ni = PriorityQueue[0].i, nj = PriorityQueue[0].j, value = PriorityQueue[0].value + 1;
+                // console.log(ni, nj, PriorityQueue[0].Hcost, PriorityQueue[0].Fcost)
+                console.log(PriorityQueue[0])
+                PriorityQueue = [...PriorityQueue.slice(1)];
+                if (ni > 0) await pushPQ(ni - 1, nj, nGcost, value);
+                if (nj > 0) await pushPQ(ni, nj - 1, nGcost, value);
+                if (ni < 2 * size - 1) await pushPQ(ni + 1, nj, nGcost, value);
+                if (nj < size - 1) await pushPQ(ni, nj + 1, nGcost, value);
+            }
+
 
         }
         switch (AlgoNum) {

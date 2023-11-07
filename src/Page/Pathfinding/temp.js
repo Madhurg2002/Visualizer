@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-function sol({ menuConfig }) {
-    const [menuOpened, setMenuOpened] = useState;
+import React, { useEffect, useState } from "react";
+export default function Sol({ menuConfig }) {
+    const [menuOpened, setMenuOpened] = useState();
     const menu = menuConfig.map((menu, index) => (
         <div
             data-test-id={`first-level-${menu.title.toLowerCase()}`}
@@ -33,4 +33,3 @@ function sol({ menuConfig }) {
     ))
     return <div className='menu-wrapper'>{menu}</div>
 }
-export default sol;
