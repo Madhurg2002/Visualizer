@@ -137,16 +137,16 @@ function generateRandomArray(size) {
 }
 
 export default function Sort() {
-  const [size, setSize] = React.useState(30);
-  const [array, setArray] = React.useState(generateRandomArray(30));
-  const [sorting, setSorting] = React.useState(false);
-  const [paused, setPaused] = React.useState(false);
-  const [activeIndices, setActiveIndices] = React.useState([]);
-  const [algorithm, setAlgorithm] = React.useState("Bubble Sort");
-  const genRef = React.useRef(null);
-  const initialArrayRef = React.useRef(array);
+  const [size, setSize] = useState(30);
+  const [array, setArray] = useState(generateRandomArray(30));
+  const [sorting, setSorting] = useState(false);
+  const [paused, setPaused] = useState(false);
+  const [activeIndices, setActiveIndices] = useState([]);
+  const [algorithm, setAlgorithm] = useState("Bubble Sort");
+  const genRef = useRef(null);
+  const initialArrayRef = useRef(array);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if(!sorting){
       const newArr = generateRandomArray(size);
       setArray(newArr);
@@ -190,7 +190,7 @@ export default function Sort() {
     genRef.current = null;
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if(!sorting || paused){
       return;
     }
