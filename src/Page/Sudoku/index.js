@@ -1,150 +1,89 @@
-import React, { useEffect, useState, useMemo, useRef, useCallback } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+// src/Page/Sudoku/index.js
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useRef,
+  useCallback,
+} from "react";
+import { useNavigate } from "react-router-dom";
 
-const size = 3; // 9x9 blocks
+import {
+  randomSeed,
+  generateFull,
+  puzzleFromFull,
+  isComplete,
+  DIFFICULTY,
+} from "./utils";
+import SudokuBoard from "./SudokuBoard";
+import Controls from "./Controls";
+import WinningModal from "./WinningModal";
+import NumberSelector from "./NumberSelector";
+import Settings from "./Settings";
+import { THEMES } from "./themes";
 
-function createSeededRNG(seed) {
-  let h = 2166136261 >>> 0;
-  for (let i = 0; i < seed.length; i++) {
-    h ^= seed.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return function () {
-    h += h << 13;
-    h ^= h >>> 7;
-    h += h << 3;
-    h ^= h >>> 17;
-    h += h << 5;
-    return (h >>> 0) / 4294967296;
-  };
-}
-
-function shuffle(arr, rand) {
-  let array = arr.slice();
-  for (let i = array.length - 1; i > 0; i--) {
-    const j = Math.floor(rand() * (i + 1));
-    [array[i], array[j]] = [array[j], array[i]];
-  }
-  return array;
-}
-
-function isValid(board, r, c, num) {
-  for (let i = 0; i < 9; i++) {
-    if (board[r][i] === num || board[i][c] === num) return false;
-  }
-  const br = r - (r % size);
-  const bc = c - (c % size);
-  for (let rr = br; rr < br + size; rr++) {
-    for (let cc = bc; cc < bc + size; cc++) {
-      if (board[rr][cc] === num) return false;
-    }
-  }
-  return true;
-}
-
-function solve(board) {
-  for (let r = 0; r < 9; r++) {
-    for (let c = 0; c < 9; c++) {
-      if (board[r][c] === 0) {
-        for (let n = 1; n <= 9; n++) {
-          if (isValid(board, r, c, n)) {
-            board[r][c] = n;
-            if (solve(board)) return true;
-            board[r][c] = 0;
-          }
-        }
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
-function generateFullSolution(rand) {
-  const board = Array(9).fill(0).map(() => Array(9).fill(0));
-  function fill() {
-    for (let r = 0; r < 9; r++) {
-      for (let c = 0; c < 9; c++) {
-        if (board[r][c] === 0) {
-          for (const n of shuffle([1,2,3,4,5,6,7,8,9], rand)) {
-            if (isValid(board, r, c, n)) {
-              board[r][c] = n;
-              if (fill()) return true;
-              board[r][c] = 0;
-            }
-          }
-          return false;
-        }
-      }
-    }
-    return true;
-  }
-  fill();
-  return board;
-}
-
-function removeClues(board, cluesCount, rand) {
-  const total = 81;
-  const positions = shuffle([...Array(total).keys()], rand);
-  const newBoard = board.map(row => row.slice());
-  let removed = 0;
-  for (const pos of positions) {
-    if (removed >= total - cluesCount) break;
-    const r = Math.floor(pos / 9);
-    const c = pos % 9;
-    if (newBoard[r][c] === 0) continue;
-    const temp = newBoard[r][c];
-    newBoard[r][c] = 0;
-    const copy = newBoard.map(row => row.slice());
-    if (!solve(copy)) {
-      newBoard[r][c] = temp;
-    } else {
-      removed++;
-    }
-  }
-  return newBoard;
-}
-
-function randomSeed(len = 8) {
-  const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-  let res = "";
-  for (let i = 0; i < len; i++) res += chars.charAt(Math.floor(Math.random() * chars.length));
-  return res;
+function SettingsIcon({ size = 24, color = "currentColor" }) {
+  return (
+    <svg
+      height={size}
+      width={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke={color}
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      style={{ display: "block" }}
+    >
+      <circle cx="12" cy="12" r="3" />
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09A1.65 1.65 0 0 0 12 3V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51z" />
+    </svg>
+  );
 }
 
 export default function Sudoku() {
-  const query = new URLSearchParams(window.location.search);
   const navigate = useNavigate();
+  const query = new URLSearchParams(window.location.search);
 
   const urlSeed = query.get("seed") || "";
+  const [difficulty, setDifficulty] = useState("easy");
   const [seedInput, setSeedInput] = useState(urlSeed);
   const [seed, setSeed] = useState(urlSeed || randomSeed());
-  const clues = 30;
+  const clues = DIFFICULTY[difficulty];
+
+  const [settingsVisible, setSettingsVisible] = useState(false);
+
+  const [theme, setTheme] = useState("light");
+  const [continuousCheck, setContinuousCheck] = useState(false);
+
+  const themeColors = THEMES[theme];
 
   const [board, setBoard] = useState([]);
   const [solution, setSolution] = useState([]);
   const [lockedCells, setLockedCells] = useState(new Set());
-  const [selected, setSelected] = useState(null);
-  const [checkMistakes, setCheckMistakes] = useState(false);
+  const [selectedCell, setSelectedCell] = useState(null);
+  const [selectedNumber, setSelectedNumber] = useState(null);
   const [manualCheckResult, setManualCheckResult] = useState(null);
   const [hintCell, setHintCell] = useState(null);
-
   const userEditedAfterHint = useRef(false);
   const [history, setHistory] = useState([]);
+  const [win, setWin] = useState(false);
+  const [poppedButton, setPoppedButton] = useState(null);
 
+  const boardRef = useRef(null);
   useEffect(() => {
     if (urlSeed !== seed) navigate(`?seed=${seed}`, { replace: true });
-    const rand = createSeededRNG(seed);
-    const full = generateFullSolution(rand);
-    const puzzle = removeClues(full, clues, rand);
+    const full = generateFull(seed);
+    const puzzle = puzzleFromFull(full, clues, seed + difficulty);
     setBoard(puzzle);
     setSolution(full);
-    setSelected(null);
+    setSelectedCell(null);
+    setSelectedNumber(null);
     setManualCheckResult(null);
     setHintCell(null);
+    setWin(false);
     userEditedAfterHint.current = false;
     setHistory([puzzle]);
-
     const locks = new Set();
     puzzle.forEach((row, r) => {
       row.forEach((val, c) => {
@@ -152,48 +91,82 @@ export default function Sudoku() {
       });
     });
     setLockedCells(locks);
-  }, [seed, clues, navigate, urlSeed]);
+  }, [seed, clues, navigate, urlSeed, difficulty]);
 
-  const updateBoard = useCallback((newBoard) => {
-    setBoard(newBoard);
-    setHistory(prev => [...prev, newBoard]);
-    setManualCheckResult(null);
-  }, []);
+  useEffect(() => {
+    if (seedInput.trim() && seedInput !== seed) setSeed(seedInput.trim());
+  }, [seedInput]);
 
-  const toggleCell = (r, c) => {
-    if (lockedCells.has(`${r}-${c}`)) return;
-    if (selected === null) return;
-    const copy = board.map(row => row.slice());
-    copy[r][c] = copy[r][c] === selected ? 0 : selected;
-    updateBoard(copy);
-    if(hintCell !== null) {
-      userEditedAfterHint.current = true;
-      setHintCell(null);
-    }
-  };
+  useEffect(() => {
+    document.body.style.backgroundColor = themeColors.bg;
+    return () => {
+      document.body.style.backgroundColor = "";
+    };
+  }, [themeColors.bg]);
 
   const undo = () => {
-    setHistory(prevHist => {
-      if (prevHist.length <= 1) return prevHist;
-      const newHist = prevHist.slice(0, prevHist.length - 1);
+    setHistory((prev) => {
+      if (prev.length <= 1) return prev;
+      const newHist = prev.slice(0, prev.length - 1);
       setBoard(newHist[newHist.length - 1]);
       setManualCheckResult(null);
       userEditedAfterHint.current = true;
       setHintCell(null);
+      setSelectedCell(null);
       return newHist;
     });
   };
 
-  const isWrong = useMemo(() => {
-    if (!checkMistakes) return new Set();
-    const wrongs = new Set();
-    board.forEach((row, r) => {
-      row.forEach((val, c) => {
-        if (val !== 0 && val !== solution[r][c]) wrongs.add(`${r}-${c}`);
-      });
-    });
-    return wrongs;
-  }, [board, solution, checkMistakes]);
+  const fillCell = (r, c, num) => {
+    if (lockedCells.has(`${r}-${c}`)) return;
+    const newBoard = board.map((row) => row.slice());
+    if (newBoard[r][c] === num) {
+      newBoard[r][c] = 0;
+    } else {
+      newBoard[r][c] = num;
+    }
+    setBoard(newBoard);
+    setHistory((prev) => [...prev, newBoard]);
+    setManualCheckResult(null);
+    if (hintCell !== null) {
+      userEditedAfterHint.current = true;
+      setHintCell(null);
+    }
+    if (isComplete(newBoard, solution)) setWin(true);
+  };
+
+  const handleCellClick = (r, c) => {
+    setSelectedCell([r, c]);
+    if (selectedNumber !== null) {
+      fillCell(r, c, selectedNumber);
+    }
+  };
+
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (boardRef.current && !boardRef.current.contains(event.target)) {
+        setSelectedCell(null);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [setSelectedCell]);
+  const handleNumberSelect = (num) => {
+    if (selectedNumber === num) {
+      setSelectedNumber(null);
+    } else {
+      setSelectedNumber(num);
+      if (
+        selectedCell !== null &&
+        !lockedCells.has(`${selectedCell[0]}-${selectedCell[1]}`)
+      ) {
+        fillCell(selectedCell[0], selectedCell[1], num);
+      }
+    }
+  };
 
   const onManualCheck = () => {
     for (let r = 0; r < 9; r++) {
@@ -221,38 +194,28 @@ export default function Sudoku() {
     }
     const idx = Math.floor(Math.random() * emptyCells.length);
     const [r, c] = emptyCells[idx];
-    const copy = board.map(row => row.slice());
-    copy[r][c] = solution[r][c];
-    updateBoard(copy);
+    fillCell(r, c, solution[r][c]);
     setHintCell(`${r}-${c}`);
     userEditedAfterHint.current = false;
   };
 
-  const getCellBg = (r, c) => {
-    const key = `${r}-${c}`;
-    const locked = lockedCells.has(key);
-    const wrong = isWrong.has(key);
-    const hint = hintCell === key && !userEditedAfterHint.current;
-    if (hint) return "#d1fae5";
-    if (wrong) return "#fca5a5";
-    if (locked) return "#e0e7ff";
-    if (board[r][c] !== 0) return "#f3f4f6";
-    return "white";
-  };
-
-  // Pop animation logic
-  const buttonStyleBase = {
-    padding: "8px 12px",
-    margin: 4,
-    border: "none",
-    borderRadius: 4,
-    fontWeight: "bold",
-    cursor: "pointer",
-    userSelect: "none",
-    transition: "transform 0.15s ease-in-out",
-  };
-
-  const [poppedButton, setPoppedButton] = useState(null);
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (!selectedCell || win) return;
+      const [r, c] = selectedCell;
+      if (lockedCells.has(`${r}-${c}`)) return;
+      if (/^[1-9]$/.test(e.key)) {
+        fillCell(r, c, Number(e.key));
+      } else if (e.key === "Backspace" || e.key === "Delete") {
+        fillCell(r, c, 0);
+      } else if (e.key === "ArrowUp" && r > 0) setSelectedCell([r - 1, c]);
+      else if (e.key === "ArrowDown" && r < 8) setSelectedCell([r + 1, c]);
+      else if (e.key === "ArrowLeft" && c > 0) setSelectedCell([r, c - 1]);
+      else if (e.key === "ArrowRight" && c < 8) setSelectedCell([r, c + 1]);
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [selectedCell, win, board, lockedCells]);
 
   const handleButtonClick = useCallback((btnName, cb) => {
     setPoppedButton(btnName);
@@ -260,180 +223,168 @@ export default function Sudoku() {
     setTimeout(() => setPoppedButton(null), 150);
   }, []);
 
+  const isWrong = useMemo(() => {
+    if (!continuousCheck) return new Set();
+    const wrongs = new Set();
+    board.forEach((row, r) => {
+      row.forEach((val, c) => {
+        if (val !== 0 && val !== solution[r][c]) wrongs.add(`${r}-${c}`);
+      });
+    });
+    return wrongs;
+  }, [board, solution, continuousCheck]);
+
   return (
-    <div style={{ padding: 20, textAlign: "center" }}>
-      <div style={{ marginBottom: 12 }}>
-        <label style={{ marginRight: 8, fontWeight: "bold" }}>
-          Enter Seed:{" "}
-          <input
-            type="text"
-            value={seedInput}
-            onChange={e => setSeedInput(e.target.value)}
-            onKeyDown={e => {
-              if (e.key === "Enter" && seedInput.trim()) setSeed(seedInput.trim());
-            }}
-            placeholder="Type seed and press Enter"
-            style={{ padding: 6, fontSize: 14, width: 150 }}
-          />
-        </label>
-      </div>
-
-      <button
-        onClick={() => handleButtonClick("new", () => setSeed(randomSeed()))}
+    <div
+      style={{
+        padding: 24,
+        maxWidth: 480,
+        margin: "auto",
+        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+        backgroundColor: themeColors.bg,
+        minHeight: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+      }}
+    >
+      {/* Header with title, difficulty, and settings icon */}
+      <div
         style={{
-          ...buttonStyleBase,
-          backgroundColor: poppedButton === "new" ? "#1e40af" : "#2563eb",
-          color: "white",
-          transform: poppedButton === "new" ? "scale(1.1)" : "scale(1)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 16,
+          marginBottom: 20,
+          width: "100%",
+          maxWidth: 480,
         }}
       >
-        Generate New Puzzle
-      </button>
-
-      <button
-        onClick={() => handleButtonClick("undo", undo)}
-        disabled={history.length <= 1}
-        style={{
-          ...buttonStyleBase,
-          backgroundColor: poppedButton === "undo" ? "#831843" : "#9d174d",
-          color: "white",
-          marginLeft: 10,
-          opacity: history.length <= 1 ? 0.5 : 1,
-          cursor: history.length <= 1 ? "default" : "pointer",
-          transform: poppedButton === "undo" ? "scale(1.1)" : "scale(1)",
-        }}
-      >
-        Undo
-      </button>
-
-      <div style={{ margin: "10px 0" }}>
-        <label style={{ marginRight: 15 }}>
-          <input
-            type="checkbox"
-            checked={checkMistakes}
-            onChange={e => setCheckMistakes(e.target.checked)}
-          /> Check Mistakes
-        </label>
-        {!checkMistakes && (
-          <button
-            onClick={() => handleButtonClick("check", onManualCheck)}
-            style={{
-              ...buttonStyleBase,
-              backgroundColor: poppedButton === "check" ? "#064e3b" : "#059669",
-              color: "white",
-              marginRight: 15,
-              transform: poppedButton === "check" ? "scale(1.1)" : "scale(1)",
-            }}
-          >
-            Check Filled Cells
-          </button>
-        )}
-        <button
-          onClick={() => handleButtonClick("hint", showHint)}
+        <h2
           style={{
-            ...buttonStyleBase,
-            backgroundColor: poppedButton === "hint" ? "#744210" : "#b45309",
-            color: "white",
-            transform: poppedButton === "hint" ? "scale(1.1)" : "scale(1)",
+            margin: 0,
+            color: themeColors.boardBorder,
+            fontWeight: 700,
+            fontSize: "2rem",
+            flexGrow: 1,
           }}
         >
-          Show Hint
+          Sudoku
+        </h2>
+        <span
+          style={{
+            fontSize: "1.2rem",
+            fontWeight: "600",
+            color: themeColors.boardBorder,
+            userSelect: "none",
+          }}
+        >
+          {difficulty.toUpperCase()}
+        </span>
+        <button
+          onClick={() => setSettingsVisible(true)}
+          aria-label="Open Settings"
+          title="Settings"
+          style={{
+            background: "transparent",
+            border: "none",
+            cursor: "pointer",
+            padding: 0,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            color: themeColors.boardBorder,
+            width: 32,
+            height: 32,
+            userSelect: "none",
+            transition: "color 0.2s ease",
+          }}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "#1e40af")}
+          onMouseLeave={(e) =>
+            (e.currentTarget.style.color = themeColors.boardBorder)
+          }
+        >
+          <svg
+            height="24"
+            width="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09A1.65 1.65 0 0 0 12 3V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51z" />
+          </svg>
         </button>
       </div>
+
+      <Controls
+        difficulty={difficulty}
+        setDifficulty={setDifficulty}
+        seedInput={seedInput}
+        setSeedInput={setSeedInput}
+        onRandomize={() => {
+          const newSeed = randomSeed();
+          setSeed(newSeed);
+          setSeedInput(newSeed);
+        }}
+        onUndo={undo}
+        undoDisabled={history.length <= 1}
+        onCheck={onManualCheck}
+        checkDisabled={continuousCheck}
+        onHint={showHint}
+        poppedButton={poppedButton}
+        handleButtonClick={handleButtonClick}
+      />
 
       {manualCheckResult !== null && (
         <div
           style={{
-            marginBottom: 12,
-            color: manualCheckResult ? "green" : "red",
             fontWeight: "bold",
+            color: manualCheckResult ? "#059669" : "#db2777",
+            fontSize: 18,
+            textAlign: "center",
+            marginBottom: 14,
           }}
         >
-          {manualCheckResult ? "All filled cells are correct!" : "There are incorrect entries!"}
+          {manualCheckResult
+            ? "All filled cells are correct!"
+            : "There are incorrect entries!"}
         </div>
       )}
 
-      <div style={{ marginBottom: 10 }}>
-        {[...Array(9)].map((_, i) => {
-          const n = i + 1;
-          const isSelected = selected === n;
-          return (
-            <button
-              key={n}
-              onClick={() => handleButtonClick(`num${n}`, () => setSelected(isSelected ? null : n))}
-              style={{
-                ...buttonStyleBase,
-                backgroundColor: isSelected ? "#2563eb" : "#e5e7eb",
-                color: isSelected ? "white" : "black",
-                transform: poppedButton === `num${n}` ? "scale(1.1)" : "scale(1)",
-              }}
-            >
-              {n}
-            </button>
-          );
-        })}
+      <NumberSelector
+        selected={selectedNumber}
+        setSelected={handleNumberSelect}
+        themeColors={themeColors}
+      />
+      <div ref={boardRef}>
+        <SudokuBoard
+          board={board}
+          lockedCells={lockedCells}
+          isWrong={isWrong}
+          hintCell={hintCell}
+          userEditedAfterHint={userEditedAfterHint}
+          selected={selectedCell}
+          setSelected={setSelectedCell}
+          onCellClick={handleCellClick}
+          solution={solution}
+          win={win}
+          themeColors={themeColors}
+        />
       </div>
+      {win && <WinningModal onClose={() => setWin(false)} />}
 
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(9, 40px)",
-          border: "2px solid black",
-          margin: "0 auto",
-          width: 360,
-          userSelect: "none",
-        }}
-      >
-        {board.flatMap((row, r) =>
-          row.map((val, c) => {
-            const borderRight = (c + 1) % size === 0 ? "2px solid black" : "1px solid #999";
-            const borderBottom = (r + 1) % size === 0 ? "2px solid black" : "1px solid #999";
-            const key = `${r}-${c}`;
-            const isLocked = lockedCells.has(key);
-            const wrong = isWrong.has(key);
-            const isHint = hintCell === key && !userEditedAfterHint.current;
-
-            // Determine background color
-            let bgColor = "white";
-            if (isHint) bgColor = "#d1fae5";
-            else if (wrong) bgColor = "#fca5a5";
-            else if (isLocked) bgColor = "#e0e7ff";
-            else if (val !== 0) bgColor = "#f3f4f6";
-
-            return (
-              <div
-                key={key}
-                onClick={() => toggleCell(r, c)}
-                style={{
-                  width: 40,
-                  height: 40,
-                  lineHeight: "40px",
-                  textAlign: "center",
-                  fontWeight: isLocked ? "bold" : "normal",
-                  fontSize: "1.5rem",
-                  cursor: isLocked ? "default" : selected === null ? "default" : "pointer",
-                  backgroundColor: bgColor,
-                  borderRight,
-                  borderBottom,
-                  color: isLocked ? "#111827" : wrong ? "#b91c1c" : "#111827",
-                  userSelect: "none",
-                }}
-                title={
-                  isLocked
-                    ? "Clue (locked)"
-                    : wrong
-                    ? "Incorrect value"
-                    : isHint
-                    ? `Hint: ${solution[r][c]}`
-                    : ""
-                }
-              >
-                {isHint ? solution[r][c] : val || ""}
-              </div>
-            );
-          })
-        )}
-      </div>
+      <Settings
+        visible={settingsVisible}
+        onClose={() => setSettingsVisible(false)}
+        continuousCheck={continuousCheck}
+        setContinuousCheck={setContinuousCheck}
+        theme={theme}
+        setTheme={setTheme}
+      />
     </div>
   );
 }

@@ -1,0 +1,33 @@
+// src/Page/Sudoku/themes.js
+export const THEMES = {
+  light: {
+    bg: "#f8fafc",
+    boardBorder: "#2563eb",
+    lockedCellBg: "#dbeafe",
+    selectedCellBorder: "#22d3ee",
+    wrongCellBg: "#fca5a5",
+    normalCellBg: "#ffffff",
+    numberBtnBg: "#e0e7ff",
+    numberBtnSelBg: "#2563eb",
+    numberBtnColor: "#2563eb",
+    numberBtnSelColor: "#fff",
+  lockedCellTextColor: "#1e293b",
+  wrongCellTextColor: "#7f1d1d",
+  numberBtnColor: "#334155",
+  },
+  dark: {
+    bg: "#1e293b",
+    boardBorder: "#2563eb",
+    lockedCellBg: "#3b82f6",
+    selectedCellBorder: "#38bdf8",
+    wrongCellBg: "#fb7185",
+    normalCellBg: "#334155",
+    numberBtnBg: "#475569",
+    numberBtnSelBg: "#60a5fa",
+    numberBtnColor: "#cbd5e1",
+    numberBtnSelColor: "#fff",
+  lockedCellTextColor: "#e0e7ff",
+  wrongCellTextColor: "#fca5a5",
+  numberBtnColor: "#e0e7ff",
+  },
+};
