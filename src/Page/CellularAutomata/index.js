@@ -80,7 +80,6 @@ export default function GameOfLife() {
     }
 
     setGrid((g) => {
-      let activeLocs = false;
       const next = g.map((row, i) => {
         return row.map((cell, j) => {
           let neighbors = 0;
@@ -95,10 +94,8 @@ export default function GameOfLife() {
           if (neighbors < 2 || neighbors > 3) {
             return 0;
           } else if (cell === 0 && neighbors === 3) {
-            activeLocs = true;
             return 1;
           } else {
-             if(cell === 1) activeLocs = true;
             return cell;
           }
         });

@@ -128,7 +128,7 @@ export default function Sudoku() {
 
   useEffect(() => {
     if (seedInput.trim() && seedInput !== seed) setSeed(seedInput.trim());
-  }, [seedInput]); // Timer effect increments every second if no win
+  }, [seedInput, seed]); // Timer effect increments every second if no win
 
   useEffect(() => {
     if (win) return; // stop timer when won
@@ -344,6 +344,20 @@ export default function Sudoku() {
         gap: 24,
       }}
     >
+      {win && <WinningModal onClose={() => setWin(false)} />}
+      {manualCheckResult !== null && (
+        <div 
+          style={{
+            position: 'fixed', bottom: 30, left: '50%', transform: 'translateX(-50%)',
+            backgroundColor: manualCheckResult ? '#22c55e' : '#ef4444',
+            color: '#fff', padding: '10px 20px', borderRadius: 8, zIndex: 2000,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)', fontWeight: 'bold'
+          }}
+          onClick={() => setManualCheckResult(null)} // Click to dismiss
+        >
+          {manualCheckResult ? "Correct so far!" : "Mistakes found!"}
+        </div>
+      )}
       <Settings
         visible={settingsVisible}
         onClose={() => setSettingsVisible(false)}
