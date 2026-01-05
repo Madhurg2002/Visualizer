@@ -28,12 +28,51 @@ export default function GameOfLife() {
   const [running, setRunning] = useState(false);
   const [generation, setGeneration] = useState(0);
   const [speed, setSpeed] = useState(100); // ms
+  const [statusMessage, setStatusMessage] = useState("");
 
   const runningRef = useRef(running);
   runningRef.current = running;
 
   const speedRef = useRef(speed);
   speedRef.current = speed;
+
+  const prevGridStringRef = useRef("");
+
+  useEffect(() => {
+    if (!running) {
+        prevGridStringRef.current = JSON.stringify(grid); 
+        return;
+    }
+
+    // 1. Check Empty
+    let hasLife = false;
+    // Check if any cell is alive
+    for (let r = 0; r < numRows; r++) {
+        for (let c = 0; c < numCols; c++) {
+            if (grid[r][c] === 1) {
+                hasLife = true;
+                break;
+            }
+        }
+        if (hasLife) break;
+    }
+
+    if (!hasLife) {
+        setRunning(false);
+        runningRef.current = false;
+        setStatusMessage("Population has died out!");
+        return;
+    }
+
+    // 2. Check Stable (Constant)
+    const currentGridString = JSON.stringify(grid);
+    if (currentGridString === prevGridStringRef.current) {
+         setRunning(false);
+         runningRef.current = false; // Ensure simulation loop stops
+         setStatusMessage("Population has stabilized!");
+    }
+    prevGridStringRef.current = currentGridString;
+  }, [grid, running]);
 
   const runSimulation = useCallback(() => {
     if (!runningRef.current) {
@@ -90,6 +129,7 @@ export default function GameOfLife() {
                     onClick={() => {
                     setRunning(!running);
                     if (!running) {
+                        setStatusMessage("");
                         runningRef.current = true;
                         runSimulation();
                     }
@@ -104,6 +144,7 @@ export default function GameOfLife() {
                     setGrid(generateEmptyGrid());
                     setGeneration(0);
                     setRunning(false);
+                    setStatusMessage("");
                     }}
                 >
                     Clear
@@ -120,6 +161,7 @@ export default function GameOfLife() {
                     }
                     setGrid(rows);
                     setGeneration(0);
+                    setStatusMessage("");
                     }}
                 >
                     Random
@@ -143,6 +185,11 @@ export default function GameOfLife() {
             </div>
 
         </div>
+        {statusMessage && (
+            <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded relative mb-2 animate-pulse">
+                <span className="block sm:inline">{statusMessage}</span>
+            </div>
+        )}
       </div>
 
       {/* Grid */}

@@ -49,9 +49,22 @@ export default function Sudoku() {
   const query = new URLSearchParams(window.location.search);
 
   const urlSeed = query.get("seed") || "";
-  const [difficulty, setDifficulty] = useState("easy");
-  const [seedInput, setSeedInput] = useState(urlSeed);
-  const [seed, setSeed] = useState(urlSeed || randomSeed());
+  const urlDiff = query.get("difficulty") || "easy";
+
+  // If urlSeed exists, use it. Otherwise use the initial random seed.
+  const initialSeed = useMemo(() => urlSeed || randomSeed(), [urlSeed]);
+  
+  const [difficulty, setDifficulty] = useState(urlDiff);
+  const [seedInput, setSeedInput] = useState(initialSeed);
+  const [seed, setSeed] = useState(initialSeed);
+
+  // Sync state to URL
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (seed) params.set("seed", seed);
+    if (difficulty) params.set("difficulty", difficulty);
+    navigate(`?${params.toString()}`, { replace: true });
+  }, [seed, difficulty, navigate]);
   const clues = DIFFICULTY[difficulty];
 
   const [settingsVisible, setSettingsVisible] = useState(false);
