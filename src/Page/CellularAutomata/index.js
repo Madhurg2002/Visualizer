@@ -1,98 +1,189 @@
-import React, { useEffect, useState } from "react";
-import Select from "react-select";
-// import DropdownComponent from "./DropDown";
-import "./Index.css"
-// import axios from "axios";
-// import Token from "../../Actions/Token";
-// import { useCookies } from "react-cookie";
-var SetPoint = 1, AlgoNum = 1, WeightValue = 1;
-export default function PathFinding() {
-    var convolutionset = [[0.1, -0.1, 0.3], [0, 1, -0.3], [-0.5, -0.1, 0.2]];
-    const [Grid, setGrid] = useState();
-    const [size, setSize] = useState(4);
-    var md = false;
-    function lcp() { md = false; }
-    function lco() { md = true; }
-    var SleepTime = 2;
-    function algo() {
-        var blocks = document.getElementsByClassName("block-rows")
-        Array.from(blocks).forEach(block => {
-            var k = parseInt(block.id.replace("j-", ""));
-            Array.from(block.children).forEach(e => {
-                console.log(e.style)
-                var l = parseInt(e.id.replace("i-", ""));
-                // console.log(k, l);
-                // console.log(blocks[(size + k - 1) % size].children[((2 * size) + l - 1) % (2 * size)])
-                var sum = 0;
-                for (let j = 0; j < 3; j++) {
-                    for (let i = 0; i < 3; i++) {
-                        if (blocks[(size + k + j - 1) % size].children[((2 * size) + i + l - 1) % (2 * size)].style.background === "rgb(255, 0, 0)")
-                            sum = sum + convolutionset[j][i]
+import React, { useState, useCallback, useRef, useEffect } from "react";
+import "./Index.css";
+
+const numRows = 30; // 30
+const numCols = 50; // 50
+
+const operations = [
+  [0, 1],
+  [0, -1],
+  [1, -1],
+  [-1, 1],
+  [1, 1],
+  [-1, -1],
+  [1, 0],
+  [-1, 0],
+];
+
+const generateEmptyGrid = () => {
+  const rows = [];
+  for (let i = 0; i < numRows; i++) {
+    rows.push(Array.from(Array(numCols), () => 0));
+  }
+  return rows;
+};
+
+export default function GameOfLife() {
+  const [grid, setGrid] = useState(generateEmptyGrid);
+  const [running, setRunning] = useState(false);
+  const [generation, setGeneration] = useState(0);
+  const [speed, setSpeed] = useState(100); // ms
+
+  const runningRef = useRef(running);
+  runningRef.current = running;
+
+  const speedRef = useRef(speed);
+  speedRef.current = speed;
+
+  const runSimulation = useCallback(() => {
+    if (!runningRef.current) {
+      return;
+    }
+
+    setGrid((g) => {
+      let activeLocs = false;
+      const next = g.map((row, i) => {
+        return row.map((cell, j) => {
+          let neighbors = 0;
+          operations.forEach(([x, y]) => {
+            const newI = i + x;
+            const newJ = j + y;
+            if (newI >= 0 && newI < numRows && newJ >= 0 && newJ < numCols) {
+              neighbors += g[newI][newJ];
+            }
+          });
+
+          if (neighbors < 2 || neighbors > 3) {
+            return 0;
+          } else if (cell === 0 && neighbors === 3) {
+            activeLocs = true;
+            return 1;
+          } else {
+             if(cell === 1) activeLocs = true;
+            return cell;
+          }
+        });
+      });
+      
+      // Optional: Stop if static? No, GoL can have oscillators.
+      setGeneration((gen) => gen + 1);
+      return next;
+    });
+
+    setTimeout(runSimulation, speedRef.current);
+  }, []);
+
+  return (
+    <div className="flex flex-col items-center min-h-screen bg-slate-50 text-slate-800 font-sans">
+      {/* Header */}
+      <div className="w-full bg-white shadow-sm p-4 mb-4 flex flex-col items-center">
+        <h1 className="text-3xl font-bold text-slate-700 tracking-tight mb-2">
+            Conway's Game of Life
+        </h1>
+        <div className="flex gap-4 items-center flex-wrap justify-center">
+            
+            <div className="flex gap-2">
+                <button
+                    className={`px-4 py-2 rounded font-bold shadow transition-colors ${
+                    running ? "bg-red-500 hover:bg-red-600 text-white" : "bg-green-500 hover:bg-green-600 text-white"
+                    }`}
+                    onClick={() => {
+                    setRunning(!running);
+                    if (!running) {
+                        runningRef.current = true;
+                        runSimulation();
                     }
-                }
-                if (sum > 1 || sum < 0) sum = 1
-                // console.log(typeof (sum))
-                blocks[(size + k - 1) % size].children[((2 * size) + l - 1) % (2 * size)].value = sum;
-                // e.value = sum
-                // console.log(e.value, e.style.opacity);  
-                // console.log(e.style.background===`rgb(255, 0, 0)`);
-            })
-        })
-        Array.from(blocks).forEach(block => {
-            Array.from(block.children).forEach(e => {
-                var t = e.style.background.replace(/[^\d,]/g, '').split(',')
-                e.style.background = `rgba(${t[0]}, ${t[1]}, ${t[2]}, ${e.value})`
-                console.log(e.style.background)
-            })
-        })
-    }
-    function handleChangeSpeed(a) {
-        SleepTime = a.target.value
-    }
-    function set(e, value) {
-        e.value = WeightValue;
-        e.target.style.background = `rgba(255, 0, 0)`
-    }
-    function resetGrid() {
-        var blocks = document.getElementsByClassName("blocks")
-        Array.from(blocks).forEach(e => { e.style = ""; e.value = 0; })
-    }
-    function change(e) {
-        if (md) {
-            e.target.style.background = `rgba(255, 0, 0, 1)`
-            e.target.value = WeightValue;
-        }
-    }
-    useEffect(() => {
-        var temp = [], temp1 = [];
-        var pp = {
-            background: "rgba(255,255,255,1 )",
-        }
-        for (let i = 0; i < 2 * size; i++)
-            temp[i] = <button id={`i-${i}`} className="blocks" value={0} onMouseEnter={change} style={pp} onMouseUp={lcp} onMouseDown={e => { lco(); change(e) }} />;
-        for (let j = 0; j < size; j++) {
-            temp1[j] = <div id={`j-${j}`} className="block-rows flex h-full w-screen" >{temp}</div>;
-        }
-        setGrid(<>{temp1}</>);
-    }, [size])
-    return (<>
-        < div className="flex flex-col h-screen w-screen" >
-            <div id="nav" className="flex justify-around  w-full h-100 ">
-                <input type="range" min={5} max={100} onChange={
-                    e => setTimeout(() => {
-                        setSize(e.target.value);
-                        resetGrid();
-                    }, 1000)} step={1} />
-                <button onClick={() => { setTimeout(() => { resetGrid(); }, 1000) }}>reset</button>
-                {/* <Select options={[
-                    { Value: 1, label: 'Blockage' },
-                    { Value: 2, label: 'ChangeStart' },
-                    { Value: 3, label: 'ChangeEnd' }
-                ]} onChange={e => handleChangeSetBlock(e)} placeholder="Blockage" /> */}
-                <button onClick={() => { setTimeout(() => { algo(); }, 1000) }}>Solve</button>
-                <input type="number" onChange={handleChangeSpeed} />
-            </div >
-            {Grid}
-        </div></>
-    );
+                    }}
+                >
+                    {running ? "Stop" : "Start"}
+                </button>
+                
+                <button
+                    className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded font-bold shadow transition-colors"
+                    onClick={() => {
+                    setGrid(generateEmptyGrid());
+                    setGeneration(0);
+                    setRunning(false);
+                    }}
+                >
+                    Clear
+                </button>
+
+                <button
+                    className="px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded font-bold shadow transition-colors"
+                    onClick={() => {
+                    const rows = [];
+                    for (let i = 0; i < numRows; i++) {
+                        rows.push(
+                        Array.from(Array(numCols), () => (Math.random() > 0.7 ? 1 : 0))
+                        );
+                    }
+                    setGrid(rows);
+                    setGeneration(0);
+                    }}
+                >
+                    Random
+                </button>
+            </div>
+
+            <div className="flex items-center gap-2 bg-slate-100 px-3 py-1 rounded">
+                <span className="text-xs font-bold text-slate-500 uppercase">Speed ({speed}ms)</span>
+                <input
+                    type="range"
+                    min="10"
+                    max="1000"
+                    value={speed}
+                    onChange={(e) => setSpeed(Number(e.target.value))}
+                    className="w-32 h-2 bg-slate-300 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                />
+            </div>
+            
+            <div className="font-mono font-bold text-lg text-slate-600">
+                Generation: {generation}
+            </div>
+
+        </div>
+      </div>
+
+      {/* Grid */}
+      <div className="relative shadow-2xl border-4 border-slate-700 rounded-sm bg-slate-800 overflow-hidden" 
+           style={{
+               display: "grid",
+               gridTemplateColumns: `repeat(${numCols}, 20px)`
+           }}
+      >
+        {grid.map((rows, i) =>
+          rows.map((col, j) => (
+            <div
+              key={`${i}-${j}`}
+              onClick={() => {
+                if(running) return;
+                const newGrid = JSON.parse(JSON.stringify(grid));
+                newGrid[i][j] = grid[i][j] ? 0 : 1;
+                setGrid(newGrid);
+              }}
+              style={{
+                width: 20,
+                height: 20,
+                backgroundColor: grid[i][j] ? "#3b82f6" : undefined, // blue-500
+                border: "1px solid #1e293b", // slate-800
+              }}
+              className={`transition-colors duration-100 cursor-pointer hover:bg-slate-700 ${grid[i][j] ? "animate-pulse-once" : ""}`}
+            />
+          ))
+        )}
+      </div>
+        
+      <div className="mt-6 max-w-2xl text-center text-slate-500 text-sm p-4">
+        <p>
+            <strong>Rules:</strong> 
+            1. Underpopulation: &lt; 2 neighbors dies. 
+            2. Survival: 2 or 3 neighbors lives. 
+            3. Overpopulation: &gt; 3 neighbors dies. 
+            4. Reproduction: Exactly 3 neighbors creates life.
+        </p>
+      </div>
+
+    </div>
+  );
 }

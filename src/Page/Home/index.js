@@ -1,87 +1,79 @@
-import React from "react";
-import { Link } from "react-router-dom";
 
-const backgrounds = {
-  Sort: "url('/images/sort.png')",
-  Sudoku: "url('/images/sudoku.png')",
-  PathFinding: "url('/images/pathfinding.jpg')",
-  CellularAutomata: "url('/images/cellularautomata.png')",
-  GameOfLife: "url('/images/gameoflife.jpg')",
+import React from 'react';
+import { Link } from 'react-router-dom';
+
+const Home = () => {
+    const visualizers = [
+        {
+            title: "Sorting Visualizer",
+            description: "Watch how Bubble, Merge, Quick, and other sorting algorithms work in real-time.",
+            path: "/sort",
+            color: "from-blue-500 to-cyan-400",
+            icon: (
+                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
+                </svg>
+            )
+        },
+        {
+            title: "Pathfinding Visualizer",
+            description: "Visualize Dijkstra, A*, and DFS finding the shortest path through a maze.",
+            path: "/PathFinding",
+            color: "from-purple-500 to-pink-500",
+            icon: (
+                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0121 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                </svg>
+            )
+        },
+        // We can add other cards here even if their functionality is basic
+        {
+            title: "Sudoku Solver",
+            description: "Visualize the backtracking algorithm solving a Sudoku puzzle instantly.",
+            path: "/Sudoku",
+            color: "from-amber-500 to-orange-400",
+             icon: (
+                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+            )
+        }
+    ];
+
+    return (
+        <div className="min-h-[calc(100vh-64px)] bg-slate-50 flex flex-col items-center justify-center p-8">
+            <div className="text-center max-w-3xl mb-16">
+                <h1 className="text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
+                    Algorithm <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">Visualizer</span>
+                </h1>
+                <p className="text-xl text-slate-600">
+                    A premium interactive platform to visualize and understand common algorithms.
+                </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl w-full">
+                {visualizers.map((item) => (
+                    <Link 
+                        to={item.path} 
+                        key={item.title}
+                        className="group relative bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+                    >
+                        <div className={`h-24 bg-gradient-to-r ${item.color} flex items-center justify-center`}>
+                           {item.icon}
+                        </div>
+                        <div className="p-6">
+                            <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">
+                                {item.title}
+                            </h3>
+                            <p className="text-slate-500">
+                                {item.description}
+                            </p>
+                        </div>
+                    </Link>
+                ))}
+            </div>
+        </div>
+    );
 };
-const OptionLink = ({ heading, color, index }) => {
-  const backgroundImage = backgrounds[heading];
-  return (
-    <Link
-      key={heading}
-      to={`/${heading}`}
-      aria-label={`Go to ${heading} visualizer`}
-      role="link"
-      tabIndex="0"
-      className={`
-        group flex flex-col items-center justify-center ${color} opacity-90
-        hover:opacity-100 hover:scale-105 hover:text-white
-        focus:outline-none focus:ring-4 focus:ring-white
-        transition duration-300 transform shadow-lg hover:shadow-2xl
-        animation-slide-fade rounded-lg mx-4 my-6 max-w-xs w-full h-48 bg-cover bg-center bg-no-repeat
-      `}
-      style={{
-        animationDelay: `${index * 150}ms`,
-        animationFillMode: "forwards",
-        backgroundImage,
-        backgroundBlendMode: "overlay",
-        backgroundColor: "rgba(0,0,0,0.6)",
-      }}
-    >
-      {/* Text hidden by default, shown on hover */}
-      <span className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-2xl font-semibold mt-3 text-white">
-        {heading}
-      </span>
-    </Link>
-  );
-};
 
-export default function Home() {
-  const options = [
-    { heading: "Sort", color: "bg-violet-900" },
-    { heading: "Sudoku", color: "bg-blue-900" },
-    { heading: "PathFinding", color: "bg-green-900" },
-    { heading: "CellularAutomata", color: "bg-yellow-900" },
-    { heading: "GameOfLife", color: "bg-red-900" },
-  ];
-
-  return (
-    <>
-      <style>{`
-        @keyframes slideFade {
-          0% {
-            opacity: 0;
-            transform: translateY(20px);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animation-slide-fade {
-          animation-name: slideFade;
-          animation-duration: 600ms;
-          animation-timing-function: ease-out;
-          animation-fill-mode: forwards;
-        }
-        body {
-          background: linear-gradient(135deg, #1f2937 0%, #111827 100%);
-        }
-      `}</style>
-      <main className="flex flex-wrap justify-center items-center min-h-screen p-8 gap-6">
-        {options.map(({ heading, color }, index) => (
-          <OptionLink
-            heading={heading}
-            color={color}
-            key={heading}
-            index={index}
-          />
-        ))}
-      </main>
-    </>
-  );
-}
+export default Home;

@@ -1,31 +1,20 @@
-.block-rows button {
-    width: 100%;
-    border-width: 1px;
+@keyframes pulseOnce {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.7;
+    }
+
+    50% {
+        transform: scale(1.1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
 }
 
-.empty {
-    background-color: white;
-}
-
-.blockage {
-    background-color: red;
-}
-
-.end {
-    background: yellow;
-}
-
-.searching-path {
-    background: rgb(0, 200, 255);
-}
-.searching-path-current {
-    background: rgb(0,0 , 255);
-}
-
-.path {
-    background: black;
-}
-
-.start {
-    background: green;
+.animate-pulse-once {
+    animation: pulseOnce 0.2s ease-out;
 }

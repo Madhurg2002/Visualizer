@@ -1,31 +1,190 @@
-.board-rows button {
+.board-rows {
+    display: flex;
     width: 100%;
-    border-width: 1px;
+    /* Ensure rows don't collapse */
+    flex-shrink: 0;
 }
 
+.board-rows button {
+    /* Use flex to distribute width evenly */
+    flex: 1;
+    /* Force square aspect ratio */
+    aspect-ratio: 1 / 1;
+    /* min-width: 20px; REMOVED */
+    /* min-height: 20px; REMOVED */
+    border-width: 0.5px;
+    border-color: #e2e8f0;
+    /* slate-200 */
+    margin: 0;
+    padding: 0;
+    transition: all 0.1s ease-in-out;
+}
+
+/* Specific node styles */
 .empty {
     background-color: white;
 }
 
 .blockage {
-    background-color: red;
+    background-color: #334155;
+    /* slate-700 */
+    border-color: #334155;
+    animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 .end {
-    background: yellow;
+    background-color: #ef4444;
+    /* red-500 */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0121 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7'/%3E%3C/svg%3E");
+    background-size: 70%;
+    background-repeat: no-repeat;
+    background-position: center;
+    animation: popIn 0.3s;
+    border: none;
 }
 
 .searching-path {
-    background: rgb(0, 200, 255);
+    background: #93c5fd;
+    /* blue-300 */
+    border-color: #bfdbfe;
+    /* animation: pulse 1.5s infinite; */
 }
+
 .searching-path-current {
-    background: rgb(0,0 , 255);
+    background: #3b82f6;
+    /* blue-500 */
+    transform: scale(1.1);
+    z-index: 10;
+    border-radius: 20%;
 }
 
 .path {
-    background: black;
+    background: #f59e0b;
+    /* amber-500 */
+    border-color: #fcd34d;
+    box-shadow: 0 0 5px #f59e0b;
+    z-index: 5;
+    animation: pathAnimation 0.5s ease-out forwards;
 }
 
 .start {
-    background: green;
+    background-color: #22c55e;
+    /* green-500 */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='white'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M13 5l7 7-7 7M5 5l7 7-7 7'/%3E%3C/svg%3E");
+    background-size: 70%;
+    background-repeat: no-repeat;
+    background-position: center;
+    animation: popIn 0.3s;
+    border: none;
+}
+
+@keyframes popIn {
+    from {
+        transform: scale(0);
+    }
+
+    to {
+        transform: scale(1);
+    }
+}
+
+@keyframes pathAnimation {
+    0% {
+        transform: scale(0.6);
+        opacity: 0.5;
+    }
+
+    100% {
+        transform: scale(1.0);
+        opacity: 1;
+    }
+}
+
+/* Directional Arrows */
+.path.up,
+.path.down,
+.path.left,
+.path.right {
+    position: relative;
+    overflow: hidden;
+}
+
+.path.up::after,
+.path.down::after,
+.path.left::after,
+.path.right::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 60%;
+    height: 60%;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    transform: translate(-50%, -50%);
+    opacity: 0.6;
+}
+
+.path.up::after {
+    transform: translate(-50%, -50%) rotate(-90deg);
+}
+
+.path.down::after {
+    transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.path.left::after {
+    transform: translate(-50%, -50%) rotate(180deg);
+}
+
+.path.right::after {
+    transform: translate(-50%, -50%) rotate(0deg);
+}
+
+/* Propagation Direction Indicators (Visited Nodes) */
+.searching-path,
+.searching-path-current {
+    position: relative;
+    /* Ensure icons don't overflow */
+}
+
+.searching-path::after,
+.searching-path-current::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 40%;
+    height: 40%;
+    /* Chevron SVG */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23334155' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='18 15 12 9 6 15'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    transform: translate(-50%, -50%);
+    opacity: 0.4;
+    transition: all 0.2s;
+}
+
+/* Rotations for Propagation - Default Chevron points UP */
+.searching-path.up::after,
+.searching-path-current.up::after {
+    transform: translate(-50%, -50%) rotate(0deg);
+}
+
+.searching-path.down::after,
+.searching-path-current.down::after {
+    transform: translate(-50%, -50%) rotate(180deg);
+}
+
+.searching-path.left::after,
+.searching-path-current.left::after {
+    transform: translate(-50%, -50%) rotate(-90deg);
+}
+
+.searching-path.right::after,
+.searching-path-current.right::after {
+    transform: translate(-50%, -50%) rotate(90deg);
 }

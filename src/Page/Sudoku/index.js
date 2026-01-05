@@ -1,4 +1,3 @@
-// src/Page/Sudoku/index.js
 import React, {
   useState,
   useEffect,
@@ -7,20 +6,24 @@ import React, {
   useCallback,
 } from "react";
 import { useNavigate } from "react-router-dom";
-
 import {
   randomSeed,
   generateFull,
   puzzleFromFull,
   isComplete,
   DIFFICULTY,
+
+  isValid,
 } from "./utils";
 import SudokuBoard from "./SudokuBoard";
 import Controls from "./Controls";
+
 import WinningModal from "./WinningModal";
 import NumberSelector from "./NumberSelector";
 import Settings from "./Settings";
 import { THEMES } from "./themes";
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function SettingsIcon({ size = 24, color = "currentColor" }) {
   return (
@@ -35,8 +38,8 @@ function SettingsIcon({ size = 24, color = "currentColor" }) {
       strokeLinejoin="round"
       style={{ display: "block" }}
     >
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09A1.65 1.65 0 0 0 12 3V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51z" />
+      <circle cx="12" cy="12" r="3" />{" "}
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09A1.65 1.65 0 0 0 12 3V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51z" />{" "}
     </svg>
   );
 }
@@ -52,11 +55,10 @@ export default function Sudoku() {
   const clues = DIFFICULTY[difficulty];
 
   const [settingsVisible, setSettingsVisible] = useState(false);
-
   const [theme, setTheme] = useState("light");
-  const [continuousCheck, setContinuousCheck] = useState(false);
-
   const themeColors = THEMES[theme];
+  const [continuousCheck, setContinuousCheck] = useState(false);
+  const [highlightNumbers, setHighlightNumbers] = useState(true);
 
   const [board, setBoard] = useState([]);
   const [solution, setSolution] = useState([]);
@@ -68,9 +70,21 @@ export default function Sudoku() {
   const userEditedAfterHint = useRef(false);
   const [history, setHistory] = useState([]);
   const [win, setWin] = useState(false);
-  const [poppedButton, setPoppedButton] = useState(null);
+  const [solving, setSolving] = useState(false);
+  const solvingRef = useRef(false);
+  const [poppedButton, setPoppedButton] = useState(null); // Timer state
 
-  const boardRef = useRef(null);
+  const [timeElapsed, setTimeElapsed] = useState(0); // This drives cell highlighting!
+
+  const [highlightValue, setHighlightValue] = useState(null); // Theme background
+
+  useEffect(() => {
+    document.body.style.backgroundColor = themeColors.bg;
+    return () => {
+      document.body.style.backgroundColor = "";
+    };
+  }, [themeColors.bg]);
+
   useEffect(() => {
     if (urlSeed !== seed) navigate(`?seed=${seed}`, { replace: true });
     const full = generateFull(seed);
@@ -79,30 +93,59 @@ export default function Sudoku() {
     setSolution(full);
     setSelectedCell(null);
     setSelectedNumber(null);
+    setHighlightValue(null);
     setManualCheckResult(null);
     setHintCell(null);
     setWin(false);
     userEditedAfterHint.current = false;
     setHistory([puzzle]);
+    setTimeElapsed(0); // reset timer on new puzzle
     const locks = new Set();
-    puzzle.forEach((row, r) => {
+    puzzle.forEach((row, r) =>
       row.forEach((val, c) => {
         if (val !== 0) locks.add(`${r}-${c}`);
-      });
-    });
+      })
+    );
     setLockedCells(locks);
   }, [seed, clues, navigate, urlSeed, difficulty]);
 
   useEffect(() => {
     if (seedInput.trim() && seedInput !== seed) setSeed(seedInput.trim());
-  }, [seedInput]);
+  }, [seedInput]); // Timer effect increments every second if no win
 
   useEffect(() => {
-    document.body.style.backgroundColor = themeColors.bg;
-    return () => {
-      document.body.style.backgroundColor = "";
-    };
-  }, [themeColors.bg]);
+    if (win) return; // stop timer when won
+    const timer = setInterval(() => {
+      setTimeElapsed((t) => t + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [win]); // Deselect selectedCell on outside click
+
+  const boardRef = useRef(null);
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (boardRef.current && !boardRef.current.contains(event.target)) {
+        setSelectedCell(null);
+        if (selectedNumber === null) setHighlightValue(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [selectedNumber]); // Highlight logic: always reflects selectedNumber, or cell
+
+  useEffect(() => {
+    if (!highlightNumbers) {
+      setHighlightValue(null);
+      return;
+    }
+    if (selectedNumber !== null) {
+      setHighlightValue(selectedNumber);
+    } else if (selectedCell && board[selectedCell[0]][selectedCell[1]] !== 0) {
+      setHighlightValue(board[selectedCell[0]][selectedCell[1]]);
+    } else {
+      setHighlightValue(null);
+    }
+  }, [highlightNumbers, selectedNumber, selectedCell, board]);
 
   const undo = () => {
     setHistory((prev) => {
@@ -113,18 +156,15 @@ export default function Sudoku() {
       userEditedAfterHint.current = true;
       setHintCell(null);
       setSelectedCell(null);
+      setHighlightValue(null);
       return newHist;
     });
   };
 
-  const fillCell = (r, c, num) => {
+  const fillCell = useCallback((r, c, num) => {
     if (lockedCells.has(`${r}-${c}`)) return;
     const newBoard = board.map((row) => row.slice());
-    if (newBoard[r][c] === num) {
-      newBoard[r][c] = 0;
-    } else {
-      newBoard[r][c] = num;
-    }
+    newBoard[r][c] = newBoard[r][c] === num ? 0 : num;
     setBoard(newBoard);
     setHistory((prev) => [...prev, newBoard]);
     setManualCheckResult(null);
@@ -133,7 +173,7 @@ export default function Sudoku() {
       setHintCell(null);
     }
     if (isComplete(newBoard, solution)) setWin(true);
-  };
+  }, [board, lockedCells, hintCell, solution]); // Cell click should only select
 
   const handleCellClick = (r, c) => {
     setSelectedCell([r, c]);
@@ -142,25 +182,12 @@ export default function Sudoku() {
     }
   };
 
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (boardRef.current && !boardRef.current.contains(event.target)) {
-        setSelectedCell(null);
-      }
-    }
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [setSelectedCell]);
   const handleNumberSelect = (num) => {
-    if (selectedNumber === num) {
-      setSelectedNumber(null);
-    } else {
+    if (selectedNumber === num) setSelectedNumber(null);
+    else {
       setSelectedNumber(num);
       if (
-        selectedCell !== null &&
+        selectedCell &&
         !lockedCells.has(`${selectedCell[0]}-${selectedCell[1]}`)
       ) {
         fillCell(selectedCell[0], selectedCell[1], num);
@@ -169,26 +196,25 @@ export default function Sudoku() {
   };
 
   const onManualCheck = () => {
-    for (let r = 0; r < 9; r++) {
+    for (let r = 0; r < 9; r++)
       for (let c = 0; c < 9; c++) {
         if (board[r][c] !== 0 && board[r][c] !== solution[r][c]) {
           setManualCheckResult(false);
           return;
         }
       }
-    }
     setManualCheckResult(true);
-  };
+  }; // Show hint cell
 
   const showHint = () => {
     if (hintCell !== null) return;
     const emptyCells = [];
-    board.forEach((row, r) => {
+    board.forEach((row, r) =>
       row.forEach((val, c) => {
         if (val === 0) emptyCells.push([r, c]);
-      });
-    });
-    if (emptyCells.length === 0) {
+      })
+    );
+    if (!emptyCells.length) {
       alert("No empty cells to hint.");
       return;
     }
@@ -197,6 +223,62 @@ export default function Sudoku() {
     fillCell(r, c, solution[r][c]);
     setHintCell(`${r}-${c}`);
     userEditedAfterHint.current = false;
+    userEditedAfterHint.current = false;
+  };
+
+  const visualizeSolver = async () => {
+    if (solvingRef.current || win) return;
+    setSolving(true);
+    solvingRef.current = true;
+    
+    // Create a mutable copy of the board for logic
+    const currentBoard = board.map(row => row.slice());
+    
+    // Backtracking function
+    const solve = async () => {
+        if (!solvingRef.current) return false;
+
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (currentBoard[r][c] === 0) {
+                    for (let n = 1; n <= 9; n++) {
+                         if (!solvingRef.current) return false;
+                         
+                         // Visualization: Highlight current attempt (optional, or just show number)
+                         // We update the board state to trigger re-render
+                         
+                        if (isValid(currentBoard, r, c, n)) {
+                            currentBoard[r][c] = n;
+                            setBoard(currentBoard.map(row => row.slice())); // Update UI
+                            // Highlight the cell being tried? 
+                            // We can use setSelectedCell([r, c]) to show focus
+                            setSelectedCell([r, c]);
+                            
+                            await sleep(20); // Delay for visualization
+
+                            if (await solve()) return true;
+
+                            currentBoard[r][c] = 0;
+                            setBoard(currentBoard.map(row => row.slice())); // Backtrack on UI
+                            await sleep(5); // Smaller delay on backtrack?
+                        }
+                    }
+                    return false;
+                }
+            }
+        }
+        return true;
+    };
+
+    await solve();
+    
+    if (isComplete(currentBoard, solution)) {
+        setWin(true);
+    }
+    
+    setSolving(false);
+    solvingRef.current = false;
+    setSelectedCell(null);
   };
 
   useEffect(() => {
@@ -214,8 +296,7 @@ export default function Sudoku() {
       else if (e.key === "ArrowRight" && c < 8) setSelectedCell([r, c + 1]);
     };
     window.addEventListener("keydown", handleKey);
-    return () => window.removeEventListener("keydown", handleKey);
-  }, [selectedCell, win, board, lockedCells]);
+  }, [selectedCell, win, board, lockedCells, fillCell]);
 
   const handleButtonClick = useCallback((btnName, cb) => {
     setPoppedButton(btnName);
@@ -237,27 +318,35 @@ export default function Sudoku() {
   return (
     <div
       style={{
-        padding: 24,
-        maxWidth: 480,
-        margin: "auto",
-        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-        backgroundColor: themeColors.bg,
+        padding: 32,
         minHeight: "100vh",
+        background: themeColors.bg,
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
+        gap: 24,
       }}
     >
-      {/* Header with title, difficulty, and settings icon */}
+      <Settings
+        visible={settingsVisible}
+        onClose={() => setSettingsVisible(false)}
+        continuousCheck={continuousCheck}
+        setContinuousCheck={setContinuousCheck}
+        theme={theme}
+        setTheme={setTheme}
+        highlightNumbers={highlightNumbers}
+        setHighlightNumbers={setHighlightNumbers}
+      />
+      {/* Header with menu and difficulty */}
       <div
         style={{
           display: "flex",
           alignItems: "center",
-          justifyContent: "center",
-          gap: 16,
-          marginBottom: 20,
+          justifyContent: "space-between",
           width: "100%",
           maxWidth: 480,
+          marginBottom: 20,
+          padding: "0 8px",
         }}
       >
         <h2
@@ -267,6 +356,8 @@ export default function Sudoku() {
             fontWeight: 700,
             fontSize: "2rem",
             flexGrow: 1,
+            textAlign: "center",
+            userSelect: "none",
           }}
         >
           Sudoku
@@ -289,14 +380,12 @@ export default function Sudoku() {
             background: "transparent",
             border: "none",
             cursor: "pointer",
-            padding: 0,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             color: themeColors.boardBorder,
             width: 32,
             height: 32,
-            userSelect: "none",
             transition: "color 0.2s ease",
           }}
           onMouseEnter={(e) => (e.currentTarget.style.color = "#1e40af")}
@@ -304,22 +393,10 @@ export default function Sudoku() {
             (e.currentTarget.style.color = themeColors.boardBorder)
           }
         >
-          <svg
-            height="24"
-            width="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="3" />
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09A1.65 1.65 0 0 0 12 3V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51z" />
-          </svg>
+          <SettingsIcon size={24} />
         </button>
       </div>
-
+      {/* Controls below numbers */}
       <Controls
         difficulty={difficulty}
         setDifficulty={setDifficulty}
@@ -335,31 +412,46 @@ export default function Sudoku() {
         onCheck={onManualCheck}
         checkDisabled={continuousCheck}
         onHint={showHint}
+        onVisualizeSolver={visualizeSolver}
+        solving={solving}
         poppedButton={poppedButton}
         handleButtonClick={handleButtonClick}
       />
-
-      {manualCheckResult !== null && (
-        <div
-          style={{
-            fontWeight: "bold",
-            color: manualCheckResult ? "#059669" : "#db2777",
-            fontSize: 18,
-            textAlign: "center",
-            marginBottom: 14,
-          }}
-        >
-          {manualCheckResult
-            ? "All filled cells are correct!"
-            : "There are incorrect entries!"}
-        </div>
-      )}
-
-      <NumberSelector
-        selected={selectedNumber}
-        setSelected={handleNumberSelect}
-        themeColors={themeColors}
-      />
+      {/* Timer above the Sudoku */}
+      <div
+        style={{
+          backgroundColor:
+            theme === "light"
+              ? "rgba(255, 255, 255, 0.7)" // translucent light for light theme
+              : "rgba(0, 0, 0, 0.6)", // translucent dark for dark theme
+          backdropFilter: "blur(6px)",
+          padding: "8px 20px",
+          borderRadius: 12,
+          boxShadow:
+            theme === "light"
+              ? "0 4px 12px rgba(0, 0, 0, 0.1)"
+              : "0 4px 12px rgba(0, 0, 0, 0.7)",
+          fontFamily: "'Courier New', Courier, monospace",
+          fontWeight: "700",
+          fontSize: "1.3rem",
+          color: themeColors.boardBorder, // text color from theme (ensure contrast)
+          userSelect: "none",
+          minWidth: 90,
+          textAlign: "center",
+          marginBottom: 12,
+          border:
+            theme === "light"
+              ? "1px solid rgba(0, 0, 0, 0.1)"
+              : "1px solid rgba(255, 255, 255, 0.15)",
+        }}
+        role="timer"
+        aria-live="polite"
+        aria-label="Elapsed time"
+        title="Elapsed time"
+      >
+        {new Date(timeElapsed * 1000).toISOString().substr(14, 5)}
+      </div>
+      {/* Sudoku board */}
       <div ref={boardRef}>
         <SudokuBoard
           board={board}
@@ -373,18 +465,21 @@ export default function Sudoku() {
           solution={solution}
           win={win}
           themeColors={themeColors}
+          highlightValue={highlightValue}
         />
       </div>
-      {win && <WinningModal onClose={() => setWin(false)} />}
-
-      <Settings
-        visible={settingsVisible}
-        onClose={() => setSettingsVisible(false)}
-        continuousCheck={continuousCheck}
-        setContinuousCheck={setContinuousCheck}
-        theme={theme}
-        setTheme={setTheme}
+      {/* Numbers below the Sudoku */}
+      <NumberSelector
+        selected={selectedNumber}
+        setSelected={handleNumberSelect}
+        themeColors={themeColors}
       />
+      <style>{`
+        @keyframes hintBlink {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+      `}</style>{" "}
     </div>
   );
 }

@@ -1,343 +1,189 @@
-import React, { useState, useEffect, useRef } from "react";
 
-function* bubbleSort(array) {
-  let arr = array.slice();
-  const n = arr.length;
-  for (let i = 0; i < n; i++) {
-    for (let j = 0; j < n - i - 1; j++) {
-      yield { arr: arr.slice(), active: [j, j + 1] };
-      if (arr[j] > arr[j + 1]) {
-        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
-        yield { arr: arr.slice(), active: [j, j + 1] };
-      }
-    }
-  }
-  yield { arr: arr.slice(), active: [] };
-}
+import React, { useState } from 'react';
+import { useSort } from '../Hooks/useSort';
+import { ALGORITHM_DESCRIPTIONS } from '../Algorithms/sortingAlgorithms';
+import { ALGORITHM_OPTIONS } from '../Algorithms/sortingAlgorithms';
+// Icons removed to avoid dependency issues
 
-function* selectionSort(array) {
-  let arr = array.slice();
-  const n = arr.length;
-  for (let i = 0; i < n - 1; i++) {
-    let minIdx = i;
-    for (let j = i + 1; j < n; j++) {
-      yield { arr: arr.slice(), active: [j, minIdx] };
-      if (arr[j] < arr[minIdx]) {
-        minIdx = j;
-      }
-    }
-    if (minIdx !== i) {
-      [arr[i], arr[minIdx]] = [arr[minIdx], arr[i]];
-      yield { arr: arr.slice(), active: [i, minIdx] };
-    }
-  }
-  yield { arr: arr.slice(), active: [] };
-}
 
-function* insertionSort(array) {
-  let arr = array.slice();
-  for (let i = 1; i < arr.length; i++) {
-    let key = arr[i];
-    let j = i - 1;
-    while (j >= 0 && arr[j] > key) {
-      yield { arr: arr.slice(), active: [j, j + 1] };
-      arr[j + 1] = arr[j];
-      j--;
-      yield { arr: arr.slice(), active: [j + 1] };
-    }
-    arr[j + 1] = key;
-    yield { arr: arr.slice(), active: [j + 1] };
-  }
-  yield { arr: arr.slice(), active: [] };
-}
+// Simple icons if heroicons not installed, but using text for now or simple SVG if needed.
+// Actually, let's stick to simple text or standard unicode if we want to avoid deps, 
+// but I'll use simple inline SVGs for a "Premium" feel.
 
-function* quickSort(array) {
-  let arr = array.slice();
+const Sort = () => {
+    const {
+        size, setSize,
+        array,
+        sorting,
+        paused,
+        activeIndices,
+        algorithm, setAlgorithm,
+        speed, setSpeed,
+        startSort,
+        pauseSort,
+        reset,
+        stepSort
+    } = useSort(50);
+    
+    const [showDesc, setShowDesc] = useState(false);
 
-  function* partition(low, high) {
-    let pivot = arr[high];
-    let i = low - 1;
-    for (let j = low; j < high; j++) {
-      yield { arr: arr.slice(), active: [j, high] };
-      if (arr[j] < pivot) {
-        i++;
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-        yield { arr: arr.slice(), active: [i, j] };
-      }
-    }
-    [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
-    yield { arr: arr.slice(), active: [i + 1, high] };
-    return i + 1;
-  }
+    const maxVal = Math.max(...array, 1); // Avoid division by zero
 
-  function* qs(low, high) {
-    if (low < high) {
-      const partGen = partition(low, high);
-      let pi;
-      let result = partGen.next();
-      while (!result.done) {
-        yield result.value;
-        result = partGen.next();
-      }
-      pi = result.value;
-      yield* qs(low, pi - 1);
-      yield* qs(pi + 1, high);
-    }
-  }
+    return (
+        <div className="flex flex-col items-center justify-center p-6 h-full w-full bg-slate-50">
+            {/* Controls Header */}
+            <div className="w-full max-w-6xl bg-white rounded-xl shadow-lg p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 transition-all duration-300">
+                
+                {/* Inputs Group */}
+                <div className="flex flex-wrap items-center gap-6 justify-center md:justify-start">
+                    <div className="flex flex-col space-y-1 relative"
+                         onMouseEnter={() => setShowDesc(true)}
+                         onMouseLeave={() => setShowDesc(false)}
+                    >
+                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1 cursor-help">
+                            Algorithm <span className="text-slate-400 text-[10px]">(Hover for info)</span>
+                        </label>
+                        <select
+                            disabled={sorting}
+                            value={algorithm}
+                            onChange={(e) => setAlgorithm(e.target.value)}
+                            className="bg-slate-100 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-40 p-2.5 outline-none transition-all disabled:opacity-50"
+                        >
+                            {ALGORITHM_OPTIONS.map((algo) => (
+                                <option key={algo} value={algo}>{algo}</option>
+                            ))}
+                        </select>
+                        
+                         {/* Description Popover */}
+                         {showDesc && (
+                            <div className="absolute top-full left-0 mt-2 w-96 z-50 bg-white border-l-4 border-blue-500 p-4 rounded shadow-xl animate-fade-in pointer-events-none">
+                                <h3 className="text-lg font-bold text-blue-800 mb-1">{algorithm}</h3>
+                                <p className="text-sm text-blue-700 leading-relaxed">
+                                    {ALGORITHM_DESCRIPTIONS[algorithm]}
+                                </p>
+                            </div>
+                         )}
+                    </div>
 
-  yield* qs(0, arr.length - 1);
-  yield { arr: arr.slice(), active: [] };
-}
+                    <div className="flex flex-col space-y-1 w-32">
+                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Size: {size}</label>
+                        <input
+                            type="range"
+                            min="10"
+                            max="100"
+                            disabled={sorting}
+                            value={size}
+                            onChange={(e) => setSize(Number(e.target.value))}
+                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600 disabled:opacity-50"
+                        />
+                    </div>
 
-function* mergeSort(array) {
-  let arr = array.slice();
+                    <div className="flex flex-col space-y-1 w-32">
+                         <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Speed: {speed}</label>
+                         <input
+                            type="range"
+                            min="1"
+                            max="100"
+                            value={speed}
+                            onChange={(e) => setSpeed(Number(e.target.value))}
+                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                        />
+                    </div>
+                </div>
 
-  function* merge(low, mid, high) {
-    let left = arr.slice(low, mid + 1);
-    let right = arr.slice(mid + 1, high + 1);
-    let i = 0,
-      j = 0,
-      k = low;
-    while (i < left.length && j < right.length) {
-      yield { arr: arr.slice(), active: [k] };
-      if (left[i] <= right[j]) {
-        arr[k++] = left[i++];
-      } else {
-        arr[k++] = right[j++];
-      }
-    }
-    while (i < left.length) arr[k++] = left[i++];
-    while (j < right.length) arr[k++] = right[j++];
-    yield { arr: arr.slice(), active: [] };
-  }
+                {/* Actions Group */}
+                <div className="flex items-center gap-3">
+                    {!sorting && (
+                        <button
+                            onClick={startSort}
+                            className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
+                        >
+                            <span>Start</span>
+                        </button>
+                    )}
+                    
+                    {sorting && !paused && (
+                         <button
+                            onClick={pauseSort}
+                            className="flex items-center gap-2 px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
+                        >
+                            <span>Pause</span>
+                         </button>
+                    )}
 
-  function* ms(low, high) {
-    if (low < high) {
-      let mid = Math.floor((low + high) / 2);
-      yield* ms(low, mid);
-      yield* ms(mid + 1, high);
-      yield* merge(low, mid, high);
-    }
-  }
+                    {sorting && paused && (
+                        <>
+                            <button
+                                onClick={startSort}
+                                className="flex items-center gap-2 px-6 py-2.5 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
+                            >
+                                <span>Resume</span>
+                            </button>
+                            <button
+                                onClick={stepSort}
+                                className="flex items-center gap-2 px-4 py-2.5 bg-slate-600 hover:bg-slate-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
+                            >
+                                <span>Step</span>
+                            </button>
+                        </>
+                    )}
 
-  yield* ms(0, arr.length - 1);
-  yield { arr: arr.slice(), active: [] };
-}
+                    <button
+                        onClick={reset}
+                        disabled={sorting && !paused}
+                        className={`flex items-center gap-2 px-4 py-2.5 font-medium rounded-lg shadow-sm border border-slate-200 transition-all duration-200 ${
+                            sorting && !paused 
+                            ? "bg-slate-100 text-slate-400 cursor-not-allowed" 
+                            : "bg-white text-slate-700 hover:bg-slate-50 hover:text-red-500"
+                        }`}
+                    >
+                         <span>Reset</span>
+                    </button>
+                </div>
+            </div>
 
-const ALGORITHMS = {
-  "Bubble Sort": bubbleSort,
-  "Selection Sort": selectionSort,
-  "Insertion Sort": insertionSort,
-  "Quick Sort": quickSort,
-  "Merge Sort": mergeSort,
+            {/* Description */}
+            {/* Description - Removed fixed block, moved to hover tooltip */}
+
+            {/* Legend */}
+            <div className="flex gap-6 mb-4 text-sm font-medium text-slate-600 bg-white px-6 py-2 rounded-full shadow-sm border border-slate-100">
+                <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-purple-600 rounded-sm"></div>
+                    <span>Active/Compare</span>
+                </div>
+                <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-blue-600 rounded-sm"></div>
+                    <span>Unsorted</span>
+                </div>
+                <div className="flex items-center gap-2">
+                     <span className="text-xs text-slate-400">Sorted state is implied by order</span>
+                </div>
+            </div>
+
+            {/* Visualizer Board */}
+            <div className="relative w-full max-w-6xl flex-grow bg-white rounded-xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col" style={{ height: '60vh', minHeight: '400px' }}>
+                <div className="flex-1 w-full flex items-end justify-center gap-[1px] sm:gap-[2px] p-4 pb-0">
+                    {array.map((val, idx) => {
+                         const isActive = activeIndices.includes(idx);
+                         return (
+                            <div
+                                key={idx}
+                                style={{
+                                    height: `${(val / (Math.max(...array) || 1)) * 100}%`,
+                                    width: `${100 / size}%`
+                                }}
+                                className={`rounded-t-sm transition-all duration-200 ease-in-out ${
+                                    isActive 
+                                    ? 'bg-purple-600 shadow-[0_0_15px_rgba(168,85,247,0.5)]' 
+                                    : 'bg-blue-600 opacity-90 hover:opacity-100'
+                                }`}
+                            ></div>
+                         );
+                    })}
+                </div>
+            </div>
+        </div>
+    );
 };
 
-function generateRandomArray(size) {
-  return Array.from({ length: size }, () => Math.random());
-}
-
-export default function Sort() {
-  const [size, setSize] = useState(30);
-  const [array, setArray] = useState(generateRandomArray(30));
-  const [sorting, setSorting] = useState(false);
-  const [paused, setPaused] = useState(false);
-  const [activeIndices, setActiveIndices] = useState([]);
-  const [algorithm, setAlgorithm] = useState("Bubble Sort");
-  const genRef = useRef(null);
-  const initialArrayRef = useRef(array);
-
-  useEffect(() => {
-    if(!sorting){
-      const newArr = generateRandomArray(size);
-      setArray(newArr);
-      initialArrayRef.current = newArr;
-      setActiveIndices([]);
-      genRef.current = null;
-      setPaused(false);
-    }
-  }, [size, algorithm, sorting]);
-
-  const startSort = () => {
-    if(!genRef.current){
-      genRef.current = ALGORITHMS[algorithm](array);
-    }
-    setSorting(true);
-    setPaused(false);
-  };
-
-  const pauseSort = () => setPaused(true);
-
-  const stepSort = () => {
-    if(!genRef.current) return;
-    const {value, done} = genRef.current.next();
-    if(!done){
-      setArray(value.arr);
-      setActiveIndices(value.active);
-    } else{
-      setSorting(false);
-      setPaused(false);
-      setActiveIndices([]);
-      genRef.current = null;
-    }
-  };
-
-  // Reset allowed if not actively sorting (i.e. disabled during sorting && !paused)
-  const reset = () => {
-    setSorting(false);
-    setPaused(false);
-    setActiveIndices([]);
-    setArray(initialArrayRef.current);
-    genRef.current = null;
-  };
-
-  useEffect(() => {
-    if(!sorting || paused){
-      return;
-    }
-    let timeoutId;
-
-    const runStep = () => {
-      if(!genRef.current) return;
-      const {value, done} = genRef.current.next();
-      if(!done){
-        setArray(value.arr);
-        setActiveIndices(value.active);
-        timeoutId = setTimeout(runStep, 20);
-      } else {
-        setActiveIndices([]);
-        setSorting(false);
-        setPaused(false);
-        genRef.current = null;
-      }
-    };
-
-    timeoutId = setTimeout(runStep, 20);
-    return () => clearTimeout(timeoutId);
-  }, [sorting, paused]);
-
-
-
-  const barStyle = (val, idx) => ({
-    height: `${val * 100}%`,
-    width: `${100 / size}%`,
-    background: activeIndices.includes(idx)
-      ? "linear-gradient(180deg,#fbbc04,#8f5cf8)"
-      : "linear-gradient(180deg, #2563eb 60%, #1e293b)",
-    marginRight: "2px",
-    borderRadius: "2px",
-    display: "inline-block",
-    boxShadow: activeIndices.includes(idx) ? "0 0 8px #8f5cf8" : "none",
-    transition: "height 0.14s cubic-bezier(.42,0,.58,1)",
-  });
-
-  return (
-    <div
-      style={{
-        background: "#f9fafb",
-        height: "100vh",
-        padding: 20,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-      }}
-    >
-      <div
-        style={{
-          marginBottom: 16,
-          display: "flex",
-          gap: 12,
-          flexWrap: "wrap",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <label>
-          Size: {size}
-          <input
-            type="range"
-            min={10}
-            max={100}
-            disabled={sorting}
-            value={size}
-            onChange={(e) => setSize(Number(e.target.value))}
-            style={{ marginLeft: 8 }}
-          />
-        </label>
-
-        <select
-          disabled={sorting}
-          value={algorithm}
-          onChange={(e) => setAlgorithm(e.target.value)}
-        >
-          {Object.keys(ALGORITHMS).map((algo) => (
-            <option key={algo} value={algo}>
-              {algo}
-            </option>
-          ))}
-        </select>
-
-        {!sorting && (
-          <button
-            onClick={startSort}
-            style={{ cursor: "pointer", padding: "8px 18px" }}
-          >
-            Start
-          </button>
-        )}
-        {sorting && !paused && (
-          <button
-            onClick={pauseSort}
-            style={{ cursor: "pointer", padding: "8px 18px" }}
-          >
-            Pause
-          </button>
-        )}
-        {sorting && paused && (
-          <>
-            <button
-              onClick={startSort}
-              style={{ cursor: "pointer", padding: "8px 18px" }}
-            >
-              Resume
-            </button>
-            <button
-              onClick={stepSort}
-              style={{ cursor: "pointer", marginLeft: 10, padding: "8px 18px" }}
-            >
-              Step
-            </button>
-          </>
-        )}
-
-        <button
-          onClick={reset}
-          style={{
-            cursor: sorting ? "default" : "pointer",
-            padding: "8px 18px",
-            marginLeft: 16,
-          }}
-        >
-          Reset
-        </button>
-      </div>
-
-      <div
-        style={{
-          display: "flex",
-          alignItems: "flex-end",
-          height: "70vh",
-          width: "90vw",
-          border: "3px solid #e5e7eb",
-          background: "#fff",
-          borderRadius: 12,
-          overflow: "hidden",
-          boxShadow: "0 2px 12px #eee",
-        }}
-      >
-        {array.map((val, idx) => (
-          <div key={idx} style={barStyle(val, idx)}></div>
-        ))}
-      </div>
-    </div>
-  );
-}
+export default Sort;

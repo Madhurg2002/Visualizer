@@ -12,6 +12,8 @@ export default function Controls({
   onCheck,
   checkDisabled,
   onHint,
+  onVisualizeSolver,
+  solving,
   poppedButton,
   handleButtonClick,
 }) {
@@ -126,6 +128,20 @@ export default function Controls({
         }}
       >
         Show Hint
+      </button>
+      <button
+        onClick={() => handleButtonClick("solve", onVisualizeSolver)}
+        disabled={solving}
+        style={{
+          ...baseButtonStyle,
+          backgroundColor: poppedButton === "solve" ? "#4f46e5" : "#6366f1",
+          color: "white",
+          opacity: solving ? 0.5 : 1,
+          cursor: solving ? "wait" : "pointer",
+          transform: poppedButton === "solve" ? "scale(1.1)" : "scale(1)",
+        }}
+      >
+        {solving ? "Solving..." : "Visualize Solver"}
       </button>
     </div>
   );
