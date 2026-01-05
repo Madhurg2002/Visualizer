@@ -72,24 +72,21 @@ export default function Controls({
       >
         Randomize
       </button>
-      <select
-        value={difficulty}
-        onChange={(e) => setDifficulty(e.target.value)}
+      <button
+        onClick={() => {
+          const levels = ["easy", "medium", "hard"];
+          const nextIndex = (levels.indexOf(difficulty) + 1) % levels.length;
+          setDifficulty(levels[nextIndex]);
+        }}
         style={{
-          padding: "8px 16px",
-          borderRadius: 6,
-          fontWeight: 600,
-          fontSize: 16,
-          border: "1px solid #2563eb",
-          cursor: "pointer",
-          color: "#334155",
-          minWidth: 120,
+          ...baseButtonStyle,
+          backgroundColor: "#2563eb",
+          color: "white",
+          minWidth: 140,
         }}
       >
-        <option value="easy">Easy</option>
-        <option value="medium">Medium</option>
-        <option value="hard">Hard</option>
-      </select>
+        Difficulty: {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
+      </button>
       <button
         onClick={() => handleButtonClick("undo", onUndo)}
         disabled={undoDisabled}

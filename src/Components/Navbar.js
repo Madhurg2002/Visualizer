@@ -1,10 +1,9 @@
 
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 
 const Navbar = () => {
     const navItems = [
-        { name: 'Home', path: '/home' },
         { name: 'Sorting', path: '/sort' },
         { name: 'Pathfinding', path: '/PathFinding' },
         { name: 'Sudoku', path: '/Sudoku' },
@@ -18,9 +17,9 @@ const Navbar = () => {
                 <div className="flex items-center justify-between h-16">
                     <div className="flex items-center">
                         <div className="flex-shrink-0">
-                            <span className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+                            <Link to="/" className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
                                 AlgoVisualizer
-                            </span>
+                            </Link>
                         </div>
                         <div className="hidden md:block">
                             <div className="ml-10 flex items-baseline space-x-4">

@@ -27,48 +27,72 @@ export default function Settings({
       >
         <h3 style={{ fontWeight: "700", marginBottom: 20 }}>Settings</h3>
 
-        <label style={{
-          display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16
-        }}>
-          <span>Continuous Mistake Check</span>
-          <input
-            type="checkbox"
-            checked={continuousCheck}
-            onChange={e => setContinuousCheck(e.target.checked)}
-          />
-        </label>
+        <button
+          onClick={() => setContinuousCheck(!continuousCheck)}
+          style={{
+            width: "100%", textAlign: "left", marginBottom: 16,
+            padding: "12px 16px", borderRadius: 12,
+            backgroundColor: continuousCheck ? "#dcfce7" : "#f1f5f9",
+            color: continuousCheck ? "#166534" : "#475569",
+            border: continuousCheck ? "2px solid #22c55e" : "1px solid #cbd5e1",
+            fontWeight: 600, cursor: "pointer", fontSize: 16,
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+          }}
+        >
+          <span>Mistake Check</span>
+          <span>{continuousCheck ? "ON" : "OFF"}</span>
+        </button>
 
-        <label style={{
-          display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16
-        }}>
-          <span>Highlight same numbers</span>
-          <input
-            type="checkbox"
-            checked={highlightNumbers}
-            onChange={e => setHighlightNumbers(e.target.checked)}
-          />
-        </label>
+        <button
+          onClick={() => setHighlightNumbers(!highlightNumbers)}
+          style={{
+            width: "100%", textAlign: "left", marginBottom: 16,
+            padding: "12px 16px", borderRadius: 12,
+            backgroundColor: highlightNumbers ? "#dbeafe" : "#f1f5f9",
+            color: highlightNumbers ? "#1e40af" : "#475569",
+            border: highlightNumbers ? "2px solid #3b82f6" : "1px solid #cbd5e1",
+            fontWeight: 600, cursor: "pointer", fontSize: 16,
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+          }}
+        >
+          <span>Highlight Numbers</span>
+          <span>{highlightNumbers ? "ON" : "OFF"}</span>
+        </button>
 
-        <div style={{ marginBottom: 16 }}>
-          <label htmlFor="theme-select">Color Theme:</label>
-          <select
-            id="theme-select"
-            value={theme}
-            onChange={e => setTheme(e.target.value)}
-            style={{ marginLeft: 12, padding: "6px 10px", borderRadius: 8, border: "1px solid #ccc", fontSize: 16 }}
-          >
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-          </select>
+        <div style={{ marginBottom: 24 }}>
+        <button
+          onClick={() => setTheme(theme === "light" ? "dark" : "light")}
+          style={{
+            width: "100%", textAlign: "left", marginBottom: 24,
+            padding: "12px 16px", borderRadius: 12,
+            backgroundColor: theme === "dark" ? "#1e293b" : "#f8fafc",
+            color: theme === "dark" ? "#f1f5f9" : "#334155",
+            border: theme === "dark" ? "2px solid #64748b" : "1px solid #94a3b8",
+            fontWeight: 600, cursor: "pointer", fontSize: 16,
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+          }}
+        >
+          <span>Theme</span>
+          <span style={{ textTransform: "capitalize" }}>{theme}</span>
+        </button>
         </div>
 
         <button
           onClick={onClose}
           style={{
-            marginTop: 24, padding: "10px 20px", fontSize: 16, borderRadius: 10,
-            backgroundColor: "#2563eb", color: "#fff", border: "none",
-            cursor: "pointer", float: "right",
+            width: "100%",
+            padding: "12px",
+            fontSize: 16,
+            fontWeight: 600,
+            borderRadius: 12,
+            backgroundColor: "#0f172a",
+            color: "#fff",
+            border: "none",
+            cursor: "pointer",
+            transition: "opacity 0.2s",
           }}
+          onMouseEnter={e => e.currentTarget.style.opacity = 0.9}
+          onMouseLeave={e => e.currentTarget.style.opacity = 1}
         >Close</button>
       </div>
     </div>
