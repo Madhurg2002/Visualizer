@@ -37,17 +37,41 @@ const Home = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
                 </svg>
             )
+        },
+        {
+            title: "Game of Life",
+            description: "Interact with Conway's Cellular Automata. Create life, watch it evolve, or die out.",
+            path: "/CellularAutomata",
+            color: "from-green-400 to-emerald-600",
+            badged: true,
+            icon: (
+                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+                </svg>
+            )
+        },
+        {
+            title: "Tetris Game",
+            description: "Play the classic block-stacking game. Fully interactive with score tracking.",
+            path: "/Tetris",
+            color: "from-indigo-500 to-violet-500",
+            badged: true,
+            icon: (
+                 <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+            )
         }
     ];
 
     return (
         <div className="min-h-[calc(100vh-64px)] bg-slate-50 flex flex-col items-center justify-center p-8">
-            <div className="text-center max-w-3xl mb-16">
-                <h1 className="text-5xl font-extrabold text-slate-900 tracking-tight mb-4">
-                    Algorithm <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-purple-600">Visualizer</span>
+            <div className="text-center max-w-3xl mb-16 space-y-4">
+                <h1 className="text-6xl font-black text-slate-900 tracking-tight">
+                    Algorithm <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600">Visualizer</span>
                 </h1>
-                <p className="text-xl text-slate-600">
-                    A premium interactive platform to visualize and understand common algorithms.
+                <p className="text-2xl text-slate-600 font-light max-w-2xl mx-auto">
+                    Explore, visualize, and master classic algorithms with interactive demonstrations.
                 </p>
             </div>
 
@@ -56,8 +80,13 @@ const Home = () => {
                     <Link 
                         to={item.path} 
                         key={item.title}
-                        className="group relative bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1"
+                        className="group relative bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 ring-1 ring-slate-100"
                     >
+                        {item.badged && (
+                            <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg z-10 shadow-sm">
+                                NEW
+                            </div>
+                        )}
                         <div className={`h-24 bg-gradient-to-r ${item.color} flex items-center justify-center`}>
                            {item.icon}
                         </div>

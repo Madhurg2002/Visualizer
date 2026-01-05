@@ -51,6 +51,8 @@ export default function Sudoku() {
   const urlSeed = query.get("seed") || "";
   const urlDiff = query.get("difficulty") || "easy";
 
+  const urlTheme = query.get("theme") || "light";
+
   // If urlSeed exists, use it. Otherwise use the initial random seed.
   const initialSeed = useMemo(() => urlSeed || randomSeed(), [urlSeed]);
   
@@ -58,17 +60,19 @@ export default function Sudoku() {
   const [seedInput, setSeedInput] = useState(initialSeed);
   const [seed, setSeed] = useState(initialSeed);
 
+  const [settingsVisible, setSettingsVisible] = useState(false);
+  const [theme, setTheme] = useState(urlTheme);
+
   // Sync state to URL
   useEffect(() => {
     const params = new URLSearchParams();
     if (seed) params.set("seed", seed);
     if (difficulty) params.set("difficulty", difficulty);
+    if (theme) params.set("theme", theme);
     navigate(`?${params.toString()}`, { replace: true });
-  }, [seed, difficulty, navigate]);
+  }, [seed, difficulty, theme, navigate]);
   const clues = DIFFICULTY[difficulty];
 
-  const [settingsVisible, setSettingsVisible] = useState(false);
-  const [theme, setTheme] = useState("light");
   const themeColors = THEMES[theme];
   const [continuousCheck, setContinuousCheck] = useState(false);
   const [highlightNumbers, setHighlightNumbers] = useState(true);

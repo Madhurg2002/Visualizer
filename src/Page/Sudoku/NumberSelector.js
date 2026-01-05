@@ -10,11 +10,10 @@ export default function NumberSelector({ selected, setSelected, themeColors }) {
         padding: "0 8px",
         userSelect: "none",
         display: "flex",
-        justifyContent: "center",
-        gap: 8,
-        overflowX: "auto",
-        WebkitOverflowScrolling: "touch", // smooth scrolling on iOS
-        scrollbarWidth: "none", // Firefox scrollbar hidden
+        justifyContent: "space-between", // Distribute space
+        flexWrap: "nowrap", // Force single line
+        gap: "2%", // Use relative gap
+        // overflowX: "auto", 
       }}
     >
       {[...Array(9)].map((_, i) => {
@@ -25,9 +24,11 @@ export default function NumberSelector({ selected, setSelected, themeColors }) {
             key={n}
             onClick={() => setSelected(isSelected ? null : n)}
             style={{
-              flex: "0 0 44px", // fixed width buttons so 9 fit in ~396px plus gap
+              flex: "1", // Grow and shrink
+              maxWidth: 44, // Max desktop size
               aspectRatio: "1 / 1",
-              borderRadius: 12,
+              borderRadius: "15%", // Responsive radius
+              padding: 0,
               border: isSelected
                 ? `3px solid ${themeColors.numberBtnSelBg}`
                 : "2px solid #b0bec5",
@@ -38,7 +39,7 @@ export default function NumberSelector({ selected, setSelected, themeColors }) {
                 ? themeColors.numberBtnSelColor
                 : themeColors.numberBtnColor,
               fontWeight: 700,
-              fontSize: 24,
+              fontSize: "clamp(16px, 5vw, 24px)", // Responsive font size
               cursor: "pointer",
               boxShadow: isSelected
                 ? `0 0 12px ${themeColors.numberBtnSelBg}`
