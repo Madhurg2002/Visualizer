@@ -30,7 +30,7 @@ export default function Cell({ data, onClick, onContextMenu }) {
       onClick={onClick}
       onContextMenu={onContextMenu}
       className={`
-        aspect-square w-full flex items-center justify-center font-bold text-sm select-none cursor-pointer border border-slate-500
+        aspect-square w-full flex items-center justify-center font-bold text-xs select-none cursor-pointer border border-slate-500
         ${getColor()}
         ${isOpen ? "" : "shadow-inner"}
       `}

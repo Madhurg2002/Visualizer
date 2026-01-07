@@ -15,13 +15,37 @@ export default function Minesweeper() {
   const [minesLeft, setMinesLeft] = useState(10);
   const [timer, setTimer] = useState(0);
 
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+
   const resetGame = useCallback((newLevel = level) => {
-    const config = DIFFICULTIES[newLevel];
+    let config = { ...DIFFICULTIES[newLevel] };
+
+    // Transpose for mobile if needed (make it vertical)
+    if (window.innerWidth < 640 && config.cols > config.rows) {
+      const temp = config.rows;
+      config.rows = config.cols;
+      config.cols = temp;
+    }
+
     setBoard(createBoard(config.rows, config.cols, config.mines));
     setMinesLeft(config.mines);
     setStatus("Playing");
     setTimer(0);
   }, [level]);
+
+  // Handle Resize
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth < 640;
+      if (mobile !== isMobile) {
+        setIsMobile(mobile);
+        resetGame(); // Trigger reset to apply transpose logic
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [isMobile, resetGame]);
 
   // Initialize board
   useEffect(() => {
