@@ -55,7 +55,7 @@ export default function Sudoku() {
 
   // If urlSeed exists, use it. Otherwise use the initial random seed.
   const initialSeed = useMemo(() => urlSeed || randomSeed(), [urlSeed]);
-  
+
   const [difficulty, setDifficulty] = useState(urlDiff);
   const [seedInput, setSeedInput] = useState(initialSeed);
   const [seed, setSeed] = useState(initialSeed);
@@ -95,6 +95,16 @@ export default function Sudoku() {
 
   const [highlightValue, setHighlightValue] = useState(null); // Theme background
 
+  const [statistics, setStatistics] = useState(() => {
+    const saved = localStorage.getItem("sudokuStats");
+    return saved ? JSON.parse(saved) : {
+      easy: { won: 0, bestTime: null },
+      medium: { won: 0, bestTime: null },
+      hard: { won: 0, bestTime: null }
+    };
+  });
+  const hasUsedSolver = useRef(false);
+
   useEffect(() => {
     document.body.style.backgroundColor = themeColors.bg;
     return () => {
@@ -117,6 +127,7 @@ export default function Sudoku() {
     userEditedAfterHint.current = false;
     setHistory([puzzle]);
     setTimeElapsed(0); // reset timer on new puzzle
+    hasUsedSolver.current = false; // Reset solver flag
     const locks = new Set();
     puzzle.forEach((row, r) =>
       row.forEach((val, c) => {
@@ -128,15 +139,34 @@ export default function Sudoku() {
 
   useEffect(() => {
     if (seedInput.trim() && seedInput !== seed) setSeed(seedInput.trim());
-  }, [seedInput, seed]); // Timer effect increments every second if no win
+  }, [seedInput, seed]);
 
   useEffect(() => {
-    if (win) return; // stop timer when won
+    if (win) {
+      if (!hasUsedSolver.current) {
+        setStatistics(prev => {
+          const diffStats = prev[difficulty];
+          const newWon = diffStats.won + 1;
+          const newBest = diffStats.bestTime === null ? timeElapsed : Math.min(diffStats.bestTime, timeElapsed);
+
+          const newStats = {
+            ...prev,
+            [difficulty]: { won: newWon, bestTime: newBest }
+          };
+          localStorage.setItem("sudokuStats", JSON.stringify(newStats));
+          return newStats;
+        });
+      }
+    }
+  }, [win, difficulty, timeElapsed]);
+
+  useEffect(() => {
+    if (win) return;
     const timer = setInterval(() => {
       setTimeElapsed((t) => t + 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [win]); // Deselect selectedCell on outside click
+  }, [win]);
 
   const boardRef = useRef(null);
   useEffect(() => {
@@ -148,7 +178,7 @@ export default function Sudoku() {
     }
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [selectedNumber]); // Highlight logic: always reflects selectedNumber, or cell
+  }, [selectedNumber]);
 
   useEffect(() => {
     if (!highlightNumbers) {
@@ -247,52 +277,53 @@ export default function Sudoku() {
     if (solvingRef.current || win) return;
     setSolving(true);
     solvingRef.current = true;
-    
+    hasUsedSolver.current = true; // Mark that solver was used to disable stats
+
     // Create a mutable copy of the board for logic
     const currentBoard = board.map(row => row.slice());
-    
+
     // Backtracking function
     const solve = async () => {
-        if (!solvingRef.current) return false;
+      if (!solvingRef.current) return false;
 
-        for (let r = 0; r < 9; r++) {
-            for (let c = 0; c < 9; c++) {
-                if (currentBoard[r][c] === 0) {
-                    for (let n = 1; n <= 9; n++) {
-                         if (!solvingRef.current) return false;
-                         
-                         // Visualization: Highlight current attempt (optional, or just show number)
-                         // We update the board state to trigger re-render
-                         
-                        if (isValid(currentBoard, r, c, n)) {
-                            currentBoard[r][c] = n;
-                            setBoard(currentBoard.map(row => row.slice())); // Update UI
-                            // Highlight the cell being tried? 
-                            // We can use setSelectedCell([r, c]) to show focus
-                            setSelectedCell([r, c]);
-                            
-                            await sleep(20); // Delay for visualization
+      for (let r = 0; r < 9; r++) {
+        for (let c = 0; c < 9; c++) {
+          if (currentBoard[r][c] === 0) {
+            for (let n = 1; n <= 9; n++) {
+              if (!solvingRef.current) return false;
 
-                            if (await solve()) return true;
+              // Visualization: Highlight current attempt (optional, or just show number)
+              // We update the board state to trigger re-render
 
-                            currentBoard[r][c] = 0;
-                            setBoard(currentBoard.map(row => row.slice())); // Backtrack on UI
-                            await sleep(5); // Smaller delay on backtrack?
-                        }
-                    }
-                    return false;
-                }
+              if (isValid(currentBoard, r, c, n)) {
+                currentBoard[r][c] = n;
+                setBoard(currentBoard.map(row => row.slice())); // Update UI
+                // Highlight the cell being tried? 
+                // We can use setSelectedCell([r, c]) to show focus
+                setSelectedCell([r, c]);
+
+                await sleep(20); // Delay for visualization
+
+                if (await solve()) return true;
+
+                currentBoard[r][c] = 0;
+                setBoard(currentBoard.map(row => row.slice())); // Backtrack on UI
+                await sleep(5); // Smaller delay on backtrack?
+              }
             }
+            return false;
+          }
         }
-        return true;
+      }
+      return true;
     };
 
     await solve();
-    
+
     if (isComplete(currentBoard, solution)) {
-        setWin(true);
+      setWin(true);
     }
-    
+
     setSolving(false);
     solvingRef.current = false;
     setSelectedCell(null);
@@ -344,9 +375,16 @@ export default function Sudoku() {
         gap: 24,
       }}
     >
-      {win && <WinningModal onClose={() => setWin(false)} />}
+      {win && (
+        <WinningModal
+          onClose={() => setWin(false)}
+          timeElapsed={timeElapsed}
+          stats={statistics[difficulty]}
+          hasUsedSolver={hasUsedSolver.current}
+        />
+      )}
       {manualCheckResult !== null && (
-        <div 
+        <div
           style={{
             position: 'fixed', bottom: 30, left: '50%', transform: 'translateX(-50%)',
             backgroundColor: manualCheckResult ? '#22c55e' : '#ef4444',

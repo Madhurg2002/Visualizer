@@ -1,7 +1,14 @@
 // src/Page/Sudoku/WinningModal.js
 import React from "react";
 
-export default function WinningModal({ onClose }) {
+function formatTime(seconds) {
+  if (seconds === null || seconds === undefined) return "--:--";
+  return new Date(seconds * 1000).toISOString().substr(14, 5);
+}
+
+export default function WinningModal({ onClose, timeElapsed, stats, hasUsedSolver }) {
+  const isNewRecord = !hasUsedSolver && stats && stats.bestTime === timeElapsed;
+
   return (
     <div
       style={{
@@ -28,23 +35,44 @@ export default function WinningModal({ onClose }) {
         }}
       >
         <h2 style={{ fontSize: "2rem", marginBottom: 15, color: "#22c55e" }}>🎉 You Win!</h2>
-        <p style={{ fontSize: "1.2rem", marginBottom: 20 }}>You completed the puzzle successfully!</p>
-        <button
-          onClick={onClose}
-          style={{
-            padding: "10px 36px",
-            fontSize: 18,
-            fontWeight: "700",
-            borderRadius: 12,
-            color: "#fff",
-            backgroundColor: "#2563eb",
-            border: "none",
-            cursor: "pointer",
-            boxShadow: "0 4px 12px #2563ebaa",
-          }}
-        >
-          Close
-        </button>
+
+        {hasUsedSolver ? (
+          <p style={{ color: "#ef4444", fontWeight: "bold", marginBottom: 20 }}>
+            Solver used - Stats not recorded.
+          </p>
+        ) : (
+          <div style={{ marginBottom: 20, textAlign: 'left', display: 'inline-block' }}>
+            <p style={{ fontSize: "1.1rem", margin: "5px 0" }}>
+              <strong>Time:</strong> {formatTime(timeElapsed)}
+              {isNewRecord && <span style={{ color: "#eab308", marginLeft: 8 }}>🏆 New Best!</span>}
+            </p>
+            <p style={{ fontSize: "1.1rem", margin: "5px 0" }}>
+              <strong>Best Time:</strong> {stats ? formatTime(stats.bestTime) : "--:--"}
+            </p>
+            <p style={{ fontSize: "1.1rem", margin: "5px 0" }}>
+              <strong>Games Won:</strong> {stats ? stats.won : 0}
+            </p>
+          </div>
+        )}
+
+        <div style={{ marginTop: 20 }}>
+          <button
+            onClick={onClose}
+            style={{
+              padding: "10px 36px",
+              fontSize: 18,
+              fontWeight: "700",
+              borderRadius: 12,
+              color: "#fff",
+              backgroundColor: "#2563eb",
+              border: "none",
+              cursor: "pointer",
+              boxShadow: "0 4px 12px #2563ebaa",
+            }}
+          >
+            Close
+          </button>
+        </div>
       </div>
     </div>
   );

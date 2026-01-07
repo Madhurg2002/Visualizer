@@ -10,6 +10,7 @@ const Navbar = () => {
         { name: 'Game of Life', path: '/CellularAutomata' },
         { name: 'Tetris', path: '/Tetris' },
         { name: 'Minesweeper', path: '/Minesweeper' },
+        { name: 'Flappy Bird', path: '/FlappyBird' },
     ];
 
     return (
@@ -29,10 +30,9 @@ const Navbar = () => {
                                         key={item.name}
                                         to={item.path}
                                         className={({ isActive }) =>
-                                            `px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
-                                                isActive
-                                                    ? 'bg-slate-800 text-white shadow-inner'
-                                                    : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                                            `px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${isActive
+                                                ? 'bg-slate-800 text-white shadow-inner'
+                                                : 'text-slate-300 hover:bg-slate-700 hover:text-white'
                                             }`
                                         }
                                     >

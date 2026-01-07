@@ -115,8 +115,10 @@ export default function Tetris() {
   const [paused, setPaused] = useState(false);
   const [countdown, setCountdown] = useState(3);
   const countdownStarted = useRef(false);
+  const [highScore, setHighScore] = useState(() => parseInt(localStorage.getItem('tetrisHighScore') || '0', 10));
 
   useEffect(() => {
+    // ... (existing reset logic)
     setColorMap(assignRandomColorsToPieces());
     setBoard(createBoard());
     setScore(0);
@@ -139,6 +141,7 @@ export default function Tetris() {
     setPieceQueue((q) => q.slice(1));
     setDropTime(1000);
   }, [colorMap]);
+
   useEffect(() => {
     if (!countdownStarted.current && countdown > 0) {
       countdownStarted.current = true;
@@ -154,7 +157,6 @@ export default function Tetris() {
       }, 1000);
     }
   }, [countdown, startGame]);
-
 
   const drop = useCallback(() => {
     if (gameOver || paused || !piece) return;
@@ -191,6 +193,16 @@ export default function Tetris() {
   }, [level, gameOver, paused]);
 
   useInterval(drop, dropTime);
+
+  // High score effect
+  useEffect(() => {
+    if (gameOver) {
+      if (score > highScore) {
+        setHighScore(score);
+        localStorage.setItem('tetrisHighScore', score.toString());
+      }
+    }
+  }, [gameOver, score, highScore]);
 
   const move = (dir) => {
     if (gameOver || paused || !piece) return;
@@ -278,33 +290,11 @@ export default function Tetris() {
     };
   });
 
-  if (countdown > 0) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white select-none">
-        <h1 className="text-9xl font-bold">{countdown}</h1>
-      </div>
-    );
-  }
-
-  if (gameOver) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-8 space-y-6 select-none">
-        <h1 className="text-5xl font-bold text-red-600">Game Over</h1>
-        <p className="text-xl">Your final score was: {score}</p>
-        <button
-          onClick={restartGame}
-          className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded text-lg font-semibold"
-        >
-          Restart
-        </button>
-      </div>
-    );
-  }
-
+  // Render Section
   return (
     <div className="text-white flex flex-col items-center space-y-6 p-8 select-none min-h-screen">
       <h1 className="text-4xl font-bold mb-2">React Tetris</h1>
-      <div className="flex gap-8 flex-wrap">
+      <div className="flex gap-8 flex-wrap justify-center">
         <Board
           board={displayBoardWithPiece(
             board,
@@ -322,10 +312,12 @@ export default function Tetris() {
           </div>
           <div className="text-center">
             <p className="font-semibold text-lg">Score: {score}</p>
+            <p className="font-semibold text-lg text-yellow-400">High Score: {highScore}</p>
             <p className="font-semibold text-lg">Level: {level}</p>
             {paused && <p className="mt-4 text-yellow-400 text-xl">Paused</p>}
           </div>
           <div className="flex space-x-4">
+            {/* ... existing buttons ... */}
             <button
               onClick={togglePause}
               className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded"
@@ -341,7 +333,71 @@ export default function Tetris() {
           </div>
         </div>
       </div>
-      <p className="text-gray-400 mt-4 select-text-none max-w-xl text-center">
+
+      {/* Mobile Controls */}
+      <div className="md:hidden grid grid-cols-3 gap-4 mt-8">
+        <div className="flex items-center justify-center">
+          <button
+            className="w-16 h-16 bg-slate-700 rounded-full active:bg-slate-600 shadow-lg"
+            onTouchStart={(e) => { e.preventDefault(); rotatePiece(); }}
+            onClick={(e) => { e.preventDefault(); rotatePiece(); }}
+          >
+            ↻
+          </button>
+        </div>
+        <div className="flex items-center justify-center">
+          <button
+            className="w-16 h-16 bg-slate-700 rounded-full active:bg-slate-600 shadow-lg font-bold text-xl"
+            onTouchStart={(e) => { e.preventDefault(); move(0); /* No-op just for symmetry mapping? Or maybe Up is rotate? */ rotatePiece(); }}
+            onClick={rotatePiece}
+          >
+            ▲
+          </button>
+        </div>
+        <div className="flex items-center justify-center">
+          {/* Empty or auxiliary */}
+        </div>
+
+        <div className="flex items-center justify-center">
+          <button
+            className="w-16 h-16 bg-slate-700 rounded-full active:bg-slate-600 shadow-lg font-bold text-xl"
+            onTouchStart={(e) => { e.preventDefault(); move(-1); }}
+            onClick={() => move(-1)}
+          >
+            ◀
+          </button>
+        </div>
+        <div className="flex items-center justify-center">
+          <button
+            className="w-16 h-16 bg-slate-700 rounded-full active:bg-slate-600 shadow-lg font-bold text-xl"
+            onTouchStart={(e) => { e.preventDefault(); dropPiece(); }}
+            onClick={dropPiece}
+          >
+            ▼
+          </button>
+        </div>
+        <div className="flex items-center justify-center">
+          <button
+            className="w-16 h-16 bg-slate-700 rounded-full active:bg-slate-600 shadow-lg font-bold text-xl"
+            onTouchStart={(e) => { e.preventDefault(); move(1); }}
+            onClick={() => move(1)}
+          >
+            ▶
+          </button>
+        </div>
+
+        <div className="col-span-3 flex justify-center mt-2">
+          <button
+            className="w-full max-w-[200px] h-16 bg-red-600 rounded-full active:bg-red-500 shadow-lg font-bold text-xl"
+            onTouchStart={(e) => { e.preventDefault(); hardDrop(); }}
+            onClick={hardDrop}
+          >
+            DROP
+          </button>
+        </div>
+      </div>
+
+      <p className="text-gray-400 mt-4 select-text-none max-w-xl text-center hidden md:block">
         Controls: Arrow keys to move/rotate, Space for hard drop, P to
         pause/resume
       </p>

@@ -15,6 +15,11 @@ export default function Minesweeper() {
   const [minesLeft, setMinesLeft] = useState(10);
   const [timer, setTimer] = useState(0);
 
+  const [bestTimes, setBestTimes] = useState(() => {
+    const saved = localStorage.getItem("minesweeperBestTimes");
+    return saved ? JSON.parse(saved) : { Beginner: null, Intermediate: null, Expert: null };
+  });
+
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
 
   const resetGame = useCallback((newLevel = level) => {
@@ -89,6 +94,17 @@ export default function Minesweeper() {
       if (checkWin(result.board)) {
         setStatus("Won");
         flagAllMines(result.board);
+
+        // Update Best Time
+        setBestTimes(prev => {
+          const currentBest = prev[level];
+          if (currentBest === null || timer < currentBest) {
+            const newTimes = { ...prev, [level]: timer };
+            localStorage.setItem("minesweeperBestTimes", JSON.stringify(newTimes));
+            return newTimes;
+          }
+          return prev;
+        });
       }
     }
   };
@@ -166,9 +182,16 @@ export default function Minesweeper() {
           >
             {status === "Playing" ? "🙂" : status === "Won" ? "😎" : "😵"}
           </button>
-          <div className="flex items-center gap-2">
-            <span className="text-blue-400">⏱️</span>
-            <span>{String(timer).padStart(3, '0')}</span>
+          <div className="flex flex-col items-end">
+            <div className="flex items-center gap-2">
+              <span className="text-blue-400">⏱️</span>
+              <span>{String(timer).padStart(3, '0')}</span>
+            </div>
+            {bestTimes[level] !== null && (
+              <div className="text-xs text-green-400 font-bold mt-1">
+                Best: {bestTimes[level]}
+              </div>
+            )}
           </div>
         </div>
 
