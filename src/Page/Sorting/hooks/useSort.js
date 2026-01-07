@@ -1,6 +1,6 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ALGORITHMS, ALGORITHM_DESCRIPTIONS } from '../Algorithms/sortingAlgorithms';
+import { ALGORITHMS } from '../utils/sortingAlgorithms';
 
 const generateRandomArray = (size) => Array.from({ length: size }, () => Math.random());
 
@@ -45,7 +45,7 @@ export const useSort = (initialSize = 50) => {
         setActiveIndices([]);
         setArray(generateRandomArray(size)); // Generate new random array on reset for variety
         genRef.current = null;
-        if(timeoutRef.current) clearTimeout(timeoutRef.current);
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
 
     const stepSort = useCallback(() => {
@@ -67,21 +67,21 @@ export const useSort = (initialSize = 50) => {
         if (!sorting || paused) return;
 
         const runStep = () => {
-             if (!genRef.current) return;
-             // Speed control: faster speed = lower timeout
-             // We can do multiple steps per frame for high speeds if needed, but for now simple timeout
-             const { value, done } = genRef.current.next();
-             
-             if (!done) {
-                 setArray(value.arr);
-                 setActiveIndices(value.active);
-                 timeoutRef.current = setTimeout(runStep, Math.max(1, 100 - speed)); 
-             } else {
-                 setSorting(false);
-                 setPaused(false);
-                 setActiveIndices([]);
-                 genRef.current = null;
-             }
+            if (!genRef.current) return;
+            // Speed control: faster speed = lower timeout
+            // We can do multiple steps per frame for high speeds if needed, but for now simple timeout
+            const { value, done } = genRef.current.next();
+
+            if (!done) {
+                setArray(value.arr);
+                setActiveIndices(value.active);
+                timeoutRef.current = setTimeout(runStep, Math.max(1, 100 - speed));
+            } else {
+                setSorting(false);
+                setPaused(false);
+                setActiveIndices([]);
+                genRef.current = null;
+            }
         };
 
         timeoutRef.current = setTimeout(runStep, Math.max(1, 100 - speed));
@@ -89,8 +89,10 @@ export const useSort = (initialSize = 50) => {
     }, [sorting, paused, speed]);
 
     return {
-        size, setSize,
+        size,
+        setSize,
         array,
+        setArray,
         sorting,
         paused,
         activeIndices,

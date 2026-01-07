@@ -59,6 +59,17 @@ const Home = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
             )
+        },
+        {
+            title: "Minesweeper",
+            description: "Clear the board without hitting a mine in this classic logic game.",
+            path: "/Minesweeper",
+            color: "from-red-500 to-orange-500",
+            icon: (
+                 <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2l2 4h4l-3 4 1 5-4-2-4 2 1-5-3-4h4l2-4zM12 10a2 2 0 100 4 2 2 0 000-4z" />
+                </svg>
+            )
         }
     ];
 

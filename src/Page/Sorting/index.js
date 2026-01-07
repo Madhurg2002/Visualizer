@@ -1,8 +1,8 @@
 
 import React, { useState } from 'react';
-import { useSort } from '../Hooks/useSort';
-import { ALGORITHM_DESCRIPTIONS } from '../Algorithms/sortingAlgorithms';
-import { ALGORITHM_OPTIONS } from '../Algorithms/sortingAlgorithms';
+import { useSort } from './hooks/useSort';
+import { ALGORITHM_DESCRIPTIONS } from './utils/sortingAlgorithms';
+import { ALGORITHM_OPTIONS } from './utils/sortingAlgorithms';
 // Icons removed to avoid dependency issues
 
 
@@ -13,7 +13,7 @@ import { ALGORITHM_OPTIONS } from '../Algorithms/sortingAlgorithms';
 const Sort = () => {
     const {
         size, setSize,
-        array,
+        array, setArray,
         sorting,
         paused,
         activeIndices,
@@ -26,8 +26,20 @@ const Sort = () => {
     } = useSort(50);
     
     const [showDesc, setShowDesc] = useState(false);
+    const [customInput, setCustomInput] = useState("");
 
     const maxVal = Math.max(...array, 1); // Avoid division by zero
+
+    const handleCustomArray = () => {
+        const nums = customInput.split(',')
+            .map(s => parseInt(s.trim()))
+            .filter(n => !isNaN(n));
+        
+        if (nums.length > 0) {
+            setArray(nums);
+            setSize(nums.length);
+        }
+    };
 
     return (
         <div className="flex flex-col items-center justify-center p-6 h-full w-full bg-slate-50">
@@ -91,6 +103,25 @@ const Sort = () => {
                     </div>
                 </div>
 
+                {/* Custom Input */}
+                <div className="flex gap-2">
+                    <input 
+                        type="text"
+                        placeholder="e.g. 10, 5, 8, 20"
+                        value={customInput}
+                        onChange={(e) => setCustomInput(e.target.value)}
+                        className="px-3 py-2 border rounded text-sm w-48 text-slate-700 disabled:opacity-50"
+                        disabled={sorting}
+                    />
+                    <button
+                        onClick={handleCustomArray}
+                        disabled={sorting}
+                        className="px-3 py-2 bg-slate-700 text-white rounded text-sm hover:bg-slate-800 disabled:opacity-50"
+                    >
+                        Set
+                    </button>
+                </div>
+
                 {/* Actions Group */}
                 <div className="flex items-center gap-3">
                     {!sorting && (
@@ -108,7 +139,7 @@ const Sort = () => {
                             className="flex items-center gap-2 px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
                         >
                             <span>Pause</span>
-                         </button>
+                        </button>
                     )}
 
                     {sorting && paused && (
@@ -169,7 +200,7 @@ const Sort = () => {
                             <div
                                 key={idx}
                                 style={{
-                                    height: `${(val / (Math.max(...array) || 1)) * 100}%`,
+                                    height: `${(val / maxVal) * 100}%`,
                                     width: `${100 / size}%`
                                 }}
                                 className={`rounded-t-sm transition-all duration-200 ease-in-out ${

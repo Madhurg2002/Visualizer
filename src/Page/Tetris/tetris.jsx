@@ -4,7 +4,6 @@ import NextPiece from "./components/NextPiece";
 import useInterval from "./hooks/useInterval";
 import { assignRandomColorsToPieces } from "./utils/colorUtils";
 import { PRECOMPUTED_TETROMINOS, TETROMINO_NAMES } from "./data/tetrominoes";
-import { clamp } from "./utils/rotate";
 
 const ROWS = 20;
 const COLS = 10;
@@ -131,6 +130,15 @@ export default function Tetris() {
     countdownStarted.current = false;
   }, []);
 
+  const startGame = useCallback(() => {
+    const initialQueue = [];
+    for (let i = 0; i < 3; i++) initialQueue.push(createRandomPiece(colorMap));
+    setPieceQueue(initialQueue);
+    const firstPiece = initialQueue[0];
+    setPiece(firstPiece);
+    setPieceQueue((q) => q.slice(1));
+    setDropTime(1000);
+  }, [colorMap]);
   useEffect(() => {
     if (!countdownStarted.current && countdown > 0) {
       countdownStarted.current = true;
@@ -145,17 +153,8 @@ export default function Tetris() {
         });
       }, 1000);
     }
-  }, [countdown]);
+  }, [countdown, startGame]);
 
-  const startGame = () => {
-    const initialQueue = [];
-    for (let i = 0; i < 3; i++) initialQueue.push(createRandomPiece(colorMap));
-    setPieceQueue(initialQueue);
-    const firstPiece = initialQueue[0];
-    setPiece(firstPiece);
-    setPieceQueue((q) => q.slice(1));
-    setDropTime(1000);
-  };
 
   const drop = useCallback(() => {
     if (gameOver || paused || !piece) return;
@@ -188,6 +187,7 @@ export default function Tetris() {
   useEffect(() => {
     if (!gameOver && !paused && dropTime !== null)
       setDropTime(Math.max(1000 - (level - 1) * 100, 100));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [level, gameOver, paused]);
 
   useInterval(drop, dropTime);
@@ -248,14 +248,18 @@ export default function Tetris() {
   };
 
   const handleKeyDown = (e) => {
+    if (["ArrowLeft", "ArrowRight", "ArrowDown", "ArrowUp", " "].includes(e.key)) {
+      e.preventDefault();
+    }
+
     if (e.repeat) return;
     if (countdown > 0) return;
+
     if (e.key === "ArrowLeft") move(-1);
     else if (e.key === "ArrowRight") move(1);
     else if (e.key === "ArrowDown") dropPiece();
     else if (e.key === "ArrowUp") rotatePiece();
     else if (e.key === " ") {
-      e.preventDefault();
       hardDrop();
     } else if (e.key.toLowerCase() === "p") togglePause();
   };

@@ -9,6 +9,7 @@ const Navbar = () => {
         { name: 'Sudoku', path: '/Sudoku' },
         { name: 'Game of Life', path: '/CellularAutomata' },
         { name: 'Tetris', path: '/Tetris' },
+        { name: 'Minesweeper', path: '/Minesweeper' },
     ];
 
     return (
