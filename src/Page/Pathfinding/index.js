@@ -592,7 +592,6 @@ export default function PathFinding() {
         }
 
         setGrid(<>{temp2}</>);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [size]); // Re-render when size changes
 
     return (

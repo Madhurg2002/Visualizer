@@ -189,7 +189,6 @@ export default function Tetris() {
   useEffect(() => {
     if (!gameOver && !paused && dropTime !== null)
       setDropTime(Math.max(1000 - (level - 1) * 100, 100));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [level, gameOver, paused]);
 
   useInterval(drop, dropTime);
