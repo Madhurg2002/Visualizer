@@ -6,12 +6,10 @@
     "@testing-library/jest-dom": "^5.16.4",
     "@testing-library/react": "^13.3.0",
     "@testing-library/user-event": "^13.5.0",
-    "chess.js": "^1.4.0",
     "framer-motion": "^12.24.11",
     "js-priority-queue": "^0.1.5",
     "lucide-react": "^0.562.0",
     "react": "^18.2.0",
-    "react-chessboard": "4.3.1",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.3.0",
     "react-scripts": "5.0.1",
@@ -38,8 +36,5 @@
       "last 1 safari version"
     ]
   },
-  "packageManager": "yarn@4.4.0+sha512.91d93b445d9284e7ed52931369bc89a663414e5582d00eea45c67ddc459a2582919eece27c412d6ffd1bd0793ff35399381cb229326b961798ce4f4cc60ddfdb",
-  "devDependencies": {
-    "eslint-plugin-react-hooks": "^7.0.1"
-  }
+  "packageManager": "yarn@4.4.0+sha512.91d93b445d9284e7ed52931369bc89a663414e5582d00eea45c67ddc459a2582919eece27c412d6ffd1bd0793ff35399381cb229326b961798ce4f4cc60ddfdb"
 }

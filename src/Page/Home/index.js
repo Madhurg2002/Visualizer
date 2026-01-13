@@ -39,13 +39,7 @@ const Home = () => {
     ];
 
     const games = [
-        {
-            title: "Chess AI",
-            description: "Play against Stockfish AI with real-time analysis and best move hints.",
-            path: "/Chess",
-            color: "from-indigo-500 to-purple-600",
-            icon: <Crown className="w-8 h-8 text-white" />
-        },
+
         {
             title: "Sudoku Solver",
             description: "Visualize the backtracking algorithm solving a Sudoku puzzle instantly.",

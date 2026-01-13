@@ -15,7 +15,7 @@ const Navbar = () => {
             { name: 'Game of Life', path: '/CellularAutomata' },
         ],
         games: [
-            { name: 'Chess', path: '/Chess' },
+
             { name: 'Sudoku', path: '/Sudoku' },
             { name: 'Tetris', path: '/Tetris' },
             { name: 'Minesweeper', path: '/Minesweeper' },

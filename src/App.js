@@ -10,7 +10,7 @@ import CellularAutomata from './Page/CellularAutomata';
 import Tetris from './Page/Tetris';
 import Minesweeper from './Page/Minesweeper';
 import FlappyBird from './Page/FlappyBird';
-import Chess from './Page/Chess';
+
 import Taboo from './Page/Taboo';
 export default function App() {
   return (
@@ -25,7 +25,7 @@ export default function App() {
           <Route exact path="/Tetris" element={<Tetris />} />
           <Route exact path="/Minesweeper" element={<Minesweeper />} />
           <Route exact path="/FlappyBird" element={<FlappyBird />} />
-          <Route exact path="/Chess" element={<Chess />} />
+
           <Route exact path="/Taboo" element={<Taboo />} />
           <Route path="/*" element={<Navigate to="/" />} />
         </Routes>
