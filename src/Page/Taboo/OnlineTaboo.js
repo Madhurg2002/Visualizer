@@ -3,8 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Play, Check, X, SkipForward, Timer, Trophy, Users, Wifi, Copy } from 'lucide-react';
 import io from 'socket.io-client';
 
-// NOTE: Ideally use env var, but for this task we assume localhost:3001
-const SERVER_URL = 'http://localhost:3001';
+const SERVER_URL = process.env.REACT_APP_SERVER_URL || 'http://localhost:3001';
 
 const OnlineTaboo = ({ onBack }) => {
     const [socket, setSocket] = useState(null);
