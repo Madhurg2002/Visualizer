@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, RotateCcw, Check, X, SkipForward, Timer, Trophy, Users, Wifi } from 'lucide-react';
 import { tabooCards } from './data';
@@ -7,6 +8,13 @@ import OnlineTaboo from './OnlineTaboo';
 
 const Taboo = () => {
     const [mode, setMode] = useState(null); // 'local' | 'online'
+    const [searchParams] = useSearchParams();
+
+    useEffect(() => {
+        if (searchParams.get('room')) {
+            setMode('online');
+        }
+    }, [searchParams]);
 
     if (mode === 'online') {
         return <OnlineTaboo onBack={() => setMode(null)} />;
