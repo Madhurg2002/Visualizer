@@ -292,7 +292,7 @@ export default function Tetris() {
 
   // Render Section
   return (
-    <div className="text-white flex flex-col items-center space-y-6 p-8 select-none min-h-screen">
+    <div className="text-white flex flex-col items-center space-y-6 p-4 md:p-8 select-none min-h-screen touch-none">
       <h1 className="text-4xl font-bold mb-2">React Tetris</h1>
       <div className="flex gap-8 flex-wrap justify-center">
         <Board

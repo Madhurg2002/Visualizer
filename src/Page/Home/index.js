@@ -1,125 +1,184 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import {
+    ArrowRightLeft,
+    Map,
+    Grid3x3,
+    Activity,
+    LayoutGrid,
+    Bomb,
+    Ghost,
+    Crown,
+    MessageSquare
+} from 'lucide-react';
 
 const Home = () => {
-    const visualizers = [
+    const algorithms = [
         {
             title: "Sorting Visualizer",
             description: "Watch how Bubble, Merge, Quick, and other sorting algorithms work in real-time.",
             path: "/sort",
             color: "from-blue-500 to-cyan-400",
-            icon: (
-                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22" />
-                </svg>
-            )
+            icon: <ArrowRightLeft className="w-8 h-8 text-white" />
         },
         {
             title: "Pathfinding Visualizer",
             description: "Visualize Dijkstra, A*, and DFS finding the shortest path through a maze.",
             path: "/PathFinding",
             color: "from-purple-500 to-pink-500",
-            icon: (
-                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0121 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                </svg>
-            )
-        },
-        // We can add other cards here even if their functionality is basic
-        {
-            title: "Sudoku Solver",
-            description: "Visualize the backtracking algorithm solving a Sudoku puzzle instantly.",
-            path: "/Sudoku",
-            color: "from-amber-500 to-orange-400",
-            icon: (
-                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-            )
+            icon: <Map className="w-8 h-8 text-white" />
         },
         {
             title: "Game of Life",
             description: "Interact with Conway's Cellular Automata. Create life, watch it evolve, or die out.",
             path: "/CellularAutomata",
             color: "from-green-400 to-emerald-600",
-            icon: (
-                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                </svg>
-            )
+            icon: <Activity className="w-8 h-8 text-white" />
+        },
+    ];
+
+    const games = [
+        {
+            title: "Chess AI",
+            description: "Play against Stockfish AI with real-time analysis and best move hints.",
+            path: "/Chess",
+            color: "from-indigo-500 to-purple-600",
+            icon: <Crown className="w-8 h-8 text-white" />
+        },
+        {
+            title: "Sudoku Solver",
+            description: "Visualize the backtracking algorithm solving a Sudoku puzzle instantly.",
+            path: "/Sudoku",
+            color: "from-amber-500 to-orange-400",
+            icon: <Grid3x3 className="w-8 h-8 text-white" />
         },
         {
             title: "Tetris Game",
             description: "Play the classic block-stacking game. Fully interactive with score tracking.",
             path: "/Tetris",
             color: "from-indigo-500 to-violet-500",
-            icon: (
-                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                </svg>
-            )
+            icon: <LayoutGrid className="w-8 h-8 text-white" />
         },
         {
             title: "Minesweeper",
             description: "Clear the board without hitting a mine in this classic logic game.",
             path: "/Minesweeper",
             color: "from-red-500 to-orange-500",
-            icon: (
-                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 2l2 4h4l-3 4 1 5-4-2-4 2 1-5-3-4h4l2-4zM12 10a2 2 0 100 4 2 2 0 000-4z" />
-                </svg>
-            )
+            icon: <Bomb className="w-8 h-8 text-white" />
         },
         {
             title: "Flappy Bird",
             description: "Navigate the bird through the pipes. A simple yet addictive game.",
             path: "/FlappyBird",
             color: "from-yellow-400 to-orange-500",
-            icon: (
-                <svg className="w-12 h-12 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            )
-        }
+            icon: <Ghost className="w-8 h-8 text-white" />
+        },
+        {
+            title: "Taboo",
+            description: "Describe the word without saying forbidden terms. A classic party game.",
+            path: "/Taboo",
+            color: "from-pink-500 to-rose-500",
+            icon: <MessageSquare className="w-8 h-8 text-white" />
+        },
     ];
 
-    return (
-        <div className="min-h-[calc(100vh-64px)] bg-slate-50 flex flex-col items-center justify-center p-8">
-            <div className="text-center max-w-3xl mb-16 space-y-4">
-                <h1 className="text-6xl font-black text-slate-900 tracking-tight">
-                    Algorithm <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-violet-600">Visualizer</span>
-                </h1>
-                <p className="text-2xl text-slate-600 font-light max-w-2xl mx-auto">
-                    Explore, visualize, and master classic algorithms with interactive demonstrations.
-                </p>
-            </div>
+    const container = {
+        hidden: { opacity: 0 },
+        show: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl w-full">
-                {visualizers.map((item) => (
-                    <Link
-                        to={item.path}
-                        key={item.title}
-                        className="group relative bg-white rounded-2xl shadow-xl overflow-hidden hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 ring-1 ring-slate-100"
-                    >
-                        {item.badged && (
-                            <div className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg z-10 shadow-sm">
-                                NEW
+    const itemVariant = {
+        hidden: { opacity: 0, y: 30 },
+        show: { opacity: 1, y: 0, transition: { type: "spring", bounce: 0.4 } }
+    };
+
+    const Section = ({ title, items }) => (
+        <div className="mb-20">
+            <motion.h2
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                className="text-2xl font-bold text-slate-300 mb-8 border-l-4 border-blue-500 pl-4"
+            >
+                {title}
+            </motion.h2>
+            <motion.div
+                variants={container}
+                initial="hidden"
+                whileInView="show"
+                viewport={{ once: true }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+            >
+                {items.map((item) => (
+                    <Link to={item.path} key={item.title} className="block group h-full">
+                        <motion.div
+                            variants={itemVariant}
+                            whileHover={{ y: -8, scale: 1.02 }}
+                            className="relative bg-white/5 backdrop-blur-sm border border-white/10 rounded-3xl overflow-hidden hover:border-white/20 transition-colors h-full"
+                        >
+                            <div className={`absolute inset-0 bg-gradient-to-br ${item.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
+
+                            <div className="p-8 flex flex-col h-full">
+                                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300`}>
+                                    {item.icon}
+                                </div>
+
+                                <h3 className="text-xl font-bold text-white mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-white group-hover:to-slate-300 transition-colors">
+                                    {item.title}
+                                </h3>
+
+                                <p className="text-slate-400 text-sm leading-relaxed group-hover:text-slate-300 transition-colors flex-grow">
+                                    {item.description}
+                                </p>
                             </div>
-                        )}
-                        <div className={`h-24 bg-gradient-to-r ${item.color} flex items-center justify-center`}>
-                            {item.icon}
-                        </div>
-                        <div className="p-6">
-                            <h3 className="text-xl font-bold text-slate-800 mb-2 group-hover:text-blue-600 transition-colors">
-                                {item.title}
-                            </h3>
-                            <p className="text-slate-500">
-                                {item.description}
-                            </p>
-                        </div>
+                        </motion.div>
                     </Link>
                 ))}
+            </motion.div>
+        </div>
+    );
+
+    return (
+        <div className="min-h-screen pt-32 pb-16 px-4 bg-[#0B0C15] overflow-hidden relative">
+
+            {/* Background Ambient Glow */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-purple-900/20 blur-[120px] rounded-full pointer-events-none" />
+            <div className="absolute bottom-0 right-0 w-[600px] h-[400px] bg-blue-900/10 blur-[100px] rounded-full pointer-events-none" />
+
+            <div className="max-w-7xl mx-auto z-10 relative">
+
+                {/* Hero Section */}
+                <div className="text-center mb-20 space-y-6">
+                    <motion.h1
+                        initial={{ opacity: 0, y: -20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.8, ease: "easeOut" }}
+                        className="text-6xl md:text-8xl font-black text-white tracking-tight"
+                    >
+                        Algorithm <br className="md:hidden" />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-400">
+                            Visualizer
+                        </span>
+                    </motion.h1>
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.3, duration: 0.8 }}
+                        className="text-xl md:text-2xl text-slate-400 font-light max-w-2xl mx-auto leading-relaxed"
+                    >
+                        Master algorithms and challenge yourself with classic games.
+                    </motion.p>
+                </div>
+
+                <Section title="Interactive Algorithms" items={algorithms} />
+                <Section title="Classic Games" items={games} />
+
             </div>
         </div>
     );

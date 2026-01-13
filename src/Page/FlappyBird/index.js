@@ -294,26 +294,29 @@ export default function FlappyBird() {
 
                 {/* UI: Start Screen */}
                 {gameState === 'START' && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 z-50"
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 z-50 backdrop-blur-sm"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <div className="bg-white p-8 rounded-2xl text-center shadow-xl border-4 border-black transform transition-transform hover:scale-105 cursor-default">
-                            <p className="text-2xl font-black text-slate-800 mb-2">GET READY!</p>
-                            <p className="text-slate-600 font-bold mb-4">Tap or Space to Jump</p>
+                        <div className="bg-slate-900/90 backdrop-blur-xl p-8 rounded-3xl text-center shadow-2xl border border-white/10 transform transition-transform hover:scale-105 cursor-default max-w-xs w-full">
+                            <h2 className="text-3xl font-black text-white mb-2 tracking-tight">GET READY</h2>
+                            <p className="text-slate-400 font-medium mb-6">Tap or Space to Jump</p>
 
                             <button
                                 onClick={(e) => { e.stopPropagation(); triggerStart(); }}
-                                className="bg-green-500 text-white px-8 py-3 rounded-xl font-black text-xl border-b-4 border-green-700 hover:brightness-110 active:border-b-0 active:translate-y-1 transition-all mb-4"
+                                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 text-white py-4 rounded-xl font-bold text-lg hover:shadow-lg hover:shadow-green-500/25 transition-all active:scale-95 mb-6"
                             >
-                                START
+                                START GAME
                             </button>
 
-                            <label className="flex items-center justify-center gap-2 text-sm font-bold text-slate-500 cursor-pointer select-none">
+                            <label className="flex items-center justify-center gap-3 text-sm font-medium text-slate-400 cursor-pointer select-none group">
+                                <div className={`w-5 h-5 rounded flex items-center justify-center border transition-colors ${useCountdown ? 'bg-blue-500 border-blue-500' : 'border-slate-600 group-hover:border-slate-500'}`}>
+                                    {useCountdown && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                                </div>
                                 <input
                                     type="checkbox"
                                     checked={useCountdown}
                                     onChange={(e) => setUseCountdown(e.target.checked)}
-                                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                    className="hidden"
                                 />
                                 Enable Countdown
                             </label>
@@ -323,39 +326,31 @@ export default function FlappyBird() {
 
                 {/* UI: Game Over */}
                 {gameState === 'GAME_OVER' && (
-                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 z-50">
-                        <div className="bg-white p-8 rounded-2xl text-center shadow-2xl border-4 border-black animate-bounce-in cursor-default" onClick={(e) => e.stopPropagation()}>
-                            <p className="text-4xl font-black text-red-500 mb-4 stroke-black">GAME OVER</p>
-                            <div className="flex gap-8 mb-6 justify-center">
-                                <div className="text-center">
-                                    <p className="text-xs uppercase font-bold text-slate-500">Score</p>
-                                    <p className="text-3xl font-bold text-slate-800">{score}</p>
+                    <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/60 z-50 backdrop-blur-sm">
+                        <div className="bg-slate-900/90 backdrop-blur-xl p-8 rounded-3xl text-center shadow-2xl border border-white/10 animate-bounce-in cursor-default max-w-xs w-full" onClick={(e) => e.stopPropagation()}>
+                            <p className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-red-400 to-rose-600 mb-6 drop-shadow-sm">GAME OVER</p>
+
+                            <div className="grid grid-cols-2 gap-4 mb-8">
+                                <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+                                    <p className="text-xs uppercase font-bold text-slate-500 tracking-wider mb-1">Score</p>
+                                    <p className="text-3xl font-black text-white">{score}</p>
                                 </div>
-                                <div className="text-center">
-                                    <p className="text-xs uppercase font-bold text-slate-500">Best</p>
-                                    <p className="text-3xl font-bold text-slate-800">{highScore}</p>
+                                <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
+                                    <p className="text-xs uppercase font-bold text-slate-500 tracking-wider mb-1">Best</p>
+                                    <p className="text-3xl font-black text-yellow-400">{highScore}</p>
                                 </div>
                             </div>
+
                             <button
                                 onClick={(e) => { e.stopPropagation(); if (canRestart) triggerStart(); }}
                                 disabled={!canRestart}
-                                className={`px-8 py-3 rounded-xl font-black text-xl border-b-4 transition-all mb-4 ${canRestart
-                                    ? "bg-sky-400 text-white border-sky-600 hover:brightness-110 active:border-b-0 active:translate-y-1"
-                                    : "bg-slate-300 text-slate-500 border-slate-400 cursor-not-allowed"
+                                className={`w-full py-4 rounded-xl font-bold text-lg transition-all ${canRestart
+                                    ? "bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-lg hover:shadow-blue-500/25 active:scale-95"
+                                    : "bg-slate-700 text-slate-500 cursor-not-allowed opacity-50"
                                     }`}
                             >
                                 {canRestart ? "PLAY AGAIN" : "WAIT..."}
                             </button>
-
-                            <label className="flex items-center justify-center gap-2 text-sm font-bold text-slate-500 cursor-pointer select-none">
-                                <input
-                                    type="checkbox"
-                                    checked={useCountdown}
-                                    onChange={(e) => setUseCountdown(e.target.checked)}
-                                    className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-                                />
-                                Enable Countdown
-                            </label>
                         </div>
                     </div>
                 )}
