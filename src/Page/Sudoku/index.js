@@ -137,9 +137,12 @@ export default function Sudoku() {
     setLockedCells(locks);
   }, [seed, clues, navigate, urlSeed, difficulty]);
 
-  useEffect(() => {
-    if (seedInput.trim() && seedInput !== seed) setSeed(seedInput.trim());
-  }, [seedInput, seed]);
+  // Manual seed application
+  const handleApplySeed = () => {
+    if (seedInput.trim() && seedInput !== seed) {
+      setSeed(seedInput.trim());
+    }
+  };
 
   useEffect(() => {
     if (win) {
@@ -471,6 +474,7 @@ export default function Sudoku() {
         setDifficulty={setDifficulty}
         seedInput={seedInput}
         setSeedInput={setSeedInput}
+        currentSeed={seed}
         onRandomize={() => {
           const newSeed = randomSeed();
           setSeed(newSeed);
@@ -484,7 +488,9 @@ export default function Sudoku() {
         onVisualizeSolver={visualizeSolver}
         solving={solving}
         poppedButton={poppedButton}
+        poppedButton={poppedButton}
         handleButtonClick={handleButtonClick}
+        onApplySeed={handleApplySeed}
       />
       {/* Timer above the Sudoku */}
       <div

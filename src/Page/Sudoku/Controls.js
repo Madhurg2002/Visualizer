@@ -6,6 +6,7 @@ export default function Controls({
   setDifficulty,
   seedInput,
   setSeedInput,
+  currentSeed,
   onRandomize,
   onUndo,
   undoDisabled,
@@ -16,6 +17,7 @@ export default function Controls({
   solving,
   poppedButton,
   handleButtonClick,
+  onApplySeed,
 }) {
   const baseButtonStyle = {
     padding: "10px 20px",
@@ -50,16 +52,35 @@ export default function Controls({
           type="text"
           value={seedInput}
           onChange={(e) => setSeedInput(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && onApplySeed()}
           placeholder="Enter seed"
           style={{
             fontFamily: "monospace",
             padding: 4,
-            width: 160,
+            width: 120,
             borderRadius: 6,
             border: "1px solid #a5b4fc",
             outline: "none",
           }}
         />
+        {seedInput !== currentSeed && (
+          <button
+            onClick={onApplySeed}
+            style={{
+              padding: "4px 8px",
+              border: "none",
+              borderRadius: 4,
+              backgroundColor: "#4f46e5",
+              color: "white",
+              cursor: "pointer",
+              fontWeight: "bold",
+              fontSize: 12,
+              animation: "fadeIn 0.2s"
+            }}
+          >
+            Go
+          </button>
+        )}
       </label>
       <button
         onClick={() => handleButtonClick("new", onRandomize)}
