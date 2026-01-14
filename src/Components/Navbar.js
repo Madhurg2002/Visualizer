@@ -30,10 +30,10 @@ const Navbar = () => {
         games: [
 
             { name: 'Sudoku', path: '/Sudoku' },
-            { name: 'Tetris', path: '/Tetris' },
+            { name: 'Falling Blocks', path: '/FallingBlocks' },
             { name: 'Minesweeper', path: '/Minesweeper' },
             { name: 'Flappy Bird', path: '/FlappyBird' },
-            { name: 'Taboo', path: '/Taboo' },
+            { name: 'Forbidden Words', path: '/ForbiddenWords' },
         ]
     };
 

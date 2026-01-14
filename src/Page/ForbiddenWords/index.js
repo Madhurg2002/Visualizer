@@ -3,10 +3,10 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Play, RotateCcw, Check, X, SkipForward, Timer, Trophy, Users, Wifi, ArrowLeft } from 'lucide-react';
-import { tabooCards } from './data';
-import OnlineTaboo from './OnlineTaboo';
+import { forbiddenWordsCards } from './data';
+import OnlineForbiddenWords from './Online';
 
-const Taboo = () => {
+const ForbiddenWords = () => {
     const [mode, setMode] = useState(null); // 'local' | 'online'
     const [searchParams] = useSearchParams();
 
@@ -17,11 +17,11 @@ const Taboo = () => {
     }, [searchParams]);
 
     if (mode === 'online') {
-        return <OnlineTaboo onBack={() => setMode(null)} />;
+        return <OnlineForbiddenWords onBack={() => setMode(null)} />;
     }
 
     if (mode === 'local') {
-        return <LocalTaboo onBack={() => setMode(null)} />;
+        return <LocalForbiddenWords onBack={() => setMode(null)} />;
     }
 
     return (
@@ -71,7 +71,7 @@ const Taboo = () => {
     );
 };
 
-const LocalTaboo = ({ onBack }) => {
+const LocalForbiddenWords = ({ onBack }) => {
     const [gameState, setGameState] = useState('start'); // start, playing, end
     const [score, setScore] = useState(0);
     const [timeLeft, setTimeLeft] = useState(60);
@@ -80,7 +80,7 @@ const LocalTaboo = ({ onBack }) => {
 
     // Initialize game
     useEffect(() => {
-        setShuffledCards([...tabooCards].sort(() => Math.random() - 0.5));
+        setShuffledCards([...forbiddenWordsCards].sort(() => Math.random() - 0.5));
     }, []);
 
     // Timer logic
@@ -100,7 +100,7 @@ const LocalTaboo = ({ onBack }) => {
         setScore(0);
         setTimeLeft(60);
         setGameState('playing');
-        setShuffledCards([...tabooCards].sort(() => Math.random() - 0.5));
+        setShuffledCards([...forbiddenWordsCards].sort(() => Math.random() - 0.5));
         setCurrentCardIndex(0);
     };
 
@@ -113,7 +113,7 @@ const LocalTaboo = ({ onBack }) => {
         nextCard();
     };
 
-    const handleTaboo = () => {
+    const handleForbidden = () => {
         setScore((prev) => Math.max(0, prev - 1)); // Optional penalty
         nextCard();
     };
@@ -133,6 +133,10 @@ const LocalTaboo = ({ onBack }) => {
             {/* Background Ambient Glow */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-purple-900/20 blur-[120px] rounded-full pointer-events-none" />
 
+            {/* Header */}
+            <h1 className="text-4xl md:text-5xl font-black text-white mb-8 text-center drop-shadow-[0_2px_10px_rgba(255,255,255,0.1)] z-10">
+                Forbidden Words <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-600">Local</span>
+            </h1>
             <div className="absolute top-24 left-0 right-0 w-full z-40 pointer-events-none px-4">
                 <div className="max-w-7xl mx-auto px-6">
                     <button
@@ -240,11 +244,11 @@ const LocalTaboo = ({ onBack }) => {
                             {/* Controls */}
                             <div className="grid grid-cols-3 gap-4">
                                 <button
-                                    onClick={handleTaboo}
+                                    onClick={handleForbidden}
                                     className="flex flex-col items-center justify-center gap-1 p-4 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-2xl border border-red-500/20 transition-all active:scale-95"
                                 >
                                     <X size={32} />
-                                    <span className="text-sm font-bold">Taboo</span>
+                                    <span className="text-sm font-bold">Forbidden</span>
                                 </button>
 
                                 <button
@@ -300,4 +304,4 @@ const LocalTaboo = ({ onBack }) => {
     );
 };
 
-export default Taboo;
+export default ForbiddenWords;

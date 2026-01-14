@@ -1,4 +1,4 @@
-const { tabooCards } = require('./data');
+const { forbiddenWordsCards } = require('./data');
 const fs = require('fs');
 
 const logToFile = (msg) => {
@@ -194,7 +194,7 @@ const setupTabooHandlers = (io, socket) => {
         const player = room.players.find(p => p.id === socket.id);
         if (!player) return;
 
-        if (action === 'taboo') {
+        if (action === 'forbidden') {
             // Allowed for Opponents
             if (player.team === room.currentTeam || player.team === 'Spectator') return;
 
@@ -392,7 +392,7 @@ function nextCard(io, roomId) {
     const room = rooms[roomId];
     if (!room) return;
 
-    const availableCards = tabooCards.filter(c => !room.usedCards.includes(c.word));
+    const availableCards = forbiddenWordsCards.filter(c => !room.usedCards.includes(c.word));
     if (availableCards.length === 0) {
         // Game Over or Reshuffle
         room.gameState = 'end';

@@ -48,9 +48,9 @@ const Home = () => {
             icon: <Grid3x3 className="w-8 h-8 text-white" />
         },
         {
-            title: "Tetris Game",
-            description: "Play the classic block-stacking game. Fully interactive with score tracking.",
-            path: "/Tetris",
+            title: "Falling Blocks",
+            description: "The classic block stacking game.",
+            path: "/FallingBlocks",
             color: "from-indigo-500 to-violet-500",
             icon: <LayoutGrid className="w-8 h-8 text-white" />
         },
@@ -69,9 +69,9 @@ const Home = () => {
             icon: <Ghost className="w-8 h-8 text-white" />
         },
         {
-            title: "Taboo",
+            title: "Forbidden Words",
             description: "Describe the word without saying forbidden terms. A classic party game.",
-            path: "/Taboo",
+            path: "/ForbiddenWords",
             color: "from-pink-500 to-rose-500",
             icon: <MessageSquare className="w-8 h-8 text-white" />
         },

@@ -2,12 +2,12 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 const GAME_HEIGHT = 600;
 const GAME_WIDTH = 400; // Constrained width for mobile-like feel
-const GRAVITY = 0.5;
-const JUMP_STRENGTH = -8;
-const PIPE_SPEED = 3;
+const GRAVITY = 0.25; // Much lighter gravity
+const JUMP_STRENGTH = -6; // Adjusted jump to match lighter gravity
+const PIPE_SPEED = 2.5; // Much slower gameplay (easier to see)
 const PIPE_WIDTH = 52;
-const PIPE_GAP = 160;
-const BIRD_SIZE = 34;
+const PIPE_GAP = 170; // Slightly wider gap
+const BIRD_SIZE = 38; // Slightly larger for the image
 
 export default function FlappyBird() {
     const [gameState, setGameState] = useState('START'); // START, PLAYING, GAME_OVER, COUNTDOWN
@@ -63,10 +63,10 @@ export default function FlappyBird() {
 
         // 3. Collision Detection
         const birdRect = {
-            top: birdY.current,
-            bottom: birdY.current + BIRD_SIZE,
-            left: 50,
-            right: 50 + BIRD_SIZE
+            top: birdY.current + 4, // Hitbox padding
+            bottom: birdY.current + BIRD_SIZE - 4,
+            left: 54, // Adjusted for image centering
+            right: 50 + BIRD_SIZE - 4
         };
 
         // Floor/Ceiling
@@ -223,22 +223,22 @@ export default function FlappyBird() {
                 <div className="absolute top-40 right-20 text-white/40 text-5xl">☁️</div>
 
                 {/* Bird */}
-                <div className="absolute bg-yellow-400 rounded-full border-2 border-black flex items-center justify-center"
+                <img
+                    src="/images/robot_bird.png"
+                    alt="Bird"
+                    className="absolute select-none pointer-events-none"
                     style={{
                         left: 50,
                         top: displayBirdY,
                         width: BIRD_SIZE,
                         height: BIRD_SIZE,
                         transform: `rotate(${displayBirdRot}deg)`,
-                        zIndex: 20
+                        zIndex: 20,
+                        backgroundColor: '#FFD700', // Fallback color (Gold)
+                        borderRadius: '50%',
+                        display: 'block' // Ensure it takes up space
                     }}
-                >
-                    <div className="absolute right-1 top-2 w-3 h-3 bg-white rounded-full border border-black">
-                        <div className="absolute right-0.5 top-1 w-1 h-1 bg-black rounded-full"></div>
-                    </div>
-                    <div className="absolute -right-2 top-4 w-4 h-3 bg-orange-500 rounded-full border border-black"></div>
-                    <div className="absolute bg-white/40 w-full h-1/2 top-0 rounded-t-full"></div>
-                </div>
+                />
 
                 {/* Pipes */}
                 {displayPipes.map((pipe, i) => (

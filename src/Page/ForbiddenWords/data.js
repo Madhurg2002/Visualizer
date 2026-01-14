@@ -1,4 +1,4 @@
-export const tabooCards = [
+export const forbiddenWordsCards = [
     {
         word: "Lion",
         forbidden: ["King", "Jungle", "Cat", "Roar", "Animal"]

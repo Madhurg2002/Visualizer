@@ -17,13 +17,13 @@ Visualize complex algorithms to understand how they work under the hood:
 
 ### 🎮 Games
 A collection of logic puzzles and party games:
-*   **Taboo (New!)**:
+*   **Forbidden Words (New!)**:
     *   **Online Multiplayer**: Play with friends remotely using real-time Socket.IO connection. Features custom rooms, lobby system, and team management.
     *   **Local Party**: Pass-and-play mode for in-person gatherings.
 *   **Sudoku**: Classic number placement puzzle. Features reproducible boards via **seed-based generation** and backtracking visualization.
 *   **Flappy Bird**: A clone of the famous arcade game. Test your reflexes!
 *   **Minesweeper**: Classic strategy game. Clear the board without detonating mines.
-*   **Tetris**: The block-stacking classic. Clear lines to score points.
+*   **Falling Blocks**: The block-stacking classic. Clear lines to score points.
 
 ## 🛠️ Tech Stack
 

@@ -1,10 +1,10 @@
 import React from "react";
-import Tetris from "./tetris";
+import FallingBlocks from "./FallingBlocks";
 
-export default function TetrisPage() {
+export default function FallingBlocksPage() {
   return (
     <div className="min-h-screen bg-gray-900 flex justify-center items-center">
-      <Tetris />
+      <FallingBlocks />
     </div>
   );
 }

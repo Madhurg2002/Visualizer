@@ -524,7 +524,7 @@ const OnlineTaboo = ({ onBack }) => {
                                 ) : (
                                     <>
                                         <div className="bg-gradient-to-r from-pink-500 to-purple-600 p-2 text-center">
-                                            <p className="text-white/80 text-xs font-bold uppercase tracking-widest mt-2">{isGiver ? 'You are the Giver' : 'Monitor for Taboo!'}</p>
+                                            <p className="text-white/80 text-xs font-bold uppercase tracking-widest mt-2">{isGiver ? 'You are the Giver' : 'Monitor for Forbidden!'}</p>
                                             <h2 className="text-4xl font-black text-white uppercase tracking-wider drop-shadow-md mb-2">
                                                 {currentCard?.word}
                                             </h2>
@@ -601,11 +601,11 @@ const OnlineTaboo = ({ onBack }) => {
                         {/* Controls */}
                         {isOpponent && turnStatus === 'playing' && (
                             <button
-                                onClick={() => handleAction('taboo')}
+                                onClick={() => handleAction('forbidden')}
                                 className="w-full flex items-center justify-center gap-2 p-6 bg-red-500 hover:bg-red-600 text-white rounded-2xl shadow-xl transition-all active:scale-95 mb-4"
                             >
                                 <X size={40} />
-                                <span className="text-2xl font-black uppercase">Taboo!</span>
+                                <span className="text-2xl font-black uppercase">Forbidden!</span>
                             </button>
                         )}
 

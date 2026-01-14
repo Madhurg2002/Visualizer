@@ -14,8 +14,7 @@ const createBoard = () =>
     .map(() => Array(COLS).fill("bg-gray-900"));
 
 const createRandomPiece = (colorMap) => {
-  const key =
-    TETROMINO_NAMES[Math.floor(Math.random() * TETROMINO_NAMES.length)];
+  const key = TETROMINO_NAMES[Math.floor(Math.random() * TETROMINO_NAMES.length)];
   const weights = [0.25, 0.25, 0.25, 0.25]; // equal weights, can customize per piece
   const rotationIndex = weightedRandom(weights);
   const color = colorMap[key];
@@ -103,7 +102,7 @@ const displayBoardWithPiece = (board, piece) => {
   return newBoard;
 };
 
-export default function Tetris() {
+export default function FallingBlocks() {
   const [colorMap, setColorMap] = useState(() => assignRandomColorsToPieces());
   const [board, setBoard] = useState(createBoard());
   const [piece, setPiece] = useState(null);
@@ -115,7 +114,7 @@ export default function Tetris() {
   const [paused, setPaused] = useState(false);
   const [countdown, setCountdown] = useState(3);
   const countdownStarted = useRef(false);
-  const [highScore, setHighScore] = useState(() => parseInt(localStorage.getItem('tetrisHighScore') || '0', 10));
+  const [highScore, setHighScore] = useState(() => parseInt(localStorage.getItem('fallingBlocksHighScore') || '0', 10));
 
   useEffect(() => {
     // ... (existing reset logic)
@@ -198,7 +197,7 @@ export default function Tetris() {
     if (gameOver) {
       if (score > highScore) {
         setHighScore(score);
-        localStorage.setItem('tetrisHighScore', score.toString());
+        localStorage.setItem('fallingBlocksHighScore', score.toString());
       }
     }
   }, [gameOver, score, highScore]);
@@ -292,7 +291,7 @@ export default function Tetris() {
   // Render Section
   return (
     <div className="text-white flex flex-col items-center space-y-6 p-4 md:p-8 select-none min-h-screen touch-none">
-      <h1 className="text-4xl font-bold mb-2">React Tetris</h1>
+      <h1 className="text-4xl font-bold mb-2">Falling Blocks</h1>
       <div className="flex gap-8 flex-wrap justify-center">
         <Board
           board={displayBoardWithPiece(

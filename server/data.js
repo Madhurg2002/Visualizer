@@ -1,4 +1,4 @@
-const tabooCards = [
+const forbiddenWordsCards = [
     {
         word: "Lion",
         forbidden: ["King", "Jungle", "Cat", "Roar", "Animal"]
@@ -81,4 +81,4 @@ const tabooCards = [
     }
 ];
 
-module.exports = { tabooCards };
+module.exports = { forbiddenWordsCards };
