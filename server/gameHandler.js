@@ -415,7 +415,8 @@ function nextCard(io, roomId) {
         currentTeam: room.currentTeam,
         turnScore: room.turnScore,
         currentRound: calculateRound(room),
-        totalRounds: room.settings.totalRounds
+        totalRounds: room.settings.totalRounds,
+        settings: room.settings
     });
 }
 

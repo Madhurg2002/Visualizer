@@ -89,7 +89,7 @@ const OnlineTaboo = ({ onBack }) => {
             setTurnStatus(data.turnStatus || 'playing'); // Default to playing for legacy/init logic
             if (data.currentRound) setCurrentRound(data.currentRound);
             if (data.turnScore !== undefined) setTurnScore(data.turnScore);
-            updateSettings(data.settings);
+            if (data.settings) setSettings(data.settings);
             if (data.gameState === 'end') {
                 setView('end');
             } else if (data.gameState === 'playing') {
@@ -161,7 +161,7 @@ const OnlineTaboo = ({ onBack }) => {
     };
 
     const copyRoomId = () => {
-        const url = `${window.location.origin}/Taboo?room=${roomId}`;
+        const url = `${window.location.origin}/ForbiddenWords?room=${roomId}`;
         navigator.clipboard.writeText(url);
     };
 
