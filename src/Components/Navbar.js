@@ -9,6 +9,9 @@ const Navbar = () => {
     const navRef = useRef(null);
     const location = useLocation();
 
+    const [isVisible, setIsVisible] = useState(true);
+    const [lastScrollY, setLastScrollY] = useState(0);
+
     // Close on outside click
     useEffect(() => {
         const handleClickOutside = (event) => {
@@ -21,6 +24,28 @@ const Navbar = () => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    // Smart Navbar Logic
+    useEffect(() => {
+        const handleScroll = () => {
+            const currentScrollY = window.scrollY;
+
+            // Always show at top (threshold 10px) to avoid flickering
+            if (currentScrollY < 10) {
+                setIsVisible(true);
+            } else if (currentScrollY > lastScrollY) {
+                // Scrolling DOWN -> Hide
+                setIsVisible(false);
+            } else {
+                // Scrolling UP -> Show
+                setIsVisible(true);
+            }
+            setLastScrollY(currentScrollY);
+        };
+
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => window.removeEventListener('scroll', handleScroll);
+    }, [lastScrollY]);
+
     const menuGroups = {
         algorithms: [
             { name: 'Sorting', path: '/sort' },
@@ -28,7 +53,6 @@ const Navbar = () => {
             { name: 'Game of Life', path: '/CellularAutomata' },
         ],
         games: [
-
             { name: 'Sudoku', path: '/Sudoku' },
             { name: 'Falling Blocks', path: '/FallingBlocks' },
             { name: 'Minesweeper', path: '/Minesweeper' },
@@ -41,7 +65,13 @@ const Navbar = () => {
     const isGroupActive = (group) => group.some(item => isPathActive(item.path));
 
     return (
-        <nav ref={navRef} className="fixed top-4 left-0 right-0 z-50 px-4">
+        <motion.nav
+            ref={navRef}
+            initial={{ y: 0 }}
+            animate={{ y: isVisible ? 0 : -100 }}
+            transition={{ duration: 0.3, ease: 'easeInOut' }}
+            className="fixed top-4 left-0 right-0 z-50 px-4"
+        >
             <div className="max-w-7xl mx-auto">
                 <div className="bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl px-6 py-3">
                     <div className="flex items-center justify-between">
@@ -182,7 +212,7 @@ const Navbar = () => {
                     )}
                 </AnimatePresence>
             </div>
-        </nav>
+        </motion.nav>
     );
 };
 
