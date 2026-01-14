@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, RotateCcw, Check, X, SkipForward, Timer, Trophy, Users, Wifi } from 'lucide-react';
+import { Play, RotateCcw, Check, X, SkipForward, Timer, Trophy, Users, Wifi, ArrowLeft } from 'lucide-react';
 import { tabooCards } from './data';
 import OnlineTaboo from './OnlineTaboo';
 
@@ -25,7 +25,7 @@ const Taboo = () => {
     }
 
     return (
-        <div className="min-h-screen bg-[#0B0C15] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        <div className="min-h-screen bg-[#0B0C15] flex flex-col items-center justify-start pt-36 md:pt-40 p-4 relative overflow-hidden">
             {/* Background Ambient Glow */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-purple-900/20 blur-[120px] rounded-full pointer-events-none" />
 
@@ -129,16 +129,21 @@ const LocalTaboo = ({ onBack }) => {
     const currentCard = shuffledCards[currentCardIndex];
 
     return (
-        <div className="min-h-screen bg-[#0B0C15] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        <div className="min-h-screen bg-[#0B0C15] flex flex-col items-center justify-start pt-36 md:pt-40 p-4 relative overflow-hidden">
             {/* Background Ambient Glow */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-purple-900/20 blur-[120px] rounded-full pointer-events-none" />
 
-            <button
-                onClick={onBack}
-                className="absolute top-6 left-6 text-slate-400 hover:text-white flex items-center gap-2 z-50"
-            >
-                Start Over
-            </button>
+            <div className="absolute top-24 left-0 right-0 w-full z-40 pointer-events-none px-4">
+                <div className="max-w-7xl mx-auto px-6">
+                    <button
+                        onClick={onBack}
+                        className="pointer-events-auto px-4 py-2 bg-slate-800/50 hover:bg-slate-700/80 backdrop-blur-md border border-white/10 rounded-full text-slate-300 hover:text-white flex items-center gap-2 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+                    >
+                        <ArrowLeft size={16} />
+                        <span className="font-bold text-sm">Exit</span>
+                    </button>
+                </div>
+            </div>
 
             <div className="max-w-md w-full z-10">
                 <AnimatePresence mode="wait">

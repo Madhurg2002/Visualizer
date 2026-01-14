@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Check, X, SkipForward, Timer, Trophy, Users, Wifi, Copy, ArrowRightLeft, Eye } from 'lucide-react';
+import { Play, Check, X, SkipForward, Timer, Trophy, Users, Wifi, Copy, ArrowRightLeft, Eye, Server, ArrowLeft } from 'lucide-react';
 import io from 'socket.io-client';
 
-const SERVER_URL = process.env.REACT_APP_SERVER_URL || 'http://localhost:3001';
+const SERVER_URL = process.env.REACT_APP_SERVER_URL;
 
 const OnlineTaboo = ({ onBack }) => {
     const [socket, setSocket] = useState(null);
     const [view, setView] = useState('lobby'); // lobby, waiting, playing, end
+    const [connectionStatus, setConnectionStatus] = useState('connecting'); // 'connecting', 'connected', 'error'
     const [roomId, setRoomId] = useState('');
     const [playerName, setPlayerName] = useState('');
     const [players, setPlayers] = useState([]);
@@ -43,10 +44,13 @@ const OnlineTaboo = ({ onBack }) => {
         newSocket.on('connect', () => {
             console.log('Connected to server');
             setError('');
+            setConnectionStatus('connected');
         });
 
         newSocket.on('connect_error', () => {
-            setError('Could not connect to server. Ensure it is running on port 3001.');
+            // For serverless cold starts, we don't want to show the error screen immediately.
+            // Socket.io will automatically retry. We just update the message.
+            setError('Server might be sleeping. Waking it up...');
         });
 
         newSocket.on('room_update', (data) => {
@@ -102,15 +106,18 @@ const OnlineTaboo = ({ onBack }) => {
             setScores(data.scores);
         });
 
+        newSocket.on('room_created', (newRoomId) => {
+            setRoomId(newRoomId);
+            setSearchParams({ room: newRoomId });
+        });
+
         return () => newSocket.close();
     }, []);
 
     const createRoom = () => {
         if (!playerName) return setError("Enter name first!");
-        const newRoomId = Math.random().toString(36).substring(2, 8).toUpperCase();
-        setRoomId(newRoomId);
-        setSearchParams({ room: newRoomId }); // Update URL immediately
-        joinRoom(newRoomId);
+        // Server now handles generation and uniqueness
+        socket.emit('create_room', { name: playerName });
     };
 
     const joinRoom = (idToJoin) => {
@@ -164,21 +171,56 @@ const OnlineTaboo = ({ onBack }) => {
     const isOpponent = myPlayer?.team && myPlayer?.team !== 'Spectator' && myPlayer?.team !== currentTeam;
 
     return (
-        <div className="min-h-screen bg-[#0B0C15] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        <div className="min-h-screen bg-[#0B0C15] flex flex-col items-center justify-start pt-36 md:pt-40 p-4 relative overflow-hidden">
             {/* Background Ambient Glow */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-purple-900/20 blur-[120px] rounded-full pointer-events-none" />
 
             {(!isGiver || turnStatus !== 'waiting') && (
-                <button
-                    onClick={onBack}
-                    className="absolute top-6 left-6 text-slate-400 hover:text-white flex items-center gap-2 z-50 transition-colors"
-                >
-                    Exit to Menu
-                </button>
+                <div className="absolute top-24 left-0 right-0 w-full z-40 pointer-events-none px-4">
+                    <div className="max-w-7xl mx-auto px-6">
+                        <button
+                            onClick={onBack}
+                            className="pointer-events-auto px-4 py-2 bg-slate-800/50 hover:bg-slate-700/80 backdrop-blur-md border border-white/10 rounded-full text-slate-300 hover:text-white flex items-center gap-2 transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0"
+                        >
+                            <ArrowLeft size={16} />
+                            <span className="font-bold text-sm">Exit</span>
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {connectionStatus === 'connecting' && (
+                <div className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-[#0B0C15] w-full h-full">
+                    <div className="relative mb-8">
+                        <div className="absolute inset-0 bg-purple-500 blur-2xl opacity-20 animate-pulse rounded-full"></div>
+                        <Server size={64} className="text-purple-400 relative z-10 animate-pulse" />
+                    </div>
+                    <h2 className="text-3xl font-bold text-white mb-3">Initiating Server</h2>
+                    <p className="text-slate-400 text-sm mb-4">Establishing secure connection via Socket.IO...</p>
+                    {error && (
+                        <p className="text-yellow-400 text-xs mb-4 animate-pulse">{error}</p>
+                    )}
+
+                    <div className="w-64 h-1 bg-slate-800 rounded-full overflow-hidden mb-8">
+                        <motion.div
+                            className="h-full bg-gradient-to-r from-purple-500 to-pink-500"
+                            initial={{ x: '-100%' }}
+                            animate={{ x: '100%' }}
+                            transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                        />
+                    </div>
+
+                    <button
+                        onClick={() => { setConnectionStatus('error'); setError('Connection cancelled by user.'); }}
+                        className="text-slate-500 hover:text-white text-sm underline transition-colors"
+                    >
+                        Cancel & Return to Lobby
+                    </button>
+                </div>
             )}
 
             <AnimatePresence mode="wait">
-                {view === 'lobby' && (
+                {(connectionStatus === 'connected' || connectionStatus === 'error') && view === 'lobby' && (
                     <motion.div
                         key="lobby"
                         initial={{ opacity: 0, y: 20 }}
@@ -201,7 +243,7 @@ const OnlineTaboo = ({ onBack }) => {
                             className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white mb-4 focus:ring-2 focus:ring-purple-500 outline-none transition-all"
                         />
 
-                        <div className="flex gap-2 mb-6">
+                        <div className="flex flex-col sm:flex-row gap-2 mb-6">
                             <input
                                 type="text"
                                 placeholder="Room ID"

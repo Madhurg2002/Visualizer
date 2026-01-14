@@ -14,6 +14,43 @@ const rooms = {};
 
 const setupTabooHandlers = (io, socket) => {
 
+    socket.on('create_room', ({ name }) => {
+        let roomId;
+        do {
+            roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
+        } while (rooms[roomId]);
+
+        rooms[roomId] = {
+            players: [{
+                id: socket.id,
+                name: name || 'Host',
+                score: 0,
+                team: 'A' // Host is always Team A initially
+            }],
+            hostId: socket.id,
+            gameState: 'waiting',
+            currentCard: null,
+            timer: 60,
+            usedCards: [],
+            timerInterval: null,
+            scores: { A: 0, B: 0 },
+            currentTeam: 'A',
+            giverId: null,
+            settings: { roundTime: 60, totalRounds: 3, inputMode: 'button' },
+            turnsPlayed: 0,
+            turnScore: 0
+        };
+
+        socket.join(roomId);
+        console.log(`[${roomId}] Room Created by ${name} (${socket.id})`);
+
+        // Send back the room ID so frontend can update URL
+        socket.emit('room_created', roomId);
+
+        // Send initial update
+        emitRoomUpdate(io, roomId);
+    });
+
     socket.on('join_room', ({ name, roomId }) => {
         socket.join(roomId);
 
