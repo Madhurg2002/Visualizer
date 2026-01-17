@@ -1,858 +1,439 @@
-export const forbiddenWordsCards = [
-    {
-        word: "Lion",
-        forbidden: ["King", "Jungle", "Cat", "Roar", "Animal"]
-    },
-    {
-        word: "Google",
-        forbidden: ["Search", "Internet", "Web", "Chrome", "Engine"]
-    },
-    {
-        word: "Einstein",
-        forbidden: ["Relativity", "Physics", "Genius", "Hair", "Scientist"]
-    },
-    {
-        word: "Titanic",
-        forbidden: ["Ship", "Iceberg", "Movie", "Sinking", "Boat"]
-    },
-    {
-        word: "Pizza",
-        forbidden: ["Cheese", "Italy", "Pepperoni", "Round", "Food"]
-    },
-    {
-        word: "Superman",
-        forbidden: ["Hero", "Cape", "Fly", "Clark Kent", "Kryptonite"]
-    },
-    {
-        word: "Snow",
-        forbidden: ["Cold", "Winter", "White", "Ice", "Flake"]
-    },
-    {
-        word: "Basketball",
-        forbidden: ["Hoop", "Sport", "NBA", "Dribble", "Orange"]
-    },
-    {
-        word: "Harry Potter",
-        forbidden: ["Wizard", "Magic", "Wand", "Hogwarts", "Book"]
-    },
-    {
-        word: "Vampire",
-        forbidden: ["Blood", "Dracula", "Bat", "Teeth", "Twilight"]
-    },
-    {
-        word: "Facebook",
-        forbidden: ["Social", "Media", "Zuckerberg", "Friends", "Post"]
-    },
-    {
-        word: "Santa Claus",
-        forbidden: ["Christmas", "Gifts", "Sleigh", "North Pole", "Red"]
-    },
-    {
-        word: "Mickey Mouse",
-        forbidden: ["Disney", "Cartoon", "Ears", "Mouse", "Walt"]
-    },
-    {
-        word: "Iphone",
-        forbidden: ["Apple", "Phone", "Steve Jobs", "Mobile", "Smart"]
-    },
-    {
-        word: "Youtube",
-        forbidden: ["Video", "Watch", "Stream", "Google", "Vlog"]
-    },
-    {
-        word: "Chocolate",
-        forbidden: ["Sweet", "Candy", "Bar", "Cocoa", "Milk"]
-    },
-    {
-        word: "Beach",
-        forbidden: ["Sand", "Ocean", "Sun", "Waves", "Vacation"]
-    },
-    {
-        word: "Doctor",
-        forbidden: ["Hospital", "Medicine", "Nurse", "Sick", "Heal"]
-    },
-    {
-        word: "Car",
-        forbidden: ["Driver", "Ride", "Transport", "Fast", "Travel"]
-    },
-    {
-        word: "Duck",
-        forbidden: ["Bird", "Yellow", "Chicken", "Quack", "Food"]
-    },
-    {
-        word: "Dragonfly",
-        forbidden: ["Red", "Wings", "Insect", "Fly", "Dragon"]
-    },
-    {
-        word: "Snowflake",
-        forbidden: ["Cold", "Winter", "Flower", "Snow", "Fall"]
-    },
-    {
-        word: "Hungry",
-        forbidden: ["Feeling", "Eat", "Food", "Breakfast", "Meal"]
-    },
-    {
-        word: "Pillow",
-        forbidden: ["Head", "Sleep", "Soft", "Bed", "Blanket"]
-    },
-    {
-        word: "Dance",
-        forbidden: ["Shoes", "Romantic", "Music", "Sing", "Town Square"]
-    },
-    {
-        word: "Proud",
-        forbidden: ["Feeling", "Accomplish", "Great", "Boast", "Humble"]
-    },
-    {
-        word: "Blanket",
-        forbidden: ["Warm", "Bed", "Pillow", "Soft", "Cold"]
-    },
-    {
-        word: "Snail",
-        forbidden: ["Round", "Slow", "River", "Eat", "Animal"]
-    },
-    {
-        word: "Shanghai",
-        forbidden: ["Modern", "Big", "China", "Expo", "Famous"]
-    },
-    {
-        word: "Soccer",
-        forbidden: ["Ball", "World Cup", "Black", "Sport", "Team"]
-    },
-    {
-        word: "Cheese",
-        forbidden: ["Yellow", "White", "Pizza", "Food", "Italy"]
-    },
-    {
-        word: "Dinosaur",
-        forbidden: ["Big", "Animal", "Extinct", "Long Ago", "Reptile"]
-    },
-    {
-        word: "Japan",
-        forbidden: ["Country", "Asia", "Cherry Blossom", "Sushi", "Tokyo"]
-    },
-    {
-        word: "Husband",
-        forbidden: ["Wife", "Ring", "Marry", "Man", "Friend"]
-    },
-    {
-        word: "Giraffe",
-        forbidden: ["Tall", "Africa", "Neck", "Long", "Yellow"]
-    },
-    {
-        word: "Michael Jackson",
-        forbidden: ["Dance", "Thriller", "Strange", "Famous", "Singer"]
-    },
-    {
-        word: "Underwear",
-        forbidden: ["Small", "Clothing", "Every Day", "Secret", "Under"]
-    },
-    {
-        word: "Girlfriend",
-        forbidden: ["Boyfriend", "Beautiful", "Flowers", "Date", "Female"]
-    },
-    {
-        word: "Wok",
-        forbidden: ["Cook", "China", "Iron", "Dishes", "Pot"]
-    },
-    {
-        word: "Camera",
-        forbidden: ["Photos", "Pictures", "Snapshot", "Travel", "Memories"]
-    },
-    {
-        word: "Slippers",
-        forbidden: ["Warm", "Feet", "Winter", "House", "Soft"]
-    },
-    {
-        word: "Comb",
-        forbidden: ["Brush", "Hair", "Smooth", "Small", "Beautiful"]
-    },
-    {
-        word: "Glasses",
-        forbidden: ["Eyes", "See", "Contacts", "Wear", "Face"]
-    },
-    {
-        word: "Hamburger",
-        forbidden: ["America", "Beef", "Bread", "McDonalds", "Unhealthy"]
-    },
-    {
-        word: "Polar Bear",
-        forbidden: ["Cold", "Winter", "Alaska", "White", "Snow"]
-    },
-    {
-        word: "Penguin",
-        forbidden: ["Bird", "Fly", "Animal", "Black", "White"]
-    },
-    {
-        word: "Popcorn",
-        forbidden: ["Kernel", "Butter", "Sweet", "Microwave", "Snack Food"]
-    },
-    {
-        word: "Speech",
-        forbidden: ["Give", "Speak", "Important", "Audience", "Nervous"]
-    },
-    {
-        word: "Furious",
-        forbidden: ["Angry", "Red Face", "Hurt", "Rage", "Violent"]
-    },
-    {
-        word: "Jealousy",
-        forbidden: ["Envy", "Emotion", "Compare", "Green", "Achieve"]
-    },
-    {
-        word: "Bench",
-        forbidden: ["Sit", "Wooden", "Chair", "Long", "Park"]
-    },
-    {
-        word: "Chicken Leg",
-        forbidden: ["Bird", "Body", "Eat", "Food", "KFC"]
-    },
-    {
-        word: "Toilet",
-        forbidden: ["Washroom", "WC", "Pee", "Poop", "Bathroom"]
-    },
-    {
-        word: "Wish",
-        forbidden: ["Want", "Desire", "Hope", "Dream", "Long For"]
-    },
-    {
-        word: "Exercise",
-        forbidden: ["Run", "Sports", "Healthy", "Daily", "Morning"]
-    },
-    {
-        word: "Crown",
-        forbidden: ["Head", "Gold", "King", "Queen", "Jewels"]
-    },
-    {
-        word: "Princess",
-        forbidden: ["Prince", "Queen", "Daughter", "Royal", "Castle"]
-    },
-    {
-        word: "Internet",
-        forbidden: ["Computer", "Web", "Surf", "Net", "Technology"]
-    },
-    {
-        word: "Ice Cream",
-        forbidden: ["Cold", "Summer", "Sweet", "Snack", "Cone"]
-    },
-    {
-        word: "Jacket",
-        forbidden: ["Coat", "Warm", "Clothes", "Sleeves", "Zipper"]
-    },
-    {
-        word: "Shower",
-        forbidden: ["Rain", "Clean", "Water", "Every Day", "Bath"]
-    },
-    {
-        word: "Wind",
-        forbidden: ["Blow", "Autumn", "Invisible", "Trees", "Kite"]
-    },
-    {
-        word: "Foreigner",
-        forbidden: ["Teacher", "Different", "Outside", "Country", "Travel"]
-    },
-    {
-        word: "Church",
-        forbidden: ["Sing", "Building", "Cross", "God", "Speaker"]
-    },
-    {
-        word: "Police",
-        forbidden: ["Uniform", "Safety", "Peace", "Protect", "Siren"]
-    },
-    {
-        word: "Boots",
-        forbidden: ["Winter", "Shoes", "Warm", "Fashion", "Snow"]
-    },
-    {
-        word: "Soy Sauce",
-        forbidden: ["Chinese", "Liquid", "Brown", "Cooking", "Salty"]
-    },
-    {
-        word: "Plane Ticket",
-        forbidden: ["Expensive", "Flight", "Travel", "Paper", "Seat"]
-    },
-    {
-        word: "Turkey",
-        forbidden: ["Bird", "Holiday", "Thanksgiving", "Big", "Tired"]
-    },
-    {
-        word: "Freezer",
-        forbidden: ["Cold", "Refrigerator", "Ice", "Food", "Kitchen"]
-    },
-    {
-        word: "Yoga Teacher",
-        forbidden: ["Exercise", "Instructor", "Master", "Chinese", "Help"]
-    },
-    {
-        word: "Straw",
-        forbidden: ["Hollow", "Horses", "Farm", "Drink", "Suck"]
-    },
-    {
-        word: "Leaf",
-        forbidden: ["Tree", "Green", "Fall", "Plant", "Page"]
-    },
-    {
-        word: "Broom",
-        forbidden: ["Sweep", "Floor", "Witch", "Wooden", "Dust"]
-    },
-    {
-        word: "Carry",
-        forbidden: ["Hold", "Pick Up", "Move", "Transport", "Support"]
-    },
-    {
-        word: "Taxi",
-        forbidden: ["Car", "Public Transport", "Fare", "City"]
-    },
-    {
-        word: "Blossom",
-        forbidden: ["Flower", "Young", "Bud", "Spring", "Bloom"]
-    },
-    {
-        word: "Witch",
-        forbidden: ["Broom", "Green", "Magic", "Halloween", "Powers"]
-    },
-    {
-        word: "Fork",
-        forbidden: ["Spoon", "Knife", "Eat", "Prongs", "Divide"]
-    },
-    {
-        word: "Parade",
-        forbidden: ["Line", "Crowd", "Floats", "Gather", "Holiday"]
-    },
-    {
-        word: "Fashion",
-        forbidden: ["Clothes", "Model", "Girls", "Look", "Magazine"]
-    },
-    {
-        word: "Trash Can",
-        forbidden: ["Rubbish", "Barrel", "Worthless", "Ruin", "Old"]
-    },
-    {
-        word: "Wedding Dress",
-        forbidden: ["White", "Married", "Clothes", "Special", "Girls"]
-    },
-    {
-        word: "Kung Fu Panda",
-        forbidden: ["Movie", "China", "Noodles", "Children", "Famous"]
-    },
-    {
-        word: "Marker",
-        forbidden: ["Write", "Draw", "Colors", "Children", "Art"]
-    },
-    {
-        word: "Snowman",
-        forbidden: ["Three", "Children", "Make", "Winter", "Outside"]
-    },
-    {
-        word: "Wings",
-        forbidden: ["Bird", "Chicken", "Fly", "Arms", "Feathers"]
-    },
-    {
-        word: "Pilot",
-        forbidden: ["Fly", "Plane", "Helicopter", "Man", "Travel"]
-    },
-    {
-        word: "Lawyer",
-        forbidden: ["Argue", "Defend", "Law", "Client", "Crime"]
-    },
-    {
-        word: "Alligator",
-        forbidden: ["Crocodile", "Green", "Animal", "Teeth", "Florida"]
-    },
-    {
-        word: "Hair Salon",
-        forbidden: ["Style", "Dye", "Wash", "Cut", "Barber"]
-    },
-    {
-        word: "Picture Frame",
-        forbidden: ["Photo", "Memory", "Wood", "Glass", "Home"]
-    },
-    {
-        word: "Purse",
-        forbidden: ["Leather", "Bag", "Money", "Woman", "Carry"]
-    },
-    {
-        word: "Orange",
-        forbidden: ["Color", "Fruit", "Juicy", "Citrus", "Red"]
-    },
-    {
-        word: "Makeup",
-        forbidden: ["Face", "Mascara", "Lipstick", "Girls", "Beautiful"]
-    },
-    {
-        word: "Tutor",
-        forbidden: ["Teach", "One on One", "Learn", "Make Up", "Review"]
-    },
-    {
-        word: "Worry",
-        forbidden: ["Nervous", "Anxiety", "Stress", "Scared", "Trouble"]
-    },
-    {
-        word: "Nervous",
-        forbidden: ["Anxious", "Test", "Difficulty", "Pressure", "Scared"]
-    },
-    {
-        word: "Moose",
-        forbidden: ["Animal", "Mammal", "Forest", "Antlers", "Hunting"]
-    },
-    {
-        word: "Shampoo",
-        forbidden: ["Conditioner", "Lather", "Wash", "Hair", "Shower"]
-    },
-    {
-        word: "Bridge",
-        forbidden: ["Cross", "River", "Build", "Over", "Connect"]
-    },
-    {
-        word: "Camel",
-        forbidden: ["Humps", "Desert", "Animal", "Water", "Cigarette"]
-    },
-    {
-        word: "Watch",
-        forbidden: ["Look", "Stare", "Wrist", "Time", "Jewelry"]
-    },
-    {
-        word: "Brush",
-        forbidden: ["Comb", "Hair", "Bristles", "Wooden", "Stroke"]
-    },
-    {
-        word: "License",
-        forbidden: ["Driver", "Car", "Card", "Permit", "Allow"]
-    },
-    {
-        word: "Shout",
-        forbidden: ["Yell", "Loud", "Speak", "Angry", "Danger"]
-    },
-    {
-        word: "Librarian",
-        forbidden: ["Books", "Library", "School", "Job", "Quiet"]
-    },
-    {
-        word: "Liberty",
-        forbidden: ["Freedom", "Statue", "Power", "Choose", "Decide"]
-    },
-    {
-        word: "Radio",
-        forbidden: ["Listen", "Music", "AM", "FM", "News"]
-    },
-    {
-        word: "Unlock",
-        forbidden: ["Key", "Door", "Box", "Safe", "Hole"]
-    },
-    {
-        word: "Pear",
-        forbidden: ["Apple", "Fruit", "Shape", "Tree", "Juice"]
-    },
-    {
-        word: "Jumping",
-        forbidden: ["Leap", "Up", "Down", "Excited", "Action"]
-    },
-    {
-        word: "Glove",
-        forbidden: ["Hand", "Cold", "Winter", "Disposable", "Mitten"]
-    },
-    {
-        word: "Midterm",
-        forbidden: ["Test", "Exam", "Half", "Final", "School"]
-    },
-    {
-        word: "Tornado",
-        forbidden: ["Storm", "Dorothy", "Swirl", "Wind", "Blow"]
-    },
-    {
-        word: "Wheelchair",
-        forbidden: ["Cripple", "Handicapped", "Legs", "Old", "Elderly"]
-    },
-    {
-        word: "Monster",
-        forbidden: ["Scary", "Green", "Alien", "Zombie", "Create"]
-    },
-    {
-        word: "Melt",
-        forbidden: ["Soft", "Warm", "Ice", "Heat", "Liquid"]
-    },
-    {
-        word: "Mature",
-        forbidden: ["Old", "Wise", "Develop", "Grown", "Advance"]
-    },
-    {
-        word: "Daisy",
-        forbidden: ["White", "Yellow", "Flower", "Duck", "Field"]
-    },
-    {
-        word: "Custom",
-        forbidden: ["Culture", "Way", "Tradition", "Behave", "Society"]
-    },
-    {
-        word: "Politics",
-        forbidden: ["Law", "President", "Leaders", "Country", "Citizen"]
-    },
-    {
-        word: "Curtain",
-        forbidden: ["Red", "Window", "Light", "Cloth", "Play"]
-    },
-    {
-        word: "Cruel",
-        forbidden: ["Mean", "Angry", "Unkind", "Pain", "Suffering"]
-    },
-    {
-        word: "Milk",
-        forbidden: ["White", "Liquid", "Drink", "Bones", "Cow"]
-    },
-    {
-        word: "Guitar",
-        forbidden: ["Instrument", "Play", "Strings", "Strum", "Music"]
-    },
-    {
-        word: "Chalk",
-        forbidden: ["White", "Dust", "Teach", "Blackboard", "Erase"]
-    },
-    {
-        word: "Bottle",
-        forbidden: ["Feed", "Baby", "Glass", "Juice", "Water"]
-    },
-    {
-        word: "Table",
-        forbidden: ["Eat", "Chairs", "Legs", "Study", "Wooden"]
-    },
-    {
-        word: "Famous",
-        forbidden: ["Popular", "Known", "Important", "Recognize", "Position"]
-    },
-    {
-        word: "Distance",
-        forbidden: ["Length", "Mile", "Meter", "Space", "Far Away"]
-    },
-    {
-        word: "Elderly",
-        forbidden: ["Old", "Nurse", "Aged", "Adult", "Health"]
-    },
-    {
-        word: "Fish",
-        forbidden: ["Swim", "Gills", "River", "Eat", "Catch"]
-    },
-    {
-        word: "New York",
-        forbidden: ["Statue", "Apple", "City", "America", "Busy"]
-    },
-    {
-        word: "Train",
-        forbidden: ["Ride", "Travel", "Cheap", "Railroad", "Choo-Choo"]
-    },
-    {
-        word: "Needle",
-        forbidden: ["Haystack", "Sharp", "Small", "Metal", "Sew"]
-    },
-    {
-        word: "Joy",
-        forbidden: ["Happy", "Celebrate", "Excited", "Pleasure", "Feeling"]
-    },
-    {
-        word: "Monkey",
-        forbidden: ["Swing", "Banana", "Zoo", "Brown", "Animal"]
-    },
-    {
-        word: "Firecracker",
-        forbidden: ["Explode", "Loud", "Red", "Light", "Holiday"]
-    },
-    {
-        word: "Sun",
-        forbidden: ["Warm", "Yellow", "Light", "Solar", "Planet"]
-    },
-    {
-        word: "Shark",
-        forbidden: ["Swim", "Teeth", "Dangerous", "Ocean", "Sea"]
-    },
-    {
-        word: "Window",
-        forbidden: ["Curtain", "Glass", "Screen", "Home", "Door"]
-    },
-    {
-        word: "Desk",
-        forbidden: ["Homework", "Sit", "Wooden", "Classroom", "Student"]
-    },
-    {
-        word: "Coffee",
-        forbidden: ["Tea", "Brown", "Drink", "Caffeine", "Starbucks"]
-    },
-    {
-        word: "Bells",
-        forbidden: ["Ring", "Silver", "Hear", "Metal", "Gold"]
-    },
-    {
-        word: "Candle",
-        forbidden: ["Bright", "Light", "Wax", "Burn", "Wick"]
-    },
-    {
-        word: "Egg Roll",
-        forbidden: ["Spring", "Vegetable", "Round", "China", "Food"]
-    },
-    {
-        word: "Santa",
-        forbidden: ["Fat", "Man", "Christmas", "Claus", "Gifts"]
-    },
-    {
-        word: "Heart",
-        forbidden: ["Shape", "Beat", "Broken", "Body", "Love"]
-    },
-    {
-        word: "Headache",
-        forbidden: ["Pound", "Beat", "Medicine", "Sick", "Rush"]
-    },
-    {
-        word: "Discuss",
-        forbidden: ["Talk", "Debate", "Ideas", "Oppose", "Share"]
-    },
-    {
-        word: "Debate",
-        forbidden: ["Discuss", "Sides", "Talk", "Oppose", "Win"]
-    },
-    {
-        word: "Judge",
-        forbidden: ["Stand Up For", "Justify", "Lawyer", "Court", "Defend"]
-    },
-    {
-        word: "Eraser",
-        forbidden: ["Clean", "Pencil", "Fix", "Mistake", "Change"]
-    },
-    {
-        word: "Prisoner",
-        forbidden: ["Jail", "Convict", "Murder", "Crime", "Bad"]
-    },
-    {
-        word: "Murder",
-        forbidden: ["Kill", "Prison", "Jail", "Law", "Court"]
-    },
-    {
-        word: "Deer",
-        forbidden: ["Antlers", "Hunting", "Forest", "Bambi", "Animal"]
-    },
-    {
-        word: "Zoo",
-        forbidden: ["Place", "Animals", "Tigers", "Elephants", "Cage"]
-    },
-    {
-        word: "Crawl",
-        forbidden: ["Fours", "Baby", "Toddler", "Hands", "Knees"]
-    },
-    {
-        word: "Bank",
-        forbidden: ["Robbery", "Money", "Safe", "Deposit", "Invest"]
-    },
-    {
-        word: "Promise",
-        forbidden: ["Vow", "Pledge", "Expect", "Reassure", "Marry"]
-    },
-    {
-        word: "Caterpillar",
-        forbidden: ["Crawl", "Insect", "Legs", "Tree", "Butterfly"]
-    },
-    {
-        word: "Pregnant",
-        forbidden: ["Baby", "Fat", "Belly", "Life", "9 Months"]
-    },
-    {
-        word: "Towel",
-        forbidden: ["Dry", "Dishes", "Shower", "Soft", "Beach"]
-    },
-    {
-        word: "Ugly",
-        forbidden: ["Duck", "Beautiful", "Hideous", "Deformed", "Butt"]
-    },
-    {
-        word: "Smart",
-        forbidden: ["Clever", "Dull", "Dumb", "Intelligent", "Stupid"]
-    },
-    {
-        word: "Spoon",
-        forbidden: ["Fork", "Knife", "Eating", "Soup", "Metal"]
-    },
-    {
-        word: "Infant",
-        forbidden: ["Baby", "Cry", "Child", "Newborn", "Young"]
-    },
-    {
-        word: "London",
-        forbidden: ["Big Ben", "England", "Europe", "Capital", "U.K."]
-    },
-    {
-        word: "Paris, France",
-        forbidden: ["Romance", "Shopping", "Eiffel Tower", "French", "Travel"]
-    },
-    {
-        word: "Exchange Student",
-        forbidden: ["Travel", "Study Abroad", "Experience", "Foreign"]
-    },
-    {
-        word: "Gold",
-        forbidden: ["Silver", "Metal", "Rich", "Money", "King"]
-    },
-    {
-        word: "Camping",
-        forbidden: ["Tent", "Outside", "Fire", "Roast", "Sleep"]
-    },
-    {
-        word: "Theater",
-        forbidden: ["Movie", "Seats", "Popcorn", "Cinema", "Drama"]
-    },
-    {
-        word: "Death",
-        forbidden: ["Die", "Old", "Murder", "Cause", "Life"]
-    },
-    {
-        word: "Flag",
-        forbidden: ["Wave", "Fly", "Old Glory", "Pole", "Fabric"]
-    },
-    {
-        word: "Knee",
-        forbidden: ["Bend", "Joint", "Leg", "Move", "Cap"]
-    },
-    {
-        word: "Describe",
-        forbidden: ["Talk About", "Words", "Characteristic", "Quality", "Depict"]
-    },
-    {
-        word: "Nan She Shan",
-        forbidden: ["Mountain", "Yizhou", "Climb", "Snake", "South"]
-    },
-    {
-        word: "Fly",
-        forbidden: ["Wings", "Bird", "Airplane", "Insect", "Bee"]
-    },
-    {
-        word: "Web",
-        forbidden: ["Internet", "Spider", "World Wide Net"]
-    },
-    {
-        word: "Toothbrush",
-        forbidden: ["Teeth", "Paste", "Clean", "Hygiene", "Rub"]
-    },
-    {
-        word: "Worm",
-        forbidden: ["Crawl", "Animal", "Wriggle", "Slimy", "Rain"]
-    },
-    {
-        word: "Machine",
-        forbidden: ["Parts", "Device", "Metal", "Power", "Cog"]
-    },
-    {
-        word: "Biology",
-        forbidden: ["Science", "Subject", "Life", "School", "Chemistry"]
-    },
-    {
-        word: "Spiderman",
-        forbidden: ["Fly", "Peter Parker", "Hero", "Super", "Web"]
-    },
-    {
-        word: "Waitress",
-        forbidden: ["Service", "Restaurant", "Food", "Bring", "Helper"]
-    },
-    {
-        word: "Wash",
-        forbidden: ["Clean", "Shower", "Dishes", "Hair", "Laundry"]
-    },
-    {
-        word: "Chemistry",
-        forbidden: ["Physics", "Chemicals", "School", "Science", "Subject"]
-    },
-    {
-        word: "History",
-        forbidden: ["Politics", "Past", "Events", "Finished", "Happen"]
-    },
-    {
-        word: "Magazine",
-        forbidden: ["Pages", "Book", "Entertain", "News", "Read"]
-    },
-    {
-        word: "Unfair",
-        forbidden: ["Unjust", "Fair", "Equal", "Just", "Unreasonable"]
-    },
-    {
-        word: "CD",
-        forbidden: ["Disc", "Music", "Listen", "Play", "Computer"]
-    },
-    {
-        word: "Immediately",
-        forbidden: ["Fast", "Now", "Delay", "Rapid", "Soon"]
-    },
-    {
-        word: "Danger",
-        forbidden: ["Safe", "Harm", "Injury", "Protect", "Avoid"]
-    },
-    {
-        word: "Ice",
-        forbidden: ["Cold", "Solid", "Water", "Freezer", "Skate"]
-    },
-    {
-        word: "Salt",
-        forbidden: ["White", "Sweet", "Popcorn", "Cooking", "Flavor"]
-    },
-    {
-        word: "Stand",
-        forbidden: ["Sit", "Floor", "Feet", "Up", "Take"]
-    },
-    {
-        word: "Bull",
-        forbidden: ["Ride", "Red", "Male", "Horns", "Charge"]
-    },
-    {
-        word: "Magic",
-        forbidden: ["Wizard", "Witch", "Power", "Trick", "Show"]
-    },
-    {
-        word: "Peaceful",
-        forbidden: ["Harmony", "Calm", "Quiet", "Tranquil", "Violent"]
-    },
-    {
-        word: "Normal",
-        forbidden: ["Strange", "Standard", "Typical", "Status Quo", "Weird"]
-    },
-    {
-        word: "Original",
-        forbidden: ["First", "Unique", "Special", "Standard", "Early"]
-    },
-    {
-        word: "Naughty",
-        forbidden: ["Bad", "Behavior", "Good", "Rude", "Disobedient"]
-    },
-    {
-        word: "Rescue",
-        forbidden: ["Save", "Hero", "Danger", "Safe", "Help"]
-    },
-    {
-        word: "Match",
-        forbidden: ["Fire", "Strike", "Pair", "Together", "Equal"]
-    },
-    {
-        word: "Hippo",
-        forbidden: ["Fat", "Animal", "Africa", "Large", "River"]
-    },
-    {
-        word: "Cookbook",
-        forbidden: ["Food", "How To", "Kitchen", "Manual", "Guide"]
-    },
-    {
-        word: "Fairy Tale",
-        forbidden: ["Prince", "Princess", "Magic", "Queen", "Story"]
-    },
-    {
-        word: "Literature",
-        forbidden: ["Works", "American", "British", "Books", "Written"]
-    },
-    {
-        word: "Globe",
-        forbidden: ["Earth", "World", "Model", "Geography", "Oceans"]
-    },
-    {
-        word: "Ocean",
-        forbidden: ["Asia", "Land", "Seven", "Earth", "Water"]
-    },
-    {
-        word: "Director",
-        forbidden: ["Movie", "Producer", "In Charge", "Supervise", "Set"]
-    },
-    {
-        word: "Advice",
-        forbidden: ["Guide", "Wise", "Recommend", "What to do", "Help"]
-    }
-]    
+const forbiddenWordsCards = [
+    // --- ANIMALS ---
+    { word: "Dog", forbidden: ["Pet", "Bark", "Puppy", "Bone", "Loyal"] },
+    { word: "Cat", forbidden: ["Meow", "Kitten", "Purr", "Fur", "Pet"] },
+    { word: "Lion", forbidden: ["King", "Jungle", "Roar", "Cat", "Mane"] },
+    { word: "Tiger", forbidden: ["Stripes", "Orange", "Cat", "Jungle", "Roar"] },
+    { word: "Elephant", forbidden: ["Trunk", "Tusk", "Big", "Ivory", "Ears"] },
+    { word: "Giraffe", forbidden: ["Neck", "Tall", "Spots", "Africa", "Leaves"] },
+    { word: "Monkey", forbidden: ["Banana", "Tree", "Climb", "Tail", "Ape"] },
+    { word: "Bear", forbidden: ["Honey", "Cave", "Hibernation", "Grizzly", "Fur"] },
+    { word: "Zebra", forbidden: ["Stripes", "Black", "White", "Horse", "Africa"] },
+    { word: "Horse", forbidden: ["Ride", "Saddle", "Gallop", "Pony", "Race"] },
+    { word: "Cow", forbidden: ["Milk", "Moo", "Farm", "Beef", "Udder"] },
+    { word: "Pig", forbidden: ["Mud", "Oink", "Bacon", "Pink", "Farm"] },
+    { word: "Chicken", forbidden: ["Egg", "Cluck", "Farm", "Bird", "Wing"] },
+    { word: "Snake", forbidden: ["Slither", "Hiss", "Poison", "Reptile", "Long"] },
+    { word: "Spider", forbidden: ["Web", "Legs", "Insect", "Scary", "Bite"] },
+    { word: "Shark", forbidden: ["Teeth", "Ocean", "Fin", "Jaws", "Attack"] },
+    { word: "Whale", forbidden: ["Blue", "Ocean", "Big", "Blowhole", "Mammal"] },
+    { word: "Dolphin", forbidden: ["Swim", "Ocean", "Smart", "Flipper", "Mammal"] },
+    { word: "Penguin", forbidden: ["Ice", "Tuxedo", "Bird", "March", "Antarctica"] },
+    { word: "Kangaroo", forbidden: ["Pouch", "Hop", "Australia", "Jump", "Joey"] },
+    { word: "Panda", forbidden: ["Bamboo", "Bear", "China", "Black", "White"] },
+    { word: "Koala", forbidden: ["Eucalyptus", "Bear", "Australia", "Tree", "Cute"] },
+    { word: "Frog", forbidden: ["Green", "Jump", "Pond", "Ribbit", "Tadpole"] },
+    { word: "Turtle", forbidden: ["Shell", "Slow", "Green", "Ninja", "Reptile"] },
+    { word: "Rabbit", forbidden: ["Carrot", "Hop", "Ears", "Bunny", "Easter"] },
+    { word: "Mouse", forbidden: ["Cheese", "Squeak", "Trap", "Cat", "Tiny"] },
+    { word: "Bat", forbidden: ["Vampire", "Cave", "Fly", "Night", "Sonar"] },
+    { word: "Owl", forbidden: ["Hoot", "Night", "Wise", "Bird", "Head"] },
+    { word: "Eagle", forbidden: ["Bald", "America", "Bird", "Fly", "Symbol"] },
+    { word: "Duck", forbidden: ["Quack", "Pond", "Bird", "Bill", "Feather"] },
+    { word: "Goose", forbidden: ["Honk", "Bird", "White", "Chase", "Egg"] },
+    { word: "Fox", forbidden: ["Orange", "Sly", "Tail", "Wild", "Dog"] },
+    { word: "Wolf", forbidden: ["Howl", "Pack", "Moon", "Wild", "Dog"] },
+    { word: "Deer", forbidden: ["Antlers", "Forest", "Bambi", "Hunt", "Doe"] },
+    { word: "Bee", forbidden: ["Honey", "Sting", "Yellow", "Hive", "Buzz"] },
+    { word: "Butterfly", forbidden: ["Caterpillar", "Wings", "Colorful", "Fly", "Insect"] },
+    { word: "Ant", forbidden: ["Small", "Hill", "Picnic", "Insect", "Work"] },
+    { word: "Octopus", forbidden: ["Eight", "Tentacles", "Ink", "Ocean", "Sea"] },
+    { word: "Jellyfish", forbidden: ["Sting", "Ocean", "Transparent", "Float", "Sea"] },
+    { word: "Crab", forbidden: ["Claws", "Beach", "Sideways", "Shell", "Red"] },
+    { word: "Lobster", forbidden: ["Red", "Expensive", "Claws", "Seafood", "Ocean"] },
+    { word: "Fish", forbidden: ["Swim", "Water", "Gills", "Scales", "Sea"] },
+    { word: "Seal", forbidden: ["Bark", "Ocean", "Flipper", "Ice", "Arf"] },
+    { word: "Gorilla", forbidden: ["Ape", "King Kong", "Jungle", "Silverback", "Big"] },
+    { word: "Rhino", forbidden: ["Horn", "Gray", "Africa", "Charge", "Big"] },
+    { word: "Hippo", forbidden: ["Water", "Big", "Dangerous", "Mouth", "Hungry"] },
+    { word: "Parrot", forbidden: ["Talk", "Bird", "Pirate", "Colorful", "Cracker"] },
+    { word: "Flamingo", forbidden: ["Pink", "Stand", "Bird", "Leg", "Lawn"] },
+    { word: "Peacock", forbidden: ["Feathers", "Show", "Colorful", "Bird", "Fan"] },
+    { word: "Camel", forbidden: ["Hump", "Desert", "Sand", "Water", "Spit"] },
+    { word: "Lizard", forbidden: ["Reptile", "Green", "Scales", "Tail", "Cold"] },
+    { word: "Crocodile", forbidden: ["Alligator", "Teeth", "Swamp", "Green", "Snap"] },
+    { word: "Dinosaur", forbidden: ["Extinct", "Fossil", "Jurassic", "T-Rex", "Lizard"] },
+    { word: "Dragon", forbidden: ["Fire", "Myth", "Fly", "Scales", "Breath"] },
+    { word: "Unicorn", forbidden: ["Horn", "Horse", "Magic", "Fantasy", "Rainbow"] },
+    { word: "Squirrel", forbidden: ["Nut", "Tree", "Tail", "Acorn", "Rodent"] },
+    { word: "Raccoon", forbidden: ["Trash", "Mask", "Bandit", "Night", "Garbage"] },
+    { word: "Beaver", forbidden: ["Dam", "Wood", "Teeth", "Tail", "River"] },
+    { word: "Otter", forbidden: ["Water", "Cute", "Hand", "River", "Sea"] },
+    { word: "Sloth", forbidden: ["Slow", "Tree", "Climb", "Lazy", "Animal"] },
+    { word: "Cheetah", forbidden: ["Fast", "Run", "Spots", "Cat", "Africa"] },
+    { word: "Leopard", forbidden: ["Spots", "Cat", "Tree", "Jungle", "Africa"] },
+    { word: "Panther", forbidden: ["Black", "Cat", "Jungle", "Bagheera", "Wild"] },
+    { word: "Mosquito", forbidden: ["Bite", "Itch", "Blood", "Fly", "Insect"] },
+    { word: "Fly", forbidden: ["Buzz", "Insect", "Annoying", "Swatter", "Garbage"] },
+    { word: "Worm", forbidden: ["Dirt", "Ground", "Hook", "Fish", "Squirm"] },
+    { word: "Snail", forbidden: ["Shell", "Slow", "Slime", "Garden", "Escargot"] },
+
+    // --- FOOD --
+    { word: "Pizza", forbidden: ["Cheese", "Pepperoni", "Italy", "Slice", "Deep Dish"] },
+    { word: "Burger", forbidden: ["Bun", "Meat", "Cheese", "Fries", "McDonalds"] },
+    { word: "Hot Dog", forbidden: ["Bun", "Sausage", "Mustard", "Baseball", "Ketchup"] },
+    { word: "Fries", forbidden: ["Potato", "Salty", "Ketchup", "Fast Food", "Yellow"] },
+    { word: "Taco", forbidden: ["Shell", "Mexican", "Meat", "Crunchy", "Tuesday"] },
+    { word: "Burrito", forbidden: ["Wrap", "Bean", "Rice", "Mexican", "Chipotle"] },
+    { word: "Sushi", forbidden: ["Raw", "Fish", "Rice", "Roll", "Japan"] },
+    { word: "Spaghetti", forbidden: ["Pasta", "Noodle", "Meatball", "Italian", "Sauce"] },
+    { word: "Lasagna", forbidden: ["Layer", "Cheese", "Pasta", "Garfield", "Italian"] },
+    { word: "Salad", forbidden: ["Green", "Lettuce", "Healthy", "Vegetable", "Dressing"] },
+    { word: "Soup", forbidden: ["Bowl", "Spoon", "Hot", "Liquid", "Chicken"] },
+    { word: "Sandwich", forbidden: ["Bread", "Lunch", "Meat", "Sub", "Cheese"] },
+    { word: "Steak", forbidden: ["Meat", "Beef", "Cow", "Grill", "Rare"] },
+    { word: "Chicken", forbidden: ["Bird", "Fried", "Meat", "Wing", "Dinner"] },
+    { word: "Bacon", forbidden: ["Pig", "Breakfast", "Crispy", "Grease", "Frying"] },
+    { word: "Egg", forbidden: ["Chicken", "Shell", "Breakfast", "Yolk", "White"] },
+    { word: "Pancake", forbidden: ["Syrup", "Breakfast", "Stack", "Flat", "Flapjack"] },
+    { word: "Waffle", forbidden: ["Syrup", "Grid", "Breakfast", "Square", "Iron"] },
+    { word: "Cereal", forbidden: ["Milk", "Bowl", "Breakfast", "Spoon", "Box"] },
+    { word: "Toast", forbidden: ["Bread", "Butter", "Breakfast", "Jam", "Toaster"] },
+    { word: "Cheese", forbidden: ["Milk", "Yellow", "Mouse", "Swiss", "Cheddar"] },
+    { word: "Butter", forbidden: ["Yellow", "Bread", "Melt", "Milk", "Stick"] },
+    { word: "Yogurt", forbidden: ["Dairy", "Spoon", "Culture", "Greek", "Healthy"] },
+    { word: "Ice Cream", forbidden: ["Cold", "Cone", "Scoop", "Vanilla", "Dessert"] },
+    { word: "Chocolate", forbidden: ["Sweet", "Candy", "Bar", "Cocoa", "Dark"] },
+    { word: "Cake", forbidden: ["Birthday", "Candle", "Sweet", "Dessert", "Bake"] },
+    { word: "Cookie", forbidden: ["Milk", "Chip", "Bake", "Sweet", "Dough"] },
+    { word: "Donut", forbidden: ["Hole", "Glaze", "Sweet", "Coffee", "Cop"] },
+    { word: "Pie", forbidden: ["Crust", "Apple", "Slice", "Dessert", "Thanksgiving"] },
+    { word: "Candy", forbidden: ["Sweet", "Sugar", "Halloween", "Wrapper", "Treat"] },
+    { word: "Popcorn", forbidden: ["Movie", "Kernel", "Butter", "Salt", "Microwave"] },
+    { word: "Chips", forbidden: ["Potato", "Bag", "Salty", "Crunchy", "Snack"] },
+    { word: "Apple", forbidden: ["Red", "Fruit", "Pie", "Tree", "Teacher"] },
+    { word: "Banana", forbidden: ["Yellow", "Peel", "Monkey", "Fruit", "Split"] },
+    { word: "Orange", forbidden: ["Juice", "Fruit", "Vitamin C", "Peel", "Citrus"] },
+    { word: "Grape", forbidden: ["Purple", "Green", "Vine", "Wine", "Bunch"] },
+    { word: "Strawberry", forbidden: ["Red", "Berry", "Shortcake", "Fruit", "Seed"] },
+    { word: "Watermelon", forbidden: ["Summer", "Seed", "Green", "Red", "Fruit"] },
+    { word: "Lemon", forbidden: ["Sour", "Yellow", "Citrus", "Aid", "Fruit"] },
+    { word: "Pineapple", forbidden: ["Yellow", "Tropical", "SpongeBob", "Fruit", "Pizza"] },
+    { word: "Peach", forbidden: ["Fuzzy", "Fruit", "Pit", "Cobbler", "Georgia"] },
+    { word: "Cherry", forbidden: ["Red", "Pit", "Top", "Fruit", "Sundae"] },
+    { word: "Potato", forbidden: ["Spud", "Fries", "Mashed", "Skin", "Vegetable"] },
+    { word: "Tomato", forbidden: ["Red", "Ketchup", "Fruit", "Sauce", "Salad"] },
+    { word: "Carrot", forbidden: ["Rabbit", "Orange", "Vegetable", "Root", "Vision"] },
+    { word: "Onion", forbidden: ["Cry", "Layers", "Smell", "Vegetable", "White"] },
+    { word: "Garlic", forbidden: ["Smell", "Vampire", "Italian", "Bread", "Clove"] },
+    { word: "Corn", forbidden: ["Cob", "Yellow", "Kernel", "Pop", "Vegetable"] },
+    { word: "Broccoli", forbidden: ["Green", "Tree", "Vegetable", "Healthy", "Stalk"] },
+    { word: "Pepper", forbidden: ["Salt", "Spicy", "Vegetable", "Red", "Green"] },
+    { word: "Salt", forbidden: ["Pepper", "White", "Sea", "Shake", "Taste"] },
+    { word: "Sugar", forbidden: ["Sweet", "White", "Cane", "Cookie", "Spice"] },
+    { word: "Coffee", forbidden: ["Caffeine", "Drink", "In Morning", "Mug", "Starbucks"] },
+    { word: "Tea", forbidden: ["Bag", "Drink", "Cup", "Hot", "Iced"] },
+    { word: "Soda", forbidden: ["Pop", "Drink", "Carbonated", "Coke", "Pepsi"] },
+    { word: "Water", forbidden: ["Drink", "Wet", "Liquid", "H2O", "Bottle"] },
+    { word: "Juice", forbidden: ["Orange", "Drink", "Fruit", "Apple", "Liquid"] },
+    { word: "Milkshake", forbidden: ["Ice Cream", "Drink", "Straw", "Dairy", "Thick"] },
+    { word: "Lemonade", forbidden: ["Lemon", "Drink", "Stand", "Yellow", "Summer"] },
+    { word: "Beer", forbidden: ["Alcohol", "Drink", "Bar", "Brewery", "Pint"] },
+    { word: "Wine", forbidden: ["Grape", "Alcohol", "Red", "White", "Glass"] },
+    { word: "Bread", forbidden: ["Loaf", "Slice", "Toast", "Sandwich", "Wheat"] },
+
+    // --- HOUSEHOLD ---
+    { word: "Chair", forbidden: ["Sit", "Seat", "Furniture", "Table", "Legs"] },
+    { word: "Table", forbidden: ["Furniture", "Eat", "Legs", "Wood", "Dinner"] },
+    { word: "Sofa", forbidden: ["Couch", "Sit", "Living Room", "Television", "Furniture"] },
+    { word: "Bed", forbidden: ["Sleep", "Mattress", "Pillow", "Sheets", "Bedroom"] },
+    { word: "Pillow", forbidden: ["Sleep", "Head", "Soft", "Bed", "Feather"] },
+    { word: "Blanket", forbidden: ["Warm", "Cover", "Sleep", "Bed", "Comforter"] },
+    { word: "Lamp", forbidden: ["Light", "Bulb", "Desk", "Shade", "Turn On"] },
+    { word: "Carpet", forbidden: ["Rug", "Floor", "Soft", "Vacuum", "Room"] },
+    { word: "Mirror", forbidden: ["Reflection", "Look", "Glass", "Wall", "Face"] },
+    { word: "Clock", forbidden: ["Time", "Watch", "Wall", "Hour", "Tick"] },
+    { word: "Door", forbidden: ["Open", "Close", "Knob", "Enter", "Lock"] },
+    { word: "Window", forbidden: ["Glass", "See", "Open", "View", "Pane"] },
+    { word: "Kitchen", forbidden: ["Cook", "Room", "Food", "Stove", "Sink"] },
+    { word: "Bathroom", forbidden: ["Toilet", "Shower", "Room", "Wash", "Tub"] },
+    { word: "Shower", forbidden: ["Water", "Clean", "Wash", "Bath", "Soap"] },
+    { word: "Toilet", forbidden: ["Flush", "Paper", "Bathroom", "Seat", "Potty"] },
+    { word: "Toothbrush", forbidden: ["Teeth", "Paste", "Clean", "Brush", "Morning"] },
+    { word: "Soap", forbidden: ["Wash", "Clean", "Bubbles", "Bar", "Hands"] },
+    { word: "Towel", forbidden: ["Dry", "Bath", "Cloth", "Wet", "Shower"] },
+    { word: "Shampoo", forbidden: ["Hair", "Wash", "Shower", "Soap", "Clean"] },
+    { word: "Comb", forbidden: ["Hair", "Brush", "Teeth", "Style", "Plastic"] },
+    { word: "Refrigerator", forbidden: ["Cold", "Food", "Kitchen", "Ice", "Freezer"] },
+    { word: "Oven", forbidden: ["Bake", "Hot", "Kitchen", "Cook", "Stove"] },
+    { word: "Microwave", forbidden: ["Heat", "Fast", "Kitchen", "Popcorn", "Cook"] },
+    { word: "Stove", forbidden: ["Cook", "Hot", "Burner", "Kitchen", "Gas"] },
+    { word: "Sink", forbidden: ["Water", "Wash", "Kitchen", "Drain", "Faucet"] },
+    { word: "Spoon", forbidden: ["Soup", "Eat", "Silverware", "Bowl", "Scoop"] },
+    { word: "Fork", forbidden: ["Eat", "Prongs", "Silverware", "Knife", "Food"] },
+    { word: "Knife", forbidden: ["Cut", "Sharp", "Silverware", "Fork", "Blade"] },
+    { word: "Plate", forbidden: ["Dish", "Eat", "Round", "Dinner", "Food"] },
+    { word: "Cup", forbidden: ["Drink", "Glass", "Mug", "Liquid", "Hold"] },
+    { word: "Glass", forbidden: ["Drink", "Break", "Window", "Clear", "Cup"] },
+    { word: "Broom", forbidden: ["Sweep", "Floor", "Dust", "Witch", "Clean"] },
+    { word: "Mop", forbidden: ["Wet", "Floor", "Clean", "Bucket", "Wash"] },
+    { word: "Vacuum", forbidden: ["Clean", "Carpet", "Suck", "Noise", "Dirt"] },
+    { word: "Trash Can", forbidden: ["Garbage", "Rubbish", "Bin", "Waste", "Bag"] },
+    { word: "Washer", forbidden: ["Clothes", "Clean", "Laundry", "Machine", "Soap"] },
+    { word: "Dryer", forbidden: ["Clothes", "Hot", "Machine", "Laundry", "Wet"] },
+    { word: "Iron", forbidden: ["Clothes", "Hot", "Flat", "Wrinkle", "Board"] },
+    { word: "Computer", forbidden: ["Laptop", "Screen", "Keyboard", "Internet", "Mouse"] },
+    { word: "Television", forbidden: ["Watch", "Screen", "Show", "Remote", "Channel"] },
+    { word: "Remote", forbidden: ["TV", "Control", "Buttons", "Change", "Channel"] },
+    { word: "Phone", forbidden: ["Call", "Cell", "Talk", "Text", "Mobile"] },
+    { word: "Camera", forbidden: ["Picture", "Photo", "Lens", "Shoot", "Smile"] },
+    { word: "Picture", forbidden: ["Frame", "Photo", "Wall", "Hang", "Image"] },
+    { word: "Key", forbidden: ["Lock", "Door", "Open", "Metal", "Ring"] },
+    { word: "Wallet", forbidden: ["Money", "Cash", "Pocket", "Cards", "Leather"] },
+    { word: "Purse", forbidden: ["Bag", "Woman", "Money", "Carry", "Shoulder"] },
+    { word: "Umbrella", forbidden: ["Rain", "Wet", "Dry", "Open", "Canopy"] },
+    { word: "Glasses", forbidden: ["Eyes", "See", "Vision", "Wear", "Frame"] },
+
+    // --- CLOTHING ---
+    { word: "Shirt", forbidden: ["Wear", "Top", "Sleeves", "Buttons", "Clothes"] },
+    { word: "Pants", forbidden: ["Legs", "Jeans", "Trousers", "Wear", "Pocket"] },
+    { word: "Shorts", forbidden: ["Legs", "Summer", "Wear", "Short", "Pants"] },
+    { word: "Dress", forbidden: ["Woman", "Wear", "Skirt", "Fancy", "Gown"] },
+    { word: "Skirt", forbidden: ["Woman", "Wear", "Legs", "Dress", "Girl"] },
+    { word: "Shoe", forbidden: ["Foot", "Walk", "Sock", "Lace", "Sneaker"] },
+    { word: "Sock", forbidden: ["Foot", "Shoe", "Warm", "Toe", "Pair"] },
+    { word: "Hat", forbidden: ["Head", "Cap", "Wear", "Winter", "Baseball"] },
+    { word: "Coat", forbidden: ["Jacket", "Winter", "Cold", "Wear", "Warm"] },
+    { word: "Jacket", forbidden: ["Coat", "Zipper", "Wear", "Cold", "Sleeve"] },
+    { word: "Glove", forbidden: ["Hand", "Finger", "Winter", "Warm", "Mittens"] },
+    { word: "Scarf", forbidden: ["Neck", "Winter", "Warm", "Wool", "Wrap"] },
+    { word: "Boots", forbidden: ["Shoes", "Winter", "Feet", "Rain", "Cowboy"] },
+    { word: "Sandal", forbidden: ["Shoe", "Summer", "Toe", "Beach", "Flip Flop"] },
+    { word: "Belt", forbidden: ["Waist", "Pants", "Buckle", "Hold", "Leather"] },
+    { word: "Tie", forbidden: ["Suit", "Neck", "Formal", "Man", "Knot"] },
+    { word: "Ring", forbidden: ["Finger", "Jewelry", "Gold", "Wedding", "Diamond"] },
+    { word: "Necklace", forbidden: ["Neck", "Jewelry", "Gold", "Chain", "Pendant"] },
+    { word: "Earring", forbidden: ["Ear", "Jewelry", "Piercing", "Gold", "Pair"] },
+    { word: "Watch", forbidden: ["Time", "Wrist", "Clock", "Wear", "Tell"] },
+    { word: "Pajamas", forbidden: ["Sleep", "Bed", "Wear", "Night", "Clothes"] },
+    { word: "Suit", forbidden: ["Man", "Formal", "Tie", "Jacket", "Business"] },
+    { word: "Uniform", forbidden: ["School", "Work", "Wear", "Same", "Job"] },
+    { word: "Zipper", forbidden: ["Close", "Jacket", "Pants", "Metal", "Up"] },
+    { word: "Button", forbidden: ["Shirt", "Push", "Round", "Hole", "Fasten"] },
+    { word: "Shoelace", forbidden: ["Tie", "Shoe", "Knot", "String", "Foot"] },
+
+    // --- NATURE & PLACES ---
+    { word: "Tree", forbidden: ["Leaf", "Green", "Wood", "Branch", "Forest"] },
+    { word: "Flower", forbidden: ["Petal", "Smell", "Garden", "Bloom", "Rose"] },
+    { word: "Grass", forbidden: ["Green", "Lawn", "Mow", "Ground", "Grow"] },
+    { word: "Sun", forbidden: ["Hot", "Yellow", "Sky", "Day", "Star"] },
+    { word: "Moon", forbidden: ["Night", "Sky", "Space", "Crescent", "Orbit"] },
+    { word: "Star", forbidden: ["Sky", "Night", "Twinkle", "Space", "Shine"] },
+    { word: "Cloud", forbidden: ["White", "Sky", "Rain", "Fluffy", "Storm"] },
+    { word: "Rain", forbidden: ["Water", "Wet", "Sky", "Storm", "Umbrella"] },
+    { word: "Snow", forbidden: ["White", "Cold", "Winter", "Ice", "Flake"] },
+    { word: "Wind", forbidden: ["Blow", "Air", "Breeze", "Storm", "Feel"] },
+    { word: "Storm", forbidden: ["Rain", "Thunder", "Lightning", "Wind", "Scary"] },
+    { word: "Rainbow", forbidden: ["Color", "Sky", "Rain", "Arc", "Pot of Gold"] },
+    { word: "Ocean", forbidden: ["Sea", "Water", "Blue", "Beach", "Fish"] },
+    { word: "River", forbidden: ["Water", "Flow", "Stream", "Boat", "Bank"] },
+    { word: "Lake", forbidden: ["Water", "Boat", "Swim", "Pond", "Fish"] },
+    { word: "Mountain", forbidden: ["High", "Climb", "Peak", "Hike", "Snow"] },
+    { word: "Desert", forbidden: ["Sand", "Hot", "Dry", "Cactus", "Camel"] },
+    { word: "Forest", forbidden: ["Trees", "Woods", "Animals", "Green", "Camping"] },
+    { word: "Jungle", forbidden: ["Trees", "Animals", "Tarzan", "Rain", "Wild"] },
+    { word: "Beach", forbidden: ["Sand", "Ocean", "Sun", "Vacation", "Swim"] },
+    { word: "City", forbidden: ["Building", "People", "Busy", "Town", "Urban"] },
+    { word: "Farm", forbidden: ["Animals", "Barn", "Farmer", "Grow", "Tractor"] },
+    { word: "Park", forbidden: ["Play", "Slide", "Swing", "Grass", "Bench"] },
+    { word: "School", forbidden: ["Learn", "Teacher", "Student", "Class", "Study"] },
+    { word: "Library", forbidden: ["Book", "Read", "Quiet", "Study", "Card"] },
+    { word: "Hospital", forbidden: ["Sick", "Doctor", "Nurse", "Medicine", "Ambulance"] },
+    { word: "Zoo", forbidden: ["Animals", "Cage", "See", "Visit", "Wild"] },
+    { word: "Museum", forbidden: ["Art", "Old", "Exhibit", "Look", "History"] },
+    { word: "Cinema", forbidden: ["Movie", "Popcorn", "Screen", "Watch", "Film"] },
+    { word: "Restaurant", forbidden: ["Eat", "Food", "Menu", "Waiter", "Dinner"] },
+    { word: "Hotel", forbidden: ["Sleep", "Stay", "Room", "Vacation", "Bed"] },
+    { word: "Airport", forbidden: ["Plane", "Fly", "Travel", "Suitcase", "Gate"] },
+    { word: "Train Station", forbidden: ["Train", "Track", "Ride", "Wait", "Platform"] },
+    { word: "Bank", forbidden: ["Money", "Cash", "Save", "Teller", "Account"] },
+    { word: "Post Office", forbidden: ["Mail", "Letter", "Stamp", "Box", "Send"] },
+    { word: "Fire Station", forbidden: ["Truck", "Firefighter", "Siren", "Pole", "Hose"] },
+    { word: "Police Station", forbidden: ["Cop", "Jail", "Badge", "Officer", "Law"] },
+    { word: "Church", forbidden: ["Pray", "Religion", "Sunday", "Building", "God"] },
+    { word: "Stadium", forbidden: ["Sports", "Game", "Seat", "Crowd", "Field"] },
+    { word: "Gym", forbidden: ["Exercise", "Workout", "Sweat", "Muscle", "Run"] },
+
+    // --- JOBS ---
+    { word: "Doctor", forbidden: ["Hospital", "Medicine", "Sick", "Heal", "Nurse"] },
+    { word: "Teacher", forbidden: ["School", "Student", "Learn", "Class", "Grade"] },
+    { word: "Police Officer", forbidden: ["Cop", "Badge", "Stop", "Arrest", "Law"] },
+    { word: "Firefighter", forbidden: ["Fire", "Truck", "Hose", "Water", "Helmet"] },
+    { word: "Nurse", forbidden: ["Doctor", "Hospital", "Sick", "Help", "Medicine"] },
+    { word: "Chef", forbidden: ["Cook", "Food", "Kitchen", "Restaurant", "Hat"] },
+    { word: "Farmer", forbidden: ["Farm", "Grow", "Animals", "Tractor", "Crops"] },
+    { word: "Pilot", forbidden: ["Plane", "Fly", "Sky", "Airport", "Captain"] },
+    { word: "Astronaut", forbidden: ["Space", "Moon", "Rocket", "NASA", "Suit"] },
+    { word: "Artist", forbidden: ["Paint", "Draw", "Picture", "Brush", "Create"] },
+    { word: "Singer", forbidden: ["Song", "Music", "Voice", "Microphone", "Concert"] },
+    { word: "Actor", forbidden: ["Movie", "Play", "Star", "Film", "Perform"] },
+    { word: "Dentist", forbidden: ["Teeth", "Mouth", "Drill", "Clean", "Smile"] },
+    { word: "Vet", forbidden: ["Animal", "Doctor", "Pet", "Sick", "Dog"] },
+    { word: "Scientist", forbidden: ["Lab", "Experiment", "Chemical", "Research", "Coat"] },
+    { word: "Soldier", forbidden: ["Army", "War", "Uniform", "Gun", "Fight"] },
+    { word: "Judge", forbidden: ["Court", "Law", "Gavel", "Guilty", "Robe"] },
+    { word: "Mechanic", forbidden: ["Car", "Fix", "Engine", "Tool", "Garage"] },
+    { word: "Waiter", forbidden: ["Food", "Restaurant", "Serve", "Table", "Order"] },
+    { word: "Librarian", forbidden: ["Book", "Library", "Read", "Quiet", "Shelf"] },
+    { word: "Mail Carrier", forbidden: ["Letter", "Post", "Deliver", "Bag", "Mailbox"] },
+    { word: "Clown", forbidden: ["Circus", "Funny", "Nose", "Makeup", "Balloon"] },
+    { word: "Magician", forbidden: ["Magic", "Trick", "Rabbit", "Hat", "Wand"] },
+    { word: "Pirate", forbidden: ["Ship", "Treasure", "Sea", "Eye Patch", "Hook"] },
+    { word: "King", forbidden: ["Queen", "Crown", "Rule", "Throne", "Royal"] },
+
+    // --- SPORTS & HOBBIES ---
+    { word: "Soccer", forbidden: ["Ball", "Kick", "Goal", "Team", "Field"] },
+    { word: "Basketball", forbidden: ["Ball", "Hoop", "Court", "Dribble", "Shot"] },
+    { word: "Baseball", forbidden: ["Bat", "Ball", "Hit", "Home Run", "Mitt"] },
+    { word: "Football", forbidden: ["Ball", "Touchdown", "Helmet", "Tackle", "Field"] },
+    { word: "Tennis", forbidden: ["Racket", "Ball", "Net", "Court", "Serve"] },
+    { word: "Golf", forbidden: ["Club", "Ball", "Hole", "Course", "Drive"] },
+    { word: "Swimming", forbidden: ["Water", "Pool", "Race", "Stroke", "Wet"] },
+    { word: "Running", forbidden: ["Fast", "Race", "Shoes", "Track", "Jog"] },
+    { word: "Bowling", forbidden: ["Ball", "Pins", "Lane", "Strike", "Shoes"] },
+    { word: "Volleyball", forbidden: ["Net", "Ball", "Spike", "Sand", "Team"] },
+    { word: "Hockey", forbidden: ["Ice", "Skate", "Puck", "Stick", "Goal"] },
+    { word: "Boxing", forbidden: ["Fight", "Gloves", "Ring", "Punch", "Round"] },
+    { word: "Skiing", forbidden: ["Snow", "Mountain", "Poles", "Winter", "Slope"] },
+    { word: "Fishing", forbidden: ["Rod", "Hook", "Fish", "Water", "Bait"] },
+    { word: "Camping", forbidden: ["Tent", "Fire", "Outside", "Sleep", "Woods"] },
+    { word: "Reading", forbidden: ["Book", "Story", "Words", "Library", "Pages"] },
+    { word: "Writing", forbidden: ["Pen", "Paper", "Story", "Words", "Pencil"] },
+    { word: "Drawing", forbidden: ["Pencil", "Paper", "Picture", "Art", "Sketch"] },
+    { word: "Dancing", forbidden: ["Music", "Move", "Step", "Song", "Ballet"] },
+    { word: "Singing", forbidden: ["Voice", "Song", "Music", "Mouth", "Tune"] },
+    { word: "Chess", forbidden: ["Board", "King", "Queen", "Checkmate", "Game"] },
+    { word: "Video Game", forbidden: ["Play", "Controller", "Screen", "Console", "Computer"] },
+    { word: "Guitar", forbidden: ["String", "Music", "Play", "Instrument", "Rock"] },
+    { word: "Piano", forbidden: ["Keys", "Music", "Play", "Black", "White"] },
+    { word: "Drums", forbidden: ["Beat", "Stick", "Music", "Loud", "Instrument"] },
+
+    // --- TRANSPORTAL ---
+    { word: "Car", forbidden: ["Drive", "Wheel", "Ride", "Road", "Engine"] },
+    { word: "Bus", forbidden: ["School", "Ride", "Drive", "Yellow", "Stop"] },
+    { word: "Truck", forbidden: ["Big", "Drive", "Load", "Pickup", "Haul"] },
+    { word: "Train", forbidden: ["Track", "Choo Choo", "Ride", "Engine", "Rail"] },
+    { word: "Airplane", forbidden: ["Fly", "Sky", "Wings", "Airport", "Pilot"] },
+    { word: "Boat", forbidden: ["Water", "Float", "Ship", "Sail", "Sea"] },
+    { word: "Ship", forbidden: ["Boat", "Big", "Ocean", "Water", "Captain"] },
+    { word: "Bicycle", forbidden: ["Ride", "Wheel", "Pedal", "Helmet", "Two"] },
+    { word: "Motorcycle", forbidden: ["Bike", "Engine", "Helmet", "Fast", "Ride"] },
+    { word: "Helicopter", forbidden: ["Fly", "Blade", "Chopper", "Sky", "Pilot"] },
+    { word: "Rocket", forbidden: ["Space", "Fly", "Moon", "NASA", "Blast Off"] },
+    { word: "Subway", forbidden: ["Train", "Underground", "City", "Track", "Metro"] },
+    { word: "Taxi", forbidden: ["Car", "Yellow", "Pay", "Driver", "Ride"] },
+    { word: "Ambulance", forbidden: ["Siren", "Hospital", "Emergency", "Red", "Sick"] },
+    { word: "Fire Truck", forbidden: ["Red", "Siren", "Hose", "Ladder", "Fire"] },
+    { word: "School Bus", forbidden: ["Yellow", "Kids", "School", "Ride", "Driver"] },
+    { word: "Tractor", forbidden: ["Farm", "Green", "Drive", "Field", "Slow"] },
+    { word: "Skateboard", forbidden: ["Wheels", "Ride", "Trick", "Board", "Helmet"] },
+    { word: "Scooter", forbidden: ["Ride", "Wheels", "Handle", "Push", "Fast"] },
+    { word: "Van", forbidden: ["Car", "Big", "Drive", "Family", "Box"] },
+
+    // --- CONCEPTS & ADJECTIVES ---
+    { word: "Happy", forbidden: ["Smile", "Glad", "Sad", "Face", "Feeling"] },
+    { word: "Sad", forbidden: ["Cry", "Happy", "Tears", "Blue", "Unhappy"] },
+    { word: "Angry", forbidden: ["Mad", "Red", "Yell", "Face", "Upset"] },
+    { word: "Scary", forbidden: ["Afraid", "Ghost", "Monster", "Dark", "Fear"] },
+    { word: "Funny", forbidden: ["Laugh", "Joke", "Clown", "Ha Ha", "Silly"] },
+    { word: "Hot", forbidden: ["Cold", "Fire", "Sun", "Burn", "Summer"] },
+    { word: "Cold", forbidden: ["Hot", "Ice", "Snow", "Winter", "Freezing"] },
+    { word: "Big", forbidden: ["Small", "Giant", "Large", "Huge", "Size"] },
+    { word: "Small", forbidden: ["Big", "Tiny", "Little", "Mini", "Micro"] },
+    { word: "Fast", forbidden: ["Slow", "Run", "Speed", "Quick", "Race"] },
+    { word: "Slow", forbidden: ["Fast", "Turtle", "Snail", "Speed", "Late"] },
+    { word: "Old", forbidden: ["New", "Age", "Grandpa", "Ancient", "Used"] },
+    { word: "New", forbidden: ["Old", "Fresh", "Shiny", "Brand", "Recent"] },
+    { word: "Rich", forbidden: ["Money", "Poor", "Millionaire", "Wealthy", "Cash"] },
+    { word: "Poor", forbidden: ["Money", "Rich", "Broke", "No", "Penny"] },
+    { word: "Good", forbidden: ["Bad", "Nice", "Great", "Behavior", "Well"] },
+    { word: "Bad", forbidden: ["Good", "Naughty", "Evil", "Wrong", "Trouble"] },
+    { word: "Love", forbidden: ["Heart", "Hate", "Like", "Kiss", "Feeling"] },
+    { word: "Hate", forbidden: ["Love", "Dislike", "Mad", "Enemy", "Feeling"] },
+    { word: "Beautiful", forbidden: ["Pretty", "Ugly", "Look", "Gorgeous", "Nice"] },
+    { word: "Ugly", forbidden: ["Beautiful", "Pretty", "Look", "Face", "Bad"] },
+    { word: "Smart", forbidden: ["Brain", "Intelligent", "Dumb", "School", "Think"] },
+    { word: "Strong", forbidden: ["Weak", "Muscle", "Power", "Lift", "Heavy"] },
+    { word: "Weak", forbidden: ["Strong", "Muscle", "Power", "No", "Frail"] },
+    { word: "Loud", forbidden: ["Quiet", "Noise", "Yell", "Sound", "Hear"] },
+    { word: "Quiet", forbidden: ["Loud", "Shhh", "Silence", "Noise", "Library"] },
+    { word: "Dark", forbidden: ["Light", "Night", "Black", "See", "Room"] },
+    { word: "Light", forbidden: ["Dark", "Sun", "Lamp", "Bright", "See"] },
+    { word: "Heavy", forbidden: ["Weight", "Light", "Lift", "Strong", "Pound"] },
+    { word: "Wet", forbidden: ["Water", "Dry", "Rain", "Soak", "Liquid"] },
+    { word: "Dry", forbidden: ["Wet", "Water", "Towel", "Thirsty", "Desert"] },
+    { word: "Clean", forbidden: ["Dirty", "Wash", "Soap", "Mess", "Sparkle"] },
+    { word: "Dirty", forbidden: ["Clean", "Mess", "Wash", "Mud", "Filth"] },
+    { word: "Hard", forbidden: ["Soft", "Rock", "Difficult", "Solid", "Tough"] },
+    { word: "Soft", forbidden: ["Hard", "Pillow", "Fluffy", "Touch", "Bed"] },
+
+    // --- EXTENDED MISC ---
+    { word: "Birthday", forbidden: ["Cake", "Party", "Happy", "Present", "Age"] },
+    { word: "Christmas", forbidden: ["Santa", "Tree", "Present", "Holiday", "December"] },
+    { word: "Halloween", forbidden: ["Ghost", "Candy", "Costume", "Pumpkin", "October"] },
+    { word: "Easter", forbidden: ["Bunny", "Egg", "Basket", "Spring", "Sunday"] },
+    { word: "Thanksgiving", forbidden: ["Turkey", "Eat", "Food", "November", "Family"] },
+    { word: "Wedding", forbidden: ["Marriage", "Bride", "Groom", "Ring", "Dress"] },
+    { word: "Summer", forbidden: ["Hot", "Sun", "Beach", "Season", "School"] },
+    { word: "Winter", forbidden: ["Cold", "Snow", "Ice", "Season", "Coat"] },
+    { word: "Spring", forbidden: ["Flower", "Season", "Rain", "Green", "Grow"] },
+    { word: "Fall", forbidden: ["Autumn", "Leaves", "Season", "Orange", "Cool"] },
+    { word: "Morning", forbidden: ["Night", "Wake", "Sun", "Breakfast", "Early"] },
+    { word: "Night", forbidden: ["Day", "Sleep", "Dark", "Moon", "Bed"] },
+    { word: "Dream", forbidden: ["Sleep", "Night", "Imagine", "Head", "Bed"] },
+    { word: "Nightmare", forbidden: ["Bad", "Dream", "Scary", "Sleep", "Night"] },
+    { word: "Ghost", forbidden: ["Boo", "Scary", "Spirit", "White", "Haunted"] },
+    { word: "Vampire", forbidden: ["Blood", "Dracula", "Teeth", "Bat", "Neck"] },
+    { word: "Witch", forbidden: ["Broom", "Magic", "Spell", "Hat", "Green"] },
+    { word: "Zombie", forbidden: ["Dead", "Brain", "Walk", "Monster", "Undead"] },
+    { word: "Monster", forbidden: ["Scary", "Bed", "Closet", "Creature", "Fright"] },
+    { word: "Alien", forbidden: ["Space", "UFO", "Green", "Mars", "Planet"] },
+    { word: "Robot", forbidden: ["Machine", "Metal", "Computer", "Future", "Beep"] },
+    { word: "Superhero", forbidden: ["Power", "Cape", "Save", "Comic", "Villain"] },
+    { word: "Princess", forbidden: ["Prince", "Crown", "Dress", "Royal", "Castle"] },
+    { word: "Money", forbidden: ["Cash", "Dollar", "Buy", "Coin", "Rich"] },
+    { word: "Time", forbidden: ["Clock", "Watch", "Hour", "Minute", "Second"] },
+    { word: "Music", forbidden: ["Song", "Listen", "Band", "Radio", "Sound"] },
+    { word: "Art", forbidden: ["Paint", "Draw", "Picture", "Museum", "Create"] },
+    { word: "Science", forbidden: ["Experiment", "Lab", "Test", "Chemistry", "Study"] },
+    { word: "Math", forbidden: ["Numbers", "Add", "School", "Count", "Problem"] },
+    { word: "History", forbidden: ["Past", "Old", "Learn", "Dates", "Subject"] },
+    { word: "Geography", forbidden: ["Map", "World", "Earth", "Place", "Country"] },
+    { word: "Map", forbidden: ["World", "Place", "Direction", "Paper", "Lost"] },
+    { word: "Flag", forbidden: ["Country", "Wave", "Pole", "Symbol", "Colors"] },
+    { word: "Game", forbidden: ["Play", "Win", "Lose", "Fun", "Board"] },
+    { word: "Toy", forbidden: ["Play", "Kid", "Doll", "Game", "Store"] },
+    { word: "Party", forbidden: ["Fun", "Birthday", "Celebrate", "Friends", "Balloon"] },
+    { word: "Present", forbidden: ["Gift", "Birthday", "Wrap", "Box", "Give"] },
+    { word: "Balloon", forbidden: ["Air", "Pop", "Float", "Rubber", "Color"] },
+    { word: "Magic", forbidden: ["Trick", "Wand", "Wizard", "Hat", "Spell"] },
+    { word: "Circus", forbidden: ["Clown", "Tent", "Animals", "Show", "Acrobat"] },
+    { word: "Ninja", forbidden: ["Stealth", "Black", "Fight", "Japan", "Sword"] },
+    { word: "Cowboy", forbidden: ["Horse", "Hat", "West", "Boots", "Ranch"] },
+    { word: "Fairy", forbidden: ["Wings", "Magic", "Small", "Fly", "Tinkerbell"] },
+    { word: "Mermaid", forbidden: ["Ocean", "Tail", "Swim", "Fish", "Ariel"] },
+
+    // --- EMOTIONS & FEELINGS ---
+    { word: "Excited", forbidden: ["Happy", "Energy", "Thrilled", "Can't Wait", "Fun"] },
+    { word: "Bored", forbidden: ["Tired", "Nothing", "Do", "Fun", "Sleepy"] },
+    { word: "Nervous", forbidden: ["Scared", "Shake", "Worried", "Test", "Anxious"] },
+    { word: "Scared", forbidden: ["Afraid", "Ghost", "Fear", "Terrified", "Spooky"] },
+    { word: "Surprised", forbidden: ["Shocked", "Unexpected", "Gift", "Party", "Jump"] },
+    { word: "Tired", forbidden: ["Sleep", "Bed", "Nap", "Exhausted", "Yawn"] },
+    { word: "Hungry", forbidden: ["Food", "Eat", "Stomach", "Starving", "Dinner"] },
+    { word: "Thirsty", forbidden: ["Drink", "Water", "Dry", "Parched", "Liquid"] },
+    { word: "Lonely", forbidden: ["Alone", "Friends", "Sad", "Single", "Person"] },
+    { word: "Embarrassed", forbidden: ["Red", "Face", "Shy", "Mistake", "Awkward"] },
+    { word: "Proud", forbidden: ["Happy", "Accomplish", "Good", "Parent", "Win"] },
+    { word: "Jealous", forbidden: ["Want", "Envy", "Green", "Have", "Other"] },
+    { word: "Confused", forbidden: ["Understand", "Question", "Lost", "Think", "Puzzle"] },
+    { word: "Guilty", forbidden: ["Bad", "Did", "Wrong", "Crime", "Sorry"] },
+    { word: "Curious", forbidden: ["Question", "Wonder", "Know", "Ask", "Interest"] },
+    { word: "Brave", forbidden: ["Scared", "Fear", "Hero", "Strong", "Courage"] },
+    { word: "Shy", forbidden: ["Quiet", "Talk", "Scared", "People", "Hide"] },
+    { word: "Calm", forbidden: ["Peace", "Quiet", "Relax", "Stress", "Chill"] },
+    { word: "Stress", forbidden: ["Worry", "Work", "School", "Relax", "Calm"] },
+    { word: "Hope", forbidden: ["Wish", "Dream", "Want", "Future", "Believe"] }
+];
+
+module.exports = { forbiddenWordsCards };
