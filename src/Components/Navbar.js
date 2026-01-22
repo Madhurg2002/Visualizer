@@ -59,6 +59,7 @@ const Navbar = () => {
             { name: 'Flappy Bird', path: '/FlappyBird' },
             { name: 'Forbidden Words', path: '/ForbiddenWords' },
             { name: 'Tic-Tac-Toe', path: '/TicTacToe' },
+            { name: 'Chess', path: '/Chess' },
         ]
     };
 

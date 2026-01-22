@@ -5,6 +5,8 @@ const cors = require('cors');
 const { setupTabooHandlers } = require('./gameHandler');
 const { setupTicTacToeHandlers } = require('./tictactoeHandler');
 
+const setupChessHandlers = require('./chessHandler');
+
 const app = express();
 app.use(cors());
 
@@ -21,6 +23,7 @@ io.on('connection', (socket) => {
 
     setupTabooHandlers(io, socket);
     setupTicTacToeHandlers(io, socket);
+    setupChessHandlers(io, socket);
 
 
     socket.on('disconnect', () => {

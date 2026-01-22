@@ -14,6 +14,7 @@ import FallingBlocks from './Page/FallingBlocks';
 import Minesweeper from './Page/Minesweeper';
 import FlappyBird from './Page/FlappyBird';
 import TicTacToe from './Page/TicTacToe';
+import Chess from './Page/Chess';
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
           <Route exact path="/Minesweeper" element={<Minesweeper />} />
           <Route exact path="/FlappyBird" element={<FlappyBird />} />
           <Route exact path="/TicTacToe" element={<TicTacToe />} />
+          <Route exact path="/Chess" element={<Chess />} />
 
           <Route path="/*" element={<Navigate to="/" />} />
         </Routes>

@@ -10,7 +10,8 @@ import {
     Bomb,
     Ghost,
     Crown,
-    MessageSquare
+    MessageSquare,
+    Gamepad2
 } from 'lucide-react';
 
 const Home = () => {
@@ -81,6 +82,13 @@ const Home = () => {
             path: "/TicTacToe",
             color: "from-blue-400 to-purple-500",
             icon: <Crown className="w-8 h-8 text-white" />
+        },
+        {
+            title: "Chess",
+            description: "Strategize and checkmate your opponent in this timeless classic.",
+            path: "/Chess",
+            color: "from-emerald-500 to-cyan-500",
+            icon: <Gamepad2 className="w-8 h-8 text-white" />
         },
     ];
 
