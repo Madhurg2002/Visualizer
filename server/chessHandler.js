@@ -4,19 +4,22 @@ const rooms = new Map();
 
 module.exports = (io, socket) => {
     // Create Room
-    socket.on('chess_create_room', ({ playerName }) => {
+    socket.on('chess_create_room', ({ playerName, timeControl }) => {
         const roomId = uuidV4().substring(0, 6).toUpperCase();
         rooms.set(roomId, {
             roomId,
             players: [{ id: socket.id, name: playerName, color: 'w' }], // Creator is White
-            board: null, // Will init on start
+            board: null,
             turn: 'w',
-            gameState: 'waiting', // waiting, playing, check, checkmate, stalemate
-            spectators: []
+            gameState: 'waiting',
+            spectators: [],
+            timeControl: timeControl || 10, // Default 10 if missing
+            whiteTime: (timeControl || 10) * 60,
+            blackTime: (timeControl || 10) * 60
         });
         socket.join(roomId);
-        socket.emit('chess_room_created', { roomId, color: 'w' });
-        console.log(`[Chess] Room ${roomId} created by ${playerName}`);
+        socket.emit('chess_room_created', { roomId, color: 'w', timeControl });
+        console.log(`[Chess] Room ${roomId} created by ${playerName} (TC: ${timeControl})`);
     });
 
     // Join Room
@@ -41,30 +44,45 @@ module.exports = (io, socket) => {
         io.to(roomId).emit('chess_player_joined', {
             players: room.players,
             gameState: 'playing',
-            turn: room.turn
+            turn: room.turn,
+            timeControl: room.timeControl,
+            whiteTime: room.whiteTime,
+            blackTime: room.blackTime
         });
 
         console.log(`[Chess] ${playerName} joined room ${roomId}`);
     });
 
     // Make Move
-    socket.on('chess_make_move', ({ roomId, move, boardState, gameState, turn }) => {
+    socket.on('chess_make_move', ({ roomId, move, boardState, gameState, turn, whiteTime, blackTime }) => {
         const room = rooms.get(roomId);
         if (!room) return;
 
-        // Basic validation could go here, but relying on client logic for custom engine
         // Sync state
         room.board = boardState;
         room.gameState = gameState;
         room.turn = turn;
+        if (whiteTime !== undefined) room.whiteTime = whiteTime;
+        if (blackTime !== undefined) room.blackTime = blackTime;
 
         // Broadcast to opponent
         socket.to(roomId).emit('chess_move_made', {
             move,
             board: boardState, // Full board sync for simplicity
             gameState,
-            turn
+            turn,
+            whiteTime,
+            blackTime
         });
+    });
+
+    // Claim Timeout
+    socket.on('chess_claim_timeout', ({ roomId, loser }) => {
+        const room = rooms.get(roomId);
+        if (room) {
+            room.gameState = 'timeout';
+            io.to(roomId).emit('chess_game_over', { reason: 'timeout', winner: loser === 'w' ? 'b' : 'w' });
+        }
     });
 
     // Rematch

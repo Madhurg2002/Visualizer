@@ -84,13 +84,34 @@ const OnlineTicTacToe = ({ onBack }) => {
         socket.emit('ttt_reset', { roomId });
     };
 
-    const copyRoomId = () => {
-        const url = `${window.location.origin}/TicTacToe?room=${roomId}`;
-        navigator.clipboard.writeText(url);
+    const copyRoomId = async () => {
+        const url = `${window.location.host}/TicTacToe?room=${roomId}`;
+        try {
+            await navigator.clipboard.writeText(url);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch (err) {
+            console.error('Failed to copy logic 1:', err);
+            // Fallback for non-secure contexts (localhost sometimes acts up or if embedded)
+            const textArea = document.createElement("textarea");
+            textArea.value = url;
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            } catch (err2) {
+                console.error('Fallback copy failed', err2);
+                alert("Could not copy link. Manually copy: " + url);
+            }
+            document.body.removeChild(textArea);
+        }
     };
 
     return (
-        <div className="min-h-screen bg-[#0B0C15] pt-36 md:pt-40 px-4 flex flex-col items-center justify-start relative overflow-hidden">
+        <div className="w-full px-4 flex flex-col items-center justify-start relative overflow-hidden">
             {/* Background Ambient Glow */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-pink-900/20 blur-[100px] rounded-full pointer-events-none" />
 

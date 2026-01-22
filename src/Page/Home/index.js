@@ -154,7 +154,7 @@ const Home = () => {
     );
 
     return (
-        <div className="min-h-screen pt-32 pb-16 px-4 bg-[#0B0C15] overflow-hidden relative">
+        <div className="min-h-full px-4 bg-[#0B0C15] overflow-hidden relative">
 
             {/* Background Ambient Glow */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-purple-900/20 blur-[120px] rounded-full pointer-events-none" />

@@ -1,4 +1,4 @@
-import { getValidMoves, checkGameState, getPieceType, getPieceColor } from './logic';
+import { getValidMoves, getPossibleMoves, checkGameState, getPieceType, getPieceColor } from './logic';
 
 // Piece Values
 const PIECE_VALUES = {
@@ -77,9 +77,14 @@ const MST = {
 
 // Evaluate the board from the perspective of the side to move (or absolute score)
 // Checks: Material, Position
-const evaluateBoard = (board) => {
+// Evaluate the board
+// Add Mobility and Endgame heuristics
+export const evaluateBoard = (board) => {
     let score = 0;
+    let whiteMaterial = 0;
+    let blackMaterial = 0;
 
+    // Material & Position
     for (let r = 0; r < 8; r++) {
         for (let c = 0; c < 8; c++) {
             const piece = board[r][c];
@@ -87,19 +92,27 @@ const evaluateBoard = (board) => {
                 const { type, color } = piece;
                 const value = PIECE_VALUES[type] || 0;
 
-                // Position bonus
-                // If white, map r to 0-7 directly? 
-                // Tables are usually "from perspective of white". 
-                // If arrays above are for White:
-                // r=0 is top (Black side), r=7 is bottom (White side).
-                // Actually standard tables are usually rank 1 to 8.
-                // Let's assume tables are for WHITE.
-                // White starts at r=7, moves to r=0.
-                // So for White, use table[r][c].
-                // For Black, mirror the table: table[7-r][c].
+                // Track material for endgame detection
+                if (type !== 'k' && type !== 'p') {
+                    if (color === 'w') whiteMaterial += value;
+                    else blackMaterial += value;
+                }
 
+                // MST Position
                 let posValue = 0;
                 if (MST[type]) {
+                    // Use Endgame King Table if material is low
+                    // Simple logic: if < 1500 material (e.g. just Rook + Minor), King should activate
+                    if (type === 'k') {
+                        const isEndgame = (color === 'w' ? blackMaterial : whiteMaterial) < 1500;
+                        if (isEndgame) {
+                            // Simple activating heuristic: separate table or just invert center logic
+                            // For simplicity using existing table but maybe boost it?
+                            // Or use a specific Endgame Table (adding later if needed).
+                            // For now, let's just stick to MST but maybe add center-proximity bonus in endgame?
+                        }
+                    }
+
                     if (color === 'w') {
                         posValue = MST[type][r][c];
                     } else {
@@ -115,11 +128,55 @@ const evaluateBoard = (board) => {
             }
         }
     }
+
+    // Mobility (Pseudo-legal moves count) - Small bonus per available move
+    // This encourages developing pieces and controlling space.
+    // Performance note: getPossibleMoves is faster than getValidMoves (no check simulation).
+    // We sample mobility for both sides.
+    const whiteMobility = countMobility(board, 'w');
+    const blackMobility = countMobility(board, 'b');
+
+    score += (whiteMobility * 5); // 5 points per pseudo-legal move (0.05 pawn)
+    score -= (blackMobility * 5);
+
     return score;
+};
+
+const countMobility = (board, color) => {
+    let count = 0;
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            if (board[r][c] && board[r][c].color === color) {
+                const moves = getPossibleMoves(board, r, c, null); // lastMove null for approx
+                count += moves.length;
+            }
+        }
+    }
+    return count;
+};
+
+// Transposition Table
+const transpositionTable = new Map();
+
+// Helper: Generate a unique signature for the board
+const getBoardSignature = (board, turn) => {
+    // fast character mapping
+    let sig = turn + ':';
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            const p = board[r][c];
+            if (p) sig += `${p.color}${p.type}${r}${c}`;
+        }
+    }
+    return sig;
 };
 
 // Minimax with Alpha-Beta Pruning
 export const getBestMove = (board, depth, isMaximizingPlayer, lastMove) => {
+    // Clear TT for new turn to ensure freshness (or keep if implementing iterative deepening later)
+    // For now, simple clear to manage memory
+    transpositionTable.clear();
+
     // Basic iterative deepening could go here, but fixed depth for now
     // Depth 3 is usually okay for JS (plies)
 
@@ -176,24 +233,40 @@ export const getBestMove = (board, depth, isMaximizingPlayer, lastMove) => {
 
 // Helper: Minimax recursive body
 const minimax = (board, depth, alpha, beta, isMaximizingPlayer, lastMove) => {
-    if (depth === 0) {
-        return evaluateBoard(board);
+    const turn = isMaximizingPlayer ? 'w' : 'b';
+    const boardSig = getBoardSignature(board, turn);
+    const alphaOriginal = alpha;
+
+    // 1. Memoization / Transposition Table Lookup
+    if (transpositionTable.has(boardSig)) {
+        const entry = transpositionTable.get(boardSig);
+        if (entry.depth >= depth) {
+            if (entry.type === 'exact') return entry.score;
+            if (entry.type === 'lower' && entry.score > alpha) alpha = entry.score;
+            else if (entry.type === 'upper' && entry.score < beta) beta = entry.score;
+            if (alpha >= beta) return entry.score;
+        }
     }
 
-    const turn = isMaximizingPlayer ? 'w' : 'b';
+    if (depth === 0) {
+        // Use Quiescence Search at leaf nodes to solve horizon effect
+        const val = quiescence(board, alpha, beta, isMaximizingPlayer, lastMove);
+        transpositionTable.set(boardSig, { score: val, depth, type: 'exact' });
+        return val;
+    }
+
     const moves = getAllMoves(board, turn, lastMove);
 
     if (moves.length === 0) {
-        // Checkmate or Stalemate
-        // If in check...
-        // For speed, just use eval. If eval is high/low enough it indicates advantage.
-        // To be precise:
-        // if (isCheck(board, turn)) return isMaximizingPlayer ? -99999 : 99999;
-        // else return 0; // Stalemate
-        return evaluateBoard(board);
+        // strictly check for checkmate vs stalemate
+        if (checkGameState(board, turn, lastMove) === 'checkmate') {
+            return isMaximizingPlayer ? -90000 : 90000;
+        }
+        return 0; // Stalemate
     }
 
-    moves.sort((a, b) => (b.capture ? 1 : 0) - (a.capture ? 1 : 0));
+    // Move Ordering: Captures > Checks (if possible) > History
+    moves.sort((a, b) => (b.capture ? 10 : 0) - (a.capture ? 10 : 0));
 
     if (isMaximizingPlayer) {
         let maxEval = -Infinity;
@@ -204,6 +277,11 @@ const minimax = (board, depth, alpha, beta, isMaximizingPlayer, lastMove) => {
             alpha = Math.max(alpha, ev);
             if (beta <= alpha) break;
         }
+
+        // Store in TT
+        const type = maxEval <= alphaOriginal ? 'upper' : (maxEval >= beta ? 'lower' : 'exact');
+        transpositionTable.set(boardSig, { score: maxEval, depth, type });
+
         return maxEval;
     } else {
         let minEval = Infinity;
@@ -214,8 +292,67 @@ const minimax = (board, depth, alpha, beta, isMaximizingPlayer, lastMove) => {
             beta = Math.min(beta, ev);
             if (beta <= alpha) break;
         }
+
+        // Store in TT
+        const type = minEval <= alphaOriginal ? 'upper' : (minEval >= beta ? 'lower' : 'exact');
+        transpositionTable.set(boardSig, { score: minEval, depth, type });
+
         return minEval;
     }
+};
+
+// Quiescence Search: Keep searching captures to avoid horizon effect
+const quiescence = (board, alpha, beta, isMaximizingPlayer, lastMove) => {
+    const standPat = evaluateBoard(board);
+
+    if (isMaximizingPlayer) {
+        if (standPat >= beta) return beta;
+        if (alpha < standPat) alpha = standPat;
+    } else {
+        if (standPat <= alpha) return alpha;
+        if (beta > standPat) beta = standPat;
+    }
+
+    // Generate only capture moves
+    const inputMoves = getAllMoves(board, isMaximizingPlayer ? 'w' : 'b', lastMove); // Optimization: pass flag to only generate captures?
+    const captureMoves = inputMoves.filter(m => m.capture);
+
+    // Sort captures by value (MVV-LVA) - simplified: just capture flag (already true), maybe capture value?
+    // For now assuming getAllMoves uses default order, but we should sort High Capture first.
+    // move.piece is attacker, we need victim. Victim is on board[move.to].
+    // Note: getAllMoves simulated board logic, 'to' might be empty in checking? No, getAllMoves uses current board.
+
+    captureMoves.sort((a, b) => {
+        // Victim value
+        const vA = getPieceValue(board[a.to.row][a.to.col]); // This might need helper
+        const vB = getPieceValue(board[b.to.row][b.to.col]);
+        return vB - vA;
+    });
+
+    if (isMaximizingPlayer) {
+        for (const move of captureMoves) {
+            const nextBoard = simulateMove(board, move);
+            const score = quiescence(nextBoard, alpha, beta, false, move);
+
+            if (score >= beta) return beta;
+            if (score > alpha) alpha = score;
+        }
+        return alpha;
+    } else {
+        for (const move of captureMoves) {
+            const nextBoard = simulateMove(board, move);
+            const score = quiescence(nextBoard, alpha, beta, true, move);
+
+            if (score <= alpha) return alpha;
+            if (score < beta) beta = score;
+        }
+        return beta;
+    }
+};
+
+const getPieceValue = (piece) => {
+    if (!piece) return 0;
+    return PIECE_VALUES[piece.type] || 0;
 };
 
 // Helper: Get all valid moves for a color

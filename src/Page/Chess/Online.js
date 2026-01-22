@@ -4,9 +4,12 @@ import { io } from 'socket.io-client';
 import { ArrowLeft, Copy, Check, Users, Wifi } from 'lucide-react';
 import Board from './Board';
 import { getValidMoves, checkGameState, initialBoard } from './logic';
-const SERVER_URL = process.env.REACT_APP_SERVER_URL;
+const SERVER_URL = process.env.REACT_APP_SERVER_URL || 'http://localhost:3001';
+
 
 const socket = io(SERVER_URL);
+
+
 
 const ChessOnline = ({ onBack }) => {
     const [view, setView] = useState('menu'); // menu, lobby, game
@@ -15,59 +18,95 @@ const ChessOnline = ({ onBack }) => {
     const [players, setPlayers] = useState([]);
     const [myColor, setMyColor] = useState(null); // 'w' or 'b'
 
+    // Time Control State
+    const [timeControl, setTimeControl] = useState(10); // Minutes (default 10)
+    const [whiteTime, setWhiteTime] = useState(null); // Seconds
+    const [blackTime, setBlackTime] = useState(null); // Seconds
+    const [timerActive, setTimerActive] = useState(false);
+
     // Game State
     const [board, setBoard] = useState(initialBoard);
     const [turn, setTurn] = useState('w');
-    const [gameState, setGameState] = useState('waiting'); // waiting, playing, check, checkmate, stalemate
+    const [gameState, setGameState] = useState('waiting'); // waiting, playing, check, checkmate, stalemate, timeout
     const [lastMove, setLastMove] = useState(null);
     const [selectedSquare, setSelectedSquare] = useState(null);
     const [possibleMoves, setPossibleMoves] = useState([]);
     const [promotionSquare, setPromotionSquare] = useState(null);
     const [copied, setCopied] = useState(false);
 
+    // Format Time Helper
+    const formatTime = (seconds) => {
+        if (seconds === null) return "--:--";
+        const m = Math.floor(Math.max(0, seconds) / 60);
+        const s = Math.floor(Math.max(0, seconds) % 60);
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
+    };
+
     useEffect(() => {
         // Socket Listeners
-        socket.on('chess_room_created', ({ roomId: newRoomId, color }) => {
+        socket.on('chess_room_created', ({ roomId: newRoomId, color, timeControl: tc }) => {
             setRoomId(newRoomId);
             setMyColor(color);
             setView('lobby');
             setPlayers([{ name: playerName, color, id: socket.id }]);
+            // Init timer for self (will sync when p2 joins)
+            if (tc) {
+                setWhiteTime(tc * 60);
+                setBlackTime(tc * 60);
+            }
         });
 
-        socket.on('chess_player_joined', ({ players, gameState, turn }) => {
+        socket.on('chess_player_joined', ({ players, gameState, turn, timeControl: tc, whiteTime: wt, blackTime: bt }) => {
             setPlayers(players);
-            // Identify my color if not set (i.e., if I am the joiner)
             const me = players.find(p => p.id === socket.id);
-            if (me) {
-                setMyColor(me.color);
+            if (me) setMyColor(me.color);
+
+            // Sync Timers
+            if (tc && !whiteTime) { // If joining, sync from server/host
+                setTimeControl(tc);
+                setWhiteTime(wt || tc * 60);
+                setBlackTime(bt || tc * 60);
             }
 
             if (gameState === 'playing') {
                 setView('game');
                 setGameState('playing');
+                setTimerActive(true); // Start clock
             }
         });
 
-        socket.on('chess_move_made', ({ move, board, gameState, turn }) => {
+        socket.on('chess_move_made', ({ move, board, gameState, turn, whiteTime: wt, blackTime: bt }) => {
             setBoard(board);
             setGameState(gameState);
             setTurn(turn);
-            setLastMove({ ...move, piece: board[move.to.row][move.to.col] }); // Reconstruct piece from board or pass explicit
-            // Actually, server passes full board, so we just trust it.
-            // Move highlight might need piece...
+            setLastMove({ ...move, piece: board[move.to.row][move.to.col] });
+
+            // Sync Times
+            if (wt !== undefined) setWhiteTime(wt);
+            if (bt !== undefined) setBlackTime(bt);
+
+            // If game over, stop timer
+            if (['checkmate', 'stalemate', 'timeout'].includes(gameState)) {
+                setTimerActive(false);
+            }
+        });
+
+        socket.on('chess_game_over', ({ reason, winner }) => {
+            setGameState('timeout');
+            setTimerActive(false);
+            alert(`Game Over: ${reason}. Winner: ${winner === 'w' ? 'White' : 'Black'}`);
         });
 
         socket.on('chess_player_left', () => {
             alert('Opponent disconnected');
             setView('menu');
-            // Reset state?
+            setTimerActive(false);
         });
 
         socket.on('chess_error', ({ message }) => {
             alert(message);
         });
 
-        // Initialize from URL
         const params = new URLSearchParams(window.location.search);
         const roomParam = params.get('room');
         if (roomParam) {
@@ -78,15 +117,64 @@ const ChessOnline = ({ onBack }) => {
             socket.off('chess_room_created');
             socket.off('chess_player_joined');
             socket.off('chess_move_made');
+            socket.off('chess_game_over');
             socket.off('chess_player_left');
             socket.off('chess_error');
         };
-    }, []); // Empty dependency for mount logic (socket listeners valid too)
+    }, []);
+    // Actually safer to keep dep array empty or correct. Empty is fine if we use functional updates or refs for mutable state, but here listeners are bound once.
+    // The issue with empty dep array is that 'whiteTime' inside listeners might be stale if we accessed it, but we get it from payload. So it's fine.
+
+    // Timer Countdown Effect
+    useEffect(() => {
+        let interval = null;
+        if (timerActive && gameState === 'playing') {
+            interval = setInterval(() => {
+                if (turn === 'w') {
+                    setWhiteTime(prev => {
+                        if (prev === null) return prev;
+                        if (prev <= 0) {
+                            clearInterval(interval);
+                            handleTimeout('w');
+                            return 0;
+                        }
+                        return prev - 1;
+                    });
+                } else {
+                    setBlackTime(prev => {
+                        if (prev === null) return prev;
+                        if (prev <= 0) {
+                            clearInterval(interval);
+                            handleTimeout('b');
+                            return 0;
+                        }
+                        return prev - 1;
+                    });
+                }
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [timerActive, gameState, turn]);
+
+    const handleTimeout = (loserColor) => {
+        setTimerActive(false);
+        setGameState('timeout');
+        // socket.emit('chess_timeout', { roomId, loser: loserColor }); 
+        // We assume trusted client for now. 
+        if (myColor !== loserColor) {
+            // If I am NOT the loser, I claim the win? 
+            // Or better, let the loser emit "I ran out of time". 
+            // To be robust, BOTH might emit. Server handles 1st one.
+            // For simplicity: If MY time runs out, *I* emit timeout.
+        } else {
+            socket.emit('chess_claim_timeout', { roomId, loser: myColor });
+        }
+    };
 
     // Helpers
     const createRoom = () => {
         if (!playerName.trim()) return alert('Enter name');
-        socket.emit('chess_create_room', { playerName });
+        socket.emit('chess_create_room', { playerName, timeControl });
     };
 
     const joinRoom = () => {
@@ -95,15 +183,17 @@ const ChessOnline = ({ onBack }) => {
     };
 
     const copyRoomId = () => {
-        const url = `${window.location.origin}/chess?room=${roomId}`;
+        const url = `${window.location.origin}/chess/online?room=${roomId}`;
         navigator.clipboard.writeText(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
     };
 
-    // Game Logic (Mirroring Local logic but emitting moves)
+    // Game Logic
     const handleSquareClick = (row, col) => {
         if (gameState !== 'playing' && gameState !== 'check') return;
-        if (turn !== myColor) return; // Not my turn
-        if (promotionSquare) return; // Block interaction if promotion pending
+        if (turn !== myColor) return;
+        if (promotionSquare) return;
 
         const clickedPiece = board[row][col];
         const isSelected = selectedSquare && selectedSquare.row === row && selectedSquare.col === col;
@@ -114,16 +204,13 @@ const ChessOnline = ({ onBack }) => {
             return;
         }
 
-        // Move Piece
         if (selectedSquare) {
             const move = possibleMoves.find(m => m.row === row && m.col === col);
             if (move) {
-                // Check Promotion
                 if (move.isPromotion) {
                     setPromotionSquare({ row, col, move, fromRow: selectedSquare.row, fromCol: selectedSquare.col });
                     return;
                 }
-
                 executeMove(selectedSquare.row, selectedSquare.col, row, col, move);
                 return;
             }
@@ -141,18 +228,14 @@ const ChessOnline = ({ onBack }) => {
     };
 
     const executeMove = (fromRow, fromCol, toRow, toCol, moveDetails) => {
-        // Optimistic Update
         const newBoard = board.map(r => r.map(c => c ? { ...c } : null));
         let movingPiece = { ...newBoard[fromRow][fromCol], hasMoved: true };
 
-        if (moveDetails.isPromotion) {
-            movingPiece.type = moveDetails.promotionType || 'q';
-        }
+        if (moveDetails.isPromotion) movingPiece.type = moveDetails.promotionType || 'q';
 
         newBoard[fromRow][fromCol] = null;
         newBoard[toRow][toCol] = movingPiece;
 
-        // Castling
         if (moveDetails.isCastling) {
             if (toCol > fromCol) { // Kingside
                 const rook = newBoard[fromRow][7];
@@ -165,7 +248,6 @@ const ChessOnline = ({ onBack }) => {
             }
         }
 
-        // En Passant
         if (moveDetails.isEnPassant) {
             const captureRow = fromRow;
             newBoard[captureRow][toCol] = null;
@@ -181,7 +263,6 @@ const ChessOnline = ({ onBack }) => {
         const nextTurn = turn === 'w' ? 'b' : 'w';
         const newState = checkGameState(newBoard, nextTurn, thisMove);
 
-        // Update Local
         setBoard(newBoard);
         setTurn(nextTurn);
         setLastMove(thisMove);
@@ -190,14 +271,21 @@ const ChessOnline = ({ onBack }) => {
         setPossibleMoves([]);
         setPromotionSquare(null);
 
-        // Emit to Server
+        // Emit to Server with time
         socket.emit('chess_make_move', {
             roomId,
             move: thisMove,
             boardState: newBoard,
             gameState: newState,
-            turn: nextTurn
+            turn: nextTurn,
+            whiteTime, // My current local time
+            blackTime  // Opponent's time (unchanged during my turn)
         });
+
+        // If game over locally
+        if (['checkmate', 'stalemate'].includes(newState)) {
+            setTimerActive(false);
+        }
     };
 
     const handlePromotionSelect = (type) => {
@@ -212,7 +300,6 @@ const ChessOnline = ({ onBack }) => {
     if (view === 'menu') {
         return (
             <div className="flex flex-col items-center justify-start min-h-screen pt-36 md:pt-40 p-4 text-white relative overflow-hidden">
-                {/* Background Ambient Glow */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-emerald-900/20 blur-[100px] rounded-full pointer-events-none" />
 
                 <div className="w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 text-center shadow-2xl z-10">
@@ -231,6 +318,24 @@ const ChessOnline = ({ onBack }) => {
                             onChange={(e) => setPlayerName(e.target.value)}
                             className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
                         />
+
+                        {/* Time Control Selector */}
+                        <div className="flex flex-col text-left gap-1">
+                            <label className="text-xs text-slate-500 font-bold uppercase tracking-wider ml-1">Time Control</label>
+                            <div className="flex gap-2">
+                                {[5, 10, 30].map(m => (
+                                    <button
+                                        key={m}
+                                        onClick={() => setTimeControl(m)}
+                                        className={`flex-1 py-2 rounded-lg border text-sm font-bold transition-all ${timeControl === m
+                                            ? 'bg-emerald-600 border-emerald-500 text-white'
+                                            : 'bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700'}`}
+                                    >
+                                        {m} min
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
 
                         <div className="flex flex-col sm:flex-row gap-2">
                             <input
@@ -254,7 +359,7 @@ const ChessOnline = ({ onBack }) => {
                             onClick={createRoom}
                             className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl text-white font-bold hover:opacity-90 transition-opacity shadow-lg shadow-emerald-500/20"
                         >
-                            Create New Room
+                            Create New Room ({timeControl} min)
                         </button>
                     </div>
                 </div>
@@ -265,7 +370,6 @@ const ChessOnline = ({ onBack }) => {
     if (view === 'lobby') {
         return (
             <div className="flex flex-col items-center justify-start min-h-screen pt-36 md:pt-40 p-4 text-white relative overflow-hidden">
-                {/* Background Ambient Glow */}
                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-blue-900/20 blur-[100px] rounded-full pointer-events-none" />
 
                 <div className="w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 text-center shadow-2xl z-10">
@@ -306,6 +410,10 @@ const ChessOnline = ({ onBack }) => {
                             </div>
                         )}
                     </div>
+
+                    <div className="mt-8 pt-4 border-t border-white/5 text-sm text-slate-500">
+                        Time Control: <span className="text-white font-bold">{timeControl} min</span>
+                    </div>
                 </div>
             </div>
         );
@@ -328,18 +436,39 @@ const ChessOnline = ({ onBack }) => {
                 <div className="w-10" />
             </div>
 
-            <div className="text-center mb-6">
-                <div className={`text-xl font-bold ${gameState === 'checkmate' ? 'text-red-500' :
-                    gameState === 'check' ? 'text-orange-500' :
-                        'text-slate-400'
-                    }`}>
-                    {gameState === 'checkmate' ? `Checkmate! ${turn === 'w' ? 'Black' : 'White'} Wins!` :
-                        gameState === 'check' ? `${turn === 'w' ? 'White' : 'Black'} is in Check!` :
-                            gameState === 'stalemate' ? "Stalemate!" :
-                                `Turn: ${turn === 'w' ? 'White' : 'Black'}`}
+            {/* Timers & Status */}
+            <div className="w-full flex justify-between items-end mb-4 px-2">
+                {/* Opponent Info */}
+                <div className="flex flex-col items-start gap-1">
+                    <div className="flex items-center gap-2">
+                        <div className={`w-3 h-3 rounded-full ${myColor === 'w' ? 'bg-black border border-white/20' : 'bg-white'}`}></div>
+                        <span className="text-sm font-bold text-slate-300">{myColor === 'w' ? 'Black' : 'White'} (Opponent)</span>
+                    </div>
+                    <div className={`text-2xl font-mono font-bold px-3 py-1 rounded-lg border ${turn !== myColor ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]' : 'bg-slate-800 text-slate-500 border-white/10'}`}>
+                        {formatTime(myColor === 'w' ? blackTime : whiteTime)}
+                    </div>
                 </div>
-                <div className="text-sm text-emerald-400 mt-1">
-                    You are playing as {myColor === 'w' ? 'White' : 'Black'}
+
+                {/* Game Status Text */}
+                <div className="text-center pb-2">
+                    <div className={`text-lg font-bold ${gameState === 'checkmate' || gameState === 'timeout' ? 'text-red-500 animate-pulse' :
+                        gameState === 'check' ? 'text-orange-500' : 'text-slate-400'}`}>
+                        {gameState === 'checkmate' ? "Checkmate!" :
+                            gameState === 'timeout' ? "Time Out!" :
+                                gameState === 'check' ? "Check!" :
+                                    turn === myColor ? "Your Turn" : "Waiting..."}
+                    </div>
+                </div>
+
+                {/* My Info */}
+                <div className="flex flex-col items-end gap-1">
+                    <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-emerald-400">{myColor === 'w' ? 'White' : 'Black'} (You)</span>
+                        <div className={`w-3 h-3 rounded-full ${myColor === 'w' ? 'bg-white' : 'bg-black border border-white/20'}`}></div>
+                    </div>
+                    <div className={`text-2xl font-mono font-bold px-3 py-1 rounded-lg border ${turn === myColor ? 'bg-white text-black border-white shadow-[0_0_15px_rgba(255,255,255,0.3)]' : 'bg-slate-800 text-slate-500 border-white/10'}`}>
+                        {formatTime(myColor === 'w' ? whiteTime : blackTime)}
+                    </div>
                 </div>
             </div>
 
@@ -347,8 +476,7 @@ const ChessOnline = ({ onBack }) => {
                 board={board}
                 onSquareClick={handleSquareClick}
                 selectedSquare={selectedSquare}
-                possibleMoves={possibleMoves} // Maybe highlight last move too?
-                // Rotate board for Black?
+                possibleMoves={possibleMoves}
                 rotation={myColor === 'b'}
             />
 

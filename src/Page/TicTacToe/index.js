@@ -1,17 +1,12 @@
-
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { User, Users, Globe, ArrowLeft, Gamepad2 } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, Routes, Route } from 'react-router-dom';
 import LocalTicTacToe from './Local.js';
-// OnlineTicTacToe will be lazily loaded or imported when ready
 import OnlineTicTacToe from './Online.js';
 
-const TicTacToe = () => {
+const TicTacToeMenu = () => {
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const roomParam = searchParams.get('room');
-    const [mode, setMode] = useState(roomParam ? 'online' : 'menu'); // 'menu', 'ai', 'local', 'online'
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -23,22 +18,13 @@ const TicTacToe = () => {
         visible: { opacity: 1, y: 0 }
     };
 
-    // If active game mode, render that component
-    if (mode === 'ai' || mode === 'local') {
-        return <LocalTicTacToe mode={mode} onBack={() => setMode('menu')} />;
-    }
-
-    if (mode === 'online') {
-        return <OnlineTicTacToe onBack={() => setMode('menu')} />;
-    }
-
     return (
-        <div className="min-h-screen bg-[#0B0C15] pt-36 md:pt-40 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+        <div className="flex flex-col items-center justify-center p-4 relative w-full h-full">
             {/* Background Ambient Glow */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-900/20 blur-[120px] rounded-full pointer-events-none" />
 
             {/* Back Button */}
-            <div className="absolute top-24 left-4 md:left-8 z-20">
+            <div className="absolute top-0 left-4 md:left-8 z-20">
                 <button
                     onClick={() => navigate('/')}
                     className="p-3 bg-slate-800/50 hover:bg-slate-700/80 backdrop-blur-md border border-white/10 rounded-full text-slate-300 hover:text-white transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
@@ -51,7 +37,7 @@ const TicTacToe = () => {
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="w-full max-w-4xl z-10 flex flex-col items-center"
+                className="w-full max-w-4xl z-10 flex flex-col items-center mt-12"
             >
                 {/* Header */}
                 <motion.div variants={itemVariants} className="text-center mb-12">
@@ -73,7 +59,7 @@ const TicTacToe = () => {
                         variants={itemVariants}
                         whileHover={{ scale: 1.03, y: -5 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => setMode('ai')}
+                        onClick={() => navigate('ai')}
                         className="group relative h-64 bg-slate-900/40 backdrop-blur-md rounded-3xl border border-white/10 p-8 flex flex-col items-center justify-center text-center transition-all hover:bg-slate-800/60 hover:border-blue-500/30 overflow-hidden shadow-2xl"
                     >
                         <div className="mb-6 p-4 bg-blue-500/10 rounded-2xl group-hover:bg-blue-500/20 transition-colors">
@@ -91,7 +77,7 @@ const TicTacToe = () => {
                         variants={itemVariants}
                         whileHover={{ scale: 1.03, y: -5 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => setMode('local')}
+                        onClick={() => navigate('local')}
                         className="group relative h-64 bg-slate-900/40 backdrop-blur-md rounded-3xl border border-white/10 p-8 flex flex-col items-center justify-center text-center transition-all hover:bg-slate-800/60 hover:border-purple-500/30 overflow-hidden shadow-2xl"
                     >
                         <div className="mb-6 p-4 bg-purple-500/10 rounded-2xl group-hover:bg-purple-500/20 transition-colors">
@@ -108,7 +94,7 @@ const TicTacToe = () => {
                         variants={itemVariants}
                         whileHover={{ scale: 1.03, y: -5 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => setMode('online')}
+                        onClick={() => navigate('online')}
                         className="group relative h-64 bg-slate-900/40 backdrop-blur-md rounded-3xl border border-white/10 p-8 flex flex-col items-center justify-center text-center transition-all hover:bg-slate-800/60 hover:border-pink-500/30 overflow-hidden shadow-2xl"
                     >
                         <div className="mb-6 p-4 bg-pink-500/10 rounded-2xl group-hover:bg-pink-500/20 transition-colors">
@@ -121,6 +107,21 @@ const TicTacToe = () => {
                     </motion.button>
                 </div>
             </motion.div>
+        </div>
+    );
+};
+
+const TicTacToe = () => {
+    const navigate = useNavigate();
+
+    return (
+        <div className="min-h-full w-full">
+            <Routes>
+                <Route index element={<TicTacToeMenu />} />
+                <Route path="ai" element={<LocalTicTacToe mode="ai" onBack={() => navigate('/TicTacToe')} />} />
+                <Route path="local" element={<LocalTicTacToe mode="local" onBack={() => navigate('/TicTacToe')} />} />
+                <Route path="online" element={<OnlineTicTacToe onBack={() => navigate('/TicTacToe')} />} />
+            </Routes>
         </div>
     );
 };

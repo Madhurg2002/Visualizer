@@ -5,17 +5,20 @@ export const parsePGN = (pgn) => {
     // Remove comments { ... }
     let clean = pgn.replace(/\{[^}]*\}/g, "");
     // Remove move numbers 1. 2. ...
-    clean = clean.replace(/\d+\./g, "");
+    // Remove move numbers 1. 2. ...
+    clean = clean.replace(/\d+\.+/g, ""); // Handle 1. or 1...
     // Remove results 1-0, 0-1, 1/2-1/2
     clean = clean.replace(/(1-0|0-1|1\/2-1\/2)/g, "");
-    // Remove extra whitespace
-    const moves = clean.trim().split(/\s+/).filter(m => m);
+    // Remove extra whitespace including newlines
+    const moves = clean.trim().split(/\s+/).filter(m => m && !/^\d+\.?$/.test(m)); // Filter out stray numbers
     return moves;
 };
 
 // Convert Algebraic (e.g. "Nf3") to Move Object { from: {r,c}, to: {r,c}, ... }
 // Requires current board state and turn color to validate and find the piece.
-export const algebraicToMove = (notation, board, turn) => {
+// Convert Algebraic (e.g. "Nf3") to Move Object { from: {r,c}, to: {r,c}, ... }
+// Requires current board state, turn color, and lastMove (for En Passant) to validate.
+export const algebraicToMove = (notation, board, turn, lastMove) => {
     // 1. Parse Notation
     // Examples: "e4" (Pawn), "exd5", "Nf3", "Nbd7", "O-O", "O-O-O", "Qxd4+"
 
@@ -121,7 +124,8 @@ export const algebraicToMove = (notation, board, turn) => {
                 if (disambigRow !== -1 && r !== disambigRow) continue;
 
                 // Check if this piece can move to target
-                const moves = getValidMoves(board, r, c, null); // passing null lastMove might break En Passant check? 
+                // Check if this piece can move to target
+                const moves = getValidMoves(board, r, c, lastMove);
                 // Issue: getValidMoves needs lastMove for En Passant.
                 // WE NEED LAST MOVE passed into this function too.
                 // Assuming basic moves for now, but En Passant verification requires it.

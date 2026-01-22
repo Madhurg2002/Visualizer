@@ -28,11 +28,11 @@ export default function App() {
           <Route exact path="/CellularAutomata" element={<CellularAutomata />} />
 
           <Route exact path="/Sudoku" element={<Sudoku />} />
-          <Route exact path="/ForbiddenWords" element={<ForbiddenWords />} />
+          <Route path="/ForbiddenWords/*" element={<ForbiddenWords />} />
           <Route exact path="/FallingBlocks" element={<FallingBlocks />} />
           <Route exact path="/Minesweeper" element={<Minesweeper />} />
           <Route exact path="/FlappyBird" element={<FlappyBird />} />
-          <Route exact path="/TicTacToe" element={<TicTacToe />} />
+          <Route path="/TicTacToe/*" element={<TicTacToe />} />
           <Route path="/Chess/*" element={<Chess />} />
 
           <Route path="/*" element={<Navigate to="/" />} />

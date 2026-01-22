@@ -69,7 +69,7 @@ const LocalTicTacToe = ({ mode, onBack }) => {
         : `Next Player: ${xIsNext ? 'X' : 'O'}`;
 
     return (
-        <div className="min-h-screen bg-[#0B0C15] pt-36 md:pt-40 px-4 flex flex-col items-center justify-start relative overflow-hidden">
+        <div className="w-full px-4 flex flex-col items-center justify-start relative overflow-hidden">
             {/* HUD */}
             <div className="w-full flex justify-between items-center mb-8 bg-slate-800/50 p-4 rounded-2xl border border-white/5 backdrop-blur-md max-w-lg z-10">
                 <button

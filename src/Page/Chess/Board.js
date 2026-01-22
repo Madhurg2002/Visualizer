@@ -9,7 +9,7 @@ const Piece = ({ type, color }) => {
     return Component ? <Component className="w-full h-full drop-shadow-lg" /> : null;
 };
 
-const Board = ({ board, onSquareClick, selectedSquare, possibleMoves, rotation = false }) => {
+const Board = ({ board, onSquareClick, selectedSquare, possibleMoves, rotation = false, bestMoveHint = null }) => {
 
     // Logic.jsBoard is always 8x8.
     // If rotation is true (Black View), we want visual Top-Left to be 7,7?
@@ -20,6 +20,8 @@ const Board = ({ board, onSquareClick, selectedSquare, possibleMoves, rotation =
     // White View: I want Row 0 at Top. Row 7 at Bottom.
     // Black View: I want Row 7 at Top. Row 0 at Bottom.
 
+    // White View (Default): Row 0 (Black) at Top. Row 7 (White) at Bottom.
+    // Black View (Flipped): Row 7 (White) at Top. Row 0 (Black) at Bottom.
     const rows = rotation ? [7, 6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6, 7];
     const cols = rotation ? [7, 6, 5, 4, 3, 2, 1, 0] : [0, 1, 2, 3, 4, 5, 6, 7];
 
@@ -38,6 +40,11 @@ const Board = ({ board, onSquareClick, selectedSquare, possibleMoves, rotation =
                         const isPossibleMove = !!validMove;
                         const isCapture = validMove && validMove.capture;
 
+                        // Hint Logic
+                        const isHintFrom = bestMoveHint && bestMoveHint.from.row === row && bestMoveHint.from.col === col;
+                        const isHintTo = bestMoveHint && bestMoveHint.to.row === row && bestMoveHint.to.col === col;
+                        const isHint = isHintFrom || isHintTo;
+
                         // Click Logic
                         // If my turn, I click my piece (row, col)
                         // onSquareClick expects (row, col) indices of the board array.
@@ -50,6 +57,7 @@ const Board = ({ board, onSquareClick, selectedSquare, possibleMoves, rotation =
                                     relative flex items-center justify-center cursor-pointer
                                     ${isLight ? 'bg-[#EBECD0]' : 'bg-[#739552]'}
                                     ${isSelected ? 'after:absolute after:inset-0 after:bg-yellow-400/50' : ''}
+                                    ${isHint ? 'ring-inset ring-4 ring-blue-400/60' : ''}
                                 `}
                             >
                                 {/* Rank/File Markers */}
@@ -57,10 +65,21 @@ const Board = ({ board, onSquareClick, selectedSquare, possibleMoves, rotation =
                                 {/* Top-Left Corner of View depends on rotation */}
                                 {/* Just show for specific visual rows/cols */}
 
-                                {/* Rank (Numbers): Left side */}
+                                {/* Rank (Numbers): Left side. Visual Column 0.
+                                    If rotation (Flip), Visual Col 0 is Logical Col 7.
+                                    If !rotation, Visual Col 0 is Logical Col 0.
+                                */}
                                 {col === (rotation ? 7 : 0) && (
                                     <span className={`absolute top-0.5 left-1 text-[10px] font-bold ${isLight ? 'text-[#739552]' : 'text-[#EBECD0]'}`}>
-                                        {8 - row}
+                                        {/* If rotation (Black View), visual top row is 0, which is Rank 1. Visual bottom is 7 (Rank 8). 
+                                            Wait, logical row 0 is Rank 8. logical row 7 is Rank 1.
+                                            White View (0..7): Top is 0 (8). Bottom is 7 (1). Formula: 8 - row.
+                                            Black View (7..0): Top is 7 (1). Bottom is 0 (8). Formula: 8 - row.
+                                            Actually the Formula 8-row relies on the 'row' variable being the LOGICAL row index.
+                                            In White View, Top Div has key=0. 8-0=8. Correct.
+                                            In Black View, Top Div has key=7. 8-7=1. Correct. 
+                                            So logic is fine. */
+                                            8 - row}
                                     </span>
                                 )}
 

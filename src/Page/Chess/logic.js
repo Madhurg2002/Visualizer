@@ -325,3 +325,39 @@ export const getAlgebraicNotation = (move, board, isCheck, isCheckmate) => {
 
     return notation;
 };
+
+// Convert Board to FEN
+export const boardToFen = (board, turn, castling = { w: { k: true, q: true }, b: { k: true, q: true } }, enPassant = '-', halfMove = 0, fullMove = 1) => {
+    let fen = "";
+    for (let r = 0; r < 8; r++) {
+        let empty = 0;
+        for (let c = 0; c < 8; c++) {
+            const p = board[r][c];
+            if (!p) {
+                empty++;
+            } else {
+                if (empty > 0) {
+                    fen += empty;
+                    empty = 0;
+                }
+                const char = p.type === 'n' ? 'n' : p.type; // Ensure proper char
+                fen += p.color === 'w' ? char.toUpperCase() : char.toLowerCase();
+            }
+        }
+        if (empty > 0) fen += empty;
+        if (r < 7) fen += "/";
+    }
+
+    fen += ` ${turn} `;
+
+    // Castling
+    let castlingStr = "";
+    if (castling.w.k) castlingStr += "K";
+    if (castling.w.q) castlingStr += "Q";
+    if (castling.b.k) castlingStr += "k";
+    if (castling.b.q) castlingStr += "q";
+    fen += (castlingStr || "-");
+
+    fen += ` ${enPassant} ${halfMove} ${fullMove}`;
+    return fen;
+};

@@ -369,8 +369,8 @@ export default function Sudoku() {
   return (
     <div
       style={{
-        padding: 32,
-        minHeight: "100vh",
+        padding: "0 32px 32px 32px",
+        width: "100%",
         background: themeColors.bg,
         display: "flex",
         flexDirection: "column",

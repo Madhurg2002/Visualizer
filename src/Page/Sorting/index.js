@@ -24,7 +24,7 @@ const Sort = () => {
         reset,
         stepSort
     } = useSort(50);
-    
+
     const [showDesc, setShowDesc] = useState(false);
     const [customInput, setCustomInput] = useState("");
 
@@ -34,7 +34,7 @@ const Sort = () => {
         const nums = customInput.split(',')
             .map(s => parseInt(s.trim()))
             .filter(n => !isNaN(n));
-        
+
         if (nums.length > 0) {
             setArray(nums);
             setSize(nums.length);
@@ -42,15 +42,15 @@ const Sort = () => {
     };
 
     return (
-        <div className="flex flex-col items-center justify-center p-6 h-full w-full bg-slate-50">
+        <div className="flex flex-col items-center justify-center p-6 w-full h-full">
             {/* Controls Header */}
-            <div className="w-full max-w-6xl bg-white rounded-xl shadow-lg p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 transition-all duration-300">
-                
+            <div className="w-full max-w-6xl bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-xl shadow-lg p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 transition-all duration-300">
+
                 {/* Inputs Group */}
                 <div className="flex flex-wrap items-center gap-6 justify-center md:justify-start">
                     <div className="flex flex-col space-y-1 relative"
-                         onMouseEnter={() => setShowDesc(true)}
-                         onMouseLeave={() => setShowDesc(false)}
+                        onMouseEnter={() => setShowDesc(true)}
+                        onMouseLeave={() => setShowDesc(false)}
                     >
                         <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1 cursor-help">
                             Algorithm <span className="text-slate-400 text-[10px]">(Hover for info)</span>
@@ -65,16 +65,16 @@ const Sort = () => {
                                 <option key={algo} value={algo}>{algo}</option>
                             ))}
                         </select>
-                        
-                         {/* Description Popover */}
-                         {showDesc && (
+
+                        {/* Description Popover */}
+                        {showDesc && (
                             <div className="absolute top-full left-0 mt-2 w-96 z-50 bg-white border-l-4 border-blue-500 p-4 rounded shadow-xl animate-fade-in pointer-events-none">
                                 <h3 className="text-lg font-bold text-blue-800 mb-1">{algorithm}</h3>
                                 <p className="text-sm text-blue-700 leading-relaxed">
                                     {ALGORITHM_DESCRIPTIONS[algorithm]}
                                 </p>
                             </div>
-                         )}
+                        )}
                     </div>
 
                     <div className="flex flex-col space-y-1 w-32">
@@ -91,8 +91,8 @@ const Sort = () => {
                     </div>
 
                     <div className="flex flex-col space-y-1 w-32">
-                         <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Speed: {speed}</label>
-                         <input
+                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Speed: {speed}</label>
+                        <input
                             type="range"
                             min="1"
                             max="100"
@@ -105,7 +105,7 @@ const Sort = () => {
 
                 {/* Custom Input */}
                 <div className="flex gap-2">
-                    <input 
+                    <input
                         type="text"
                         placeholder="e.g. 10, 5, 8, 20"
                         value={customInput}
@@ -132,9 +132,9 @@ const Sort = () => {
                             <span>Start</span>
                         </button>
                     )}
-                    
+
                     {sorting && !paused && (
-                         <button
+                        <button
                             onClick={pauseSort}
                             className="flex items-center gap-2 px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
                         >
@@ -162,13 +162,12 @@ const Sort = () => {
                     <button
                         onClick={reset}
                         disabled={sorting && !paused}
-                        className={`flex items-center gap-2 px-4 py-2.5 font-medium rounded-lg shadow-sm border border-slate-200 transition-all duration-200 ${
-                            sorting && !paused 
-                            ? "bg-slate-100 text-slate-400 cursor-not-allowed" 
+                        className={`flex items-center gap-2 px-4 py-2.5 font-medium rounded-lg shadow-sm border border-slate-200 transition-all duration-200 ${sorting && !paused
+                            ? "bg-slate-100 text-slate-400 cursor-not-allowed"
                             : "bg-white text-slate-700 hover:bg-slate-50 hover:text-red-500"
-                        }`}
+                            }`}
                     >
-                         <span>Reset</span>
+                        <span>Reset</span>
                     </button>
                 </div>
             </div>
@@ -177,7 +176,7 @@ const Sort = () => {
             {/* Description - Removed fixed block, moved to hover tooltip */}
 
             {/* Legend */}
-            <div className="flex gap-6 mb-4 text-sm font-medium text-slate-600 bg-white px-6 py-2 rounded-full shadow-sm border border-slate-100">
+            <div className="flex gap-6 mb-4 text-sm font-medium text-slate-400 bg-slate-900 px-6 py-2 rounded-full shadow-sm border border-white/10">
                 <div className="flex items-center gap-2">
                     <div className="w-3 h-3 bg-purple-600 rounded-sm"></div>
                     <span>Active/Compare</span>
@@ -187,29 +186,28 @@ const Sort = () => {
                     <span>Unsorted</span>
                 </div>
                 <div className="flex items-center gap-2">
-                     <span className="text-xs text-slate-400">Sorted state is implied by order</span>
+                    <span className="text-xs text-slate-400">Sorted state is implied by order</span>
                 </div>
             </div>
 
             {/* Visualizer Board */}
-            <div className="relative w-full max-w-6xl flex-grow bg-white rounded-xl shadow-2xl overflow-hidden border border-slate-100 flex flex-col" style={{ height: '60vh', minHeight: '400px' }}>
+            <div className="relative w-full max-w-6xl flex-grow bg-slate-900/50 rounded-xl shadow-2xl overflow-hidden border border-white/10 flex flex-col" style={{ height: '60vh', minHeight: '400px' }}>
                 <div className="flex-1 w-full flex items-end justify-center gap-[1px] sm:gap-[2px] p-4 pb-0">
                     {array.map((val, idx) => {
-                         const isActive = activeIndices.includes(idx);
-                         return (
+                        const isActive = activeIndices.includes(idx);
+                        return (
                             <div
                                 key={idx}
                                 style={{
                                     height: `${(val / maxVal) * 100}%`,
                                     width: `${100 / size}%`
                                 }}
-                                className={`rounded-t-sm transition-all duration-200 ease-in-out ${
-                                    isActive 
-                                    ? 'bg-purple-600 shadow-[0_0_15px_rgba(168,85,247,0.5)]' 
+                                className={`rounded-t-sm transition-all duration-200 ease-in-out ${isActive
+                                    ? 'bg-purple-600 shadow-[0_0_15px_rgba(168,85,247,0.5)]'
                                     : 'bg-blue-600 opacity-90 hover:opacity-100'
-                                }`}
+                                    }`}
                             ></div>
-                         );
+                        );
                     })}
                 </div>
             </div>

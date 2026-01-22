@@ -171,7 +171,7 @@ const OnlineTaboo = ({ onBack }) => {
     const isOpponent = myPlayer?.team && myPlayer?.team !== 'Spectator' && myPlayer?.team !== currentTeam;
 
     return (
-        <div className="min-h-screen bg-[#0B0C15] flex flex-col items-center justify-start pt-36 md:pt-40 p-4 relative overflow-hidden">
+        <div className="w-full flex flex-col items-center justify-start p-4 relative overflow-hidden">
             {/* Background Ambient Glow */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-purple-900/20 blur-[120px] rounded-full pointer-events-none" />
 

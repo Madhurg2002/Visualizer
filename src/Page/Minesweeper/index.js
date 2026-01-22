@@ -148,7 +148,7 @@ export default function Minesweeper() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col items-center pt-8 text-white font-sans p-4">
+    <div className="w-full h-full flex flex-col items-center pt-8 text-white font-sans p-4 bg-slate-900">
       <h1 className="text-4xl font-bold mb-6 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-red-500">
         Minesweeper
       </h1>
