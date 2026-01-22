@@ -271,3 +271,57 @@ export const checkGameState = (board, turn, lastMove) => {
     }
     return inCheck ? 'check' : 'playing';
 };
+
+// Convert move to Algebraic Notation (e.g., Nf3, exd5, O-O, e8=Q#)
+export const getAlgebraicNotation = (move, board, isCheck, isCheckmate) => {
+    const { from, to, piece, isCastling, isPromotion, promotionType, isCapture } = move;
+
+    if (isCastling) {
+        return to.col > from.col ? "O-O" : "O-O-O"; // Kingside vs Queenside
+    }
+
+    const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
+    const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
+
+    const fromFile = files[from.col];
+    const toFile = files[to.col];
+    const toRank = ranks[to.row];
+
+    let notation = "";
+
+    // Piece Type (Pawn is empty usually)
+    if (piece.type.toLowerCase() !== 'p') {
+        notation += piece.type.toUpperCase();
+    }
+
+    // Disambiguation (not fully implemented, assume unique for now or add basic file if pawn capture)
+    // Basic file disambiguation for pawns
+    if (piece.type.toLowerCase() === 'p' && isCapture) {
+        notation += fromFile;
+    }
+
+    // For Knights/Rooks, we might need disambiguation (e.g. Nge2), skipping complex logic for MVP
+    // Ideally we check if another piece of same type/color can move to 'to'
+
+    // Capture
+    if (isCapture) {
+        notation += "x";
+    }
+
+    // Destination
+    notation += toFile + toRank;
+
+    // Promotion
+    if (isPromotion) {
+        notation += "=" + (promotionType || 'Q').toUpperCase();
+    }
+
+    // Check/Checkmate
+    if (isCheckmate) {
+        notation += "#";
+    } else if (isCheck) {
+        notation += "+";
+    }
+
+    return notation;
+};

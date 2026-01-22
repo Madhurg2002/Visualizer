@@ -33,7 +33,7 @@ export default function App() {
           <Route exact path="/Minesweeper" element={<Minesweeper />} />
           <Route exact path="/FlappyBird" element={<FlappyBird />} />
           <Route exact path="/TicTacToe" element={<TicTacToe />} />
-          <Route exact path="/Chess" element={<Chess />} />
+          <Route path="/Chess/*" element={<Chess />} />
 
           <Route path="/*" element={<Navigate to="/" />} />
         </Routes>

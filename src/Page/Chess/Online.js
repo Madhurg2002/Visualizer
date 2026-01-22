@@ -23,6 +23,7 @@ const ChessOnline = ({ onBack }) => {
     const [selectedSquare, setSelectedSquare] = useState(null);
     const [possibleMoves, setPossibleMoves] = useState([]);
     const [promotionSquare, setPromotionSquare] = useState(null);
+    const [copied, setCopied] = useState(false);
 
     useEffect(() => {
         // Socket Listeners
@@ -66,6 +67,13 @@ const ChessOnline = ({ onBack }) => {
             alert(message);
         });
 
+        // Initialize from URL
+        const params = new URLSearchParams(window.location.search);
+        const roomParam = params.get('room');
+        if (roomParam) {
+            setRoomId(roomParam);
+        }
+
         return () => {
             socket.off('chess_room_created');
             socket.off('chess_player_joined');
@@ -73,7 +81,7 @@ const ChessOnline = ({ onBack }) => {
             socket.off('chess_player_left');
             socket.off('chess_error');
         };
-    }, [playerName]);
+    }, []); // Empty dependency for mount logic (socket listeners valid too)
 
     // Helpers
     const createRoom = () => {
@@ -203,37 +211,50 @@ const ChessOnline = ({ onBack }) => {
     // Renders
     if (view === 'menu') {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] text-white">
-                <h2 className="text-3xl font-bold mb-8">Chess Online</h2>
-                <div className="w-full max-w-sm space-y-4">
-                    <input
-                        type="text"
-                        placeholder="Enter your name"
-                        value={playerName}
-                        onChange={(e) => setPlayerName(e.target.value)}
-                        className="w-full p-4 bg-slate-800 rounded-xl border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400"
-                    />
-                    <button onClick={createRoom} className="w-full p-4 bg-emerald-500 hover:bg-emerald-600 rounded-xl font-bold transition-all">
-                        Create Room
-                    </button>
-                    <div className="relative">
-                        <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-white/10"></div>
+            <div className="flex flex-col items-center justify-start min-h-screen pt-36 md:pt-40 p-4 text-white relative overflow-hidden">
+                {/* Background Ambient Glow */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-emerald-900/20 blur-[100px] rounded-full pointer-events-none" />
+
+                <div className="w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 text-center shadow-2xl z-10">
+                    <div className="flex items-center justify-center gap-3 mb-8">
+                        <div className="p-3 bg-emerald-500/10 rounded-xl">
+                            <Users className="text-emerald-400" size={32} />
                         </div>
-                        <div className="relative flex justify-center text-sm">
-                            <span className="px-2 bg-[#0B0C15] text-slate-500">OR</span>
-                        </div>
+                        <h2 className="text-3xl font-bold">Chess Online</h2>
                     </div>
-                    <div className="flex gap-2">
+
+                    <div className="space-y-6">
                         <input
                             type="text"
-                            placeholder="Room ID"
-                            value={roomId}
-                            onChange={(e) => setRoomId(e.target.value.toUpperCase())}
-                            className="flex-1 p-4 bg-slate-800 rounded-xl border border-white/10 text-white placeholder-slate-500 focus:outline-none focus:border-emerald-400 uppercase"
+                            placeholder="Your Name"
+                            value={playerName}
+                            onChange={(e) => setPlayerName(e.target.value)}
+                            className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
                         />
-                        <button onClick={joinRoom} className="px-8 bg-blue-500 hover:bg-blue-600 rounded-xl font-bold transition-all">
-                            Join
+
+                        <div className="flex flex-col sm:flex-row gap-2">
+                            <input
+                                type="text"
+                                placeholder="Room ID"
+                                value={roomId}
+                                onChange={(e) => setRoomId(e.target.value.toUpperCase())}
+                                className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all font-mono uppercase"
+                            />
+                            <button onClick={joinRoom} className="bg-slate-700 hover:bg-slate-600 text-white px-6 rounded-xl font-bold transition-colors">
+                                Join
+                            </button>
+                        </div>
+
+                        <div className="relative">
+                            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-700"></div></div>
+                            <div className="relative flex justify-center text-sm"><span className="px-2 bg-slate-900 text-slate-500">Or</span></div>
+                        </div>
+
+                        <button
+                            onClick={createRoom}
+                            className="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-xl text-white font-bold hover:opacity-90 transition-opacity shadow-lg shadow-emerald-500/20"
+                        >
+                            Create New Room
                         </button>
                     </div>
                 </div>
@@ -243,26 +264,47 @@ const ChessOnline = ({ onBack }) => {
 
     if (view === 'lobby') {
         return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] text-white">
-                <div className="bg-slate-900 p-8 rounded-2xl border border-white/10 text-center max-w-md w-full">
-                    <h2 className="text-2xl font-bold mb-2">Waiting for opponent...</h2>
-                    <p className="text-slate-400 mb-6">Share this Room ID with a friend</p>
+            <div className="flex flex-col items-center justify-start min-h-screen pt-36 md:pt-40 p-4 text-white relative overflow-hidden">
+                {/* Background Ambient Glow */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-blue-900/20 blur-[100px] rounded-full pointer-events-none" />
 
-                    <button
-                        onClick={copyRoomId}
-                        className="w-full p-4 bg-slate-800 rounded-xl border border-white/10 flex items-center justify-center gap-3 hover:bg-slate-750 transition-all mb-4 group"
-                    >
-                        <span className="text-3xl font-mono tracking-widest text-emerald-400">{roomId}</span>
-                        {copied ? <Check className="text-emerald-400" /> : <Copy className="text-slate-400 group-hover:text-white" />}
-                    </button>
+                <div className="w-full max-w-md bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 text-center shadow-2xl z-10">
+                    <div className="w-16 h-16 bg-blue-500/20 rounded-2xl flex items-center justify-center mx-auto mb-6 animate-pulse text-blue-400">
+                        <Wifi size={32} />
+                    </div>
 
-                    <div className="space-y-2">
+                    <h2 className="text-2xl font-bold mb-2">Waiting for opponent</h2>
+                    <p className="text-slate-400 mb-8 text-sm">Share this code with your friend to start the game.</p>
+
+                    <div className="bg-slate-800/50 p-4 rounded-xl border border-white/5 mb-8">
+                        <div className="text-xs text-slate-500 uppercase tracking-widest mb-1">Room Code</div>
+                        <button
+                            onClick={copyRoomId}
+                            className="w-full flex items-center justify-center gap-3 group hover:opacity-80 transition-opacity"
+                        >
+                            <span className="text-4xl font-mono font-bold text-white tracking-widest">{roomId}</span>
+                            {copied ? <Check className="text-emerald-400" size={20} /> : <Copy className="text-slate-500 group-hover:text-white transition-colors" size={20} />}
+                        </button>
+                        {copied && <div className="text-xs text-emerald-400 mt-2 font-medium">Copied to clipboard!</div>}
+                    </div>
+
+                    <div className="space-y-3">
+                        <div className="text-left text-xs text-slate-500 font-medium uppercase tracking-wider px-1">Players ({players.length}/2)</div>
                         {players.map((p, i) => (
-                            <div key={i} className="flex items-center gap-3 p-3 bg-slate-800/50 rounded-lg">
-                                <div className={`w-3 h-3 rounded-full ${p.color === 'w' ? 'bg-white' : 'bg-slate-600'}`} />
-                                <span>{p.name} {p.id === socket.id ? '(You)' : ''}</span>
+                            <div key={i} className="flex items-center gap-3 p-3 bg-slate-800 rounded-xl border border-white/5">
+                                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${p.color === 'w' ? 'bg-white text-black' : 'bg-slate-700 text-white'}`}>
+                                    {p.color === 'w' ? 'W' : 'B'}
+                                </div>
+                                <span className="font-medium">{p.name} {p.id === socket.id ? '(You)' : ''}</span>
+                                {p.id === socket.id && <div className="ml-auto w-2 h-2 bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]"></div>}
                             </div>
                         ))}
+                        {players.length === 1 && (
+                            <div className="flex items-center gap-3 p-3 border border-dashed border-white/10 rounded-xl text-slate-500">
+                                <div className="w-8 h-8 rounded-full bg-slate-800/50 animate-pulse"></div>
+                                <span className="text-sm italic">Waiting for Player 2...</span>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
@@ -270,7 +312,7 @@ const ChessOnline = ({ onBack }) => {
     }
 
     return (
-        <div className="relative w-full max-w-2xl mx-auto flex flex-col items-center">
+        <div className="relative w-full max-w-2xl mx-auto flex flex-col items-center pt-36 md:pt-40 pb-12 px-4">
             {/* Header */}
             <div className="w-full flex items-center justify-between mb-8 px-4">
                 <button
