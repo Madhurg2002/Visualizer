@@ -75,6 +75,13 @@ const Home = () => {
             color: "from-pink-500 to-rose-500",
             icon: <MessageSquare className="w-8 h-8 text-white" />
         },
+        {
+            title: "Tic-Tac-Toe",
+            description: "The classic game. Play Solo, Local PvP, or Online.",
+            path: "/TicTacToe",
+            color: "from-blue-400 to-purple-500",
+            icon: <Crown className="w-8 h-8 text-white" />
+        },
     ];
 
     const container = {
@@ -170,8 +177,8 @@ const Home = () => {
                     </motion.p>
                 </div>
 
-                <Section title="Interactive Algorithms" items={algorithms} />
                 <Section title="Classic Games" items={games} />
+                <Section title="Interactive Algorithms" items={algorithms} />
 
             </div>
         </div>

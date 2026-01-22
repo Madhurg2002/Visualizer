@@ -3,6 +3,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const { setupTabooHandlers } = require('./gameHandler');
+const { setupTicTacToeHandlers } = require('./tictactoeHandler');
 
 const app = express();
 app.use(cors());
@@ -19,6 +20,8 @@ io.on('connection', (socket) => {
     console.log('User connected:', socket.id);
 
     setupTabooHandlers(io, socket);
+    setupTicTacToeHandlers(io, socket);
+
 
     socket.on('disconnect', () => {
         console.log('User disconnected:', socket.id);

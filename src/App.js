@@ -13,6 +13,7 @@ import ForbiddenWords from './Page/ForbiddenWords';
 import FallingBlocks from './Page/FallingBlocks';
 import Minesweeper from './Page/Minesweeper';
 import FlappyBird from './Page/FlappyBird';
+import TicTacToe from './Page/TicTacToe';
 
 export default function App() {
   return (
@@ -30,6 +31,7 @@ export default function App() {
           <Route exact path="/FallingBlocks" element={<FallingBlocks />} />
           <Route exact path="/Minesweeper" element={<Minesweeper />} />
           <Route exact path="/FlappyBird" element={<FlappyBird />} />
+          <Route exact path="/TicTacToe" element={<TicTacToe />} />
 
           <Route path="/*" element={<Navigate to="/" />} />
         </Routes>
