@@ -14,7 +14,6 @@ const ChessOnline = ({ onBack }) => {
     const [playerName, setPlayerName] = useState('');
     const [players, setPlayers] = useState([]);
     const [myColor, setMyColor] = useState(null); // 'w' or 'b'
-    const [copied, setCopied] = useState(false);
 
     // Game State
     const [board, setBoard] = useState(initialBoard);
@@ -88,9 +87,8 @@ const ChessOnline = ({ onBack }) => {
     };
 
     const copyRoomId = () => {
-        navigator.clipboard.writeText(roomId);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        const url = `${window.location.origin}/chess?room=${roomId}`;
+        navigator.clipboard.writeText(url);
     };
 
     // Game Logic (Mirroring Local logic but emitting moves)

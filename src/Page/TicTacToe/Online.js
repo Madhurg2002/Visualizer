@@ -87,8 +87,6 @@ const OnlineTicTacToe = ({ onBack }) => {
     const copyRoomId = () => {
         const url = `${window.location.origin}/TicTacToe?room=${roomId}`;
         navigator.clipboard.writeText(url);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
     };
 
     return (
