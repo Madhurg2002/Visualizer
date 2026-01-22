@@ -4,8 +4,9 @@ import { io } from 'socket.io-client';
 import { ArrowLeft, Copy, Check, Users, Wifi } from 'lucide-react';
 import Board from './Board';
 import { getValidMoves, checkGameState, initialBoard } from './logic';
+const SERVER_URL = process.env.REACT_APP_SERVER_URL;
 
-const socket = io('http://localhost:3001');
+const socket = io(SERVER_URL);
 
 const ChessOnline = ({ onBack }) => {
     const [view, setView] = useState('menu'); // menu, lobby, game

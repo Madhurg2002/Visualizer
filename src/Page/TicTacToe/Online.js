@@ -6,7 +6,7 @@ import { useSearchParams } from 'react-router-dom';
 import io from 'socket.io-client';
 import Board from './Board';
 
-const SERVER_URL = process.env.REACT_APP_SERVER_URL || 'http://localhost:3001';
+const SERVER_URL = process.env.REACT_APP_SERVER_URL;
 
 const OnlineTicTacToe = ({ onBack }) => {
     const [socket, setSocket] = useState(null);
