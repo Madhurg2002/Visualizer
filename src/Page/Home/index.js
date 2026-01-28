@@ -11,7 +11,8 @@ import {
     Ghost,
     Crown,
     MessageSquare,
-    Gamepad2
+    Gamepad2,
+    Clock
 } from 'lucide-react';
 
 const Home = () => {
@@ -89,6 +90,13 @@ const Home = () => {
             path: "/Chess",
             color: "from-emerald-500 to-cyan-500",
             icon: <Gamepad2 className="w-8 h-8 text-white" />
+        },
+        {
+            title: "Kinetic Clock",
+            description: "A mesmerizing digital clock display made of 24 analog clocks.",
+            path: "/KineticClock",
+            color: "from-slate-600 to-slate-800",
+            icon: <Clock className="w-8 h-8 text-white" />
         },
     ];
 

@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
-import { ArrowLeft, Copy, Check, Users, Wifi } from 'lucide-react';
+import { ArrowLeft, Copy, Check, Users, Wifi, Send, MessageSquare, RefreshCw, AlertCircle } from 'lucide-react';
 import Board from './Board';
 import { getValidMoves, checkGameState, initialBoard } from './logic';
 const SERVER_URL = process.env.REACT_APP_SERVER_URL || 'http://localhost:3001';
@@ -28,11 +28,17 @@ const ChessOnline = ({ onBack }) => {
     const [board, setBoard] = useState(initialBoard);
     const [turn, setTurn] = useState('w');
     const [gameState, setGameState] = useState('waiting'); // waiting, playing, check, checkmate, stalemate, timeout
+    const [gameOverData, setGameOverData] = useState(null); // { reason, winner }
     const [lastMove, setLastMove] = useState(null);
     const [selectedSquare, setSelectedSquare] = useState(null);
     const [possibleMoves, setPossibleMoves] = useState([]);
     const [promotionSquare, setPromotionSquare] = useState(null);
     const [copied, setCopied] = useState(false);
+
+    // Chat State
+    const [chatMessages, setChatMessages] = useState([]);
+    const [chatInput, setChatInput] = useState("");
+    const [isChatOpen, setIsChatOpen] = useState(false);
 
     // Format Time Helper
     const formatTime = (seconds) => {
@@ -91,10 +97,28 @@ const ChessOnline = ({ onBack }) => {
             }
         });
 
+        socket.on('chess_new_message', (msg) => {
+            setChatMessages(prev => [...prev, msg]);
+        });
+
+        socket.on('chess_restart_game', ({ whiteTime: wt, blackTime: bt }) => {
+            setBoard(initialBoard);
+            setTurn('w');
+            setGameState('playing');
+            setLastMove(null);
+            setPossibleMoves([]);
+            setSelectedSquare(null);
+            setGameOverData(null);
+            setTimerActive(true);
+            if (wt) setWhiteTime(wt);
+            if (bt) setBlackTime(bt);
+            setChatMessages(prev => [...prev, { text: "Game restarted!", sender: "System", timestamp: new Date().toISOString() }]);
+        });
+
         socket.on('chess_game_over', ({ reason, winner }) => {
-            setGameState('timeout');
+            setGameState('timeout'); // or 'checkmate' etc based on previous, but ensures timer stops
             setTimerActive(false);
-            alert(`Game Over: ${reason}. Winner: ${winner === 'w' ? 'White' : 'Black'}`);
+            setGameOverData({ reason, winner });
         });
 
         socket.on('chess_player_left', () => {
@@ -120,6 +144,9 @@ const ChessOnline = ({ onBack }) => {
             socket.off('chess_game_over');
             socket.off('chess_player_left');
             socket.off('chess_error');
+            socket.off('chess_error');
+            socket.off('chess_new_message');
+            socket.off('chess_restart_game');
         };
     }, []);
     // Actually safer to keep dep array empty or correct. Empty is fine if we use functional updates or refs for mutable state, but here listeners are bound once.
@@ -187,6 +214,13 @@ const ChessOnline = ({ onBack }) => {
         navigator.clipboard.writeText(url);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleSendMessage = (e) => {
+        e.preventDefault();
+        if (!chatInput.trim()) return;
+        socket.emit('chess_send_message', { roomId, message: chatInput });
+        setChatInput("");
     };
 
     // Game Logic
@@ -294,6 +328,113 @@ const ChessOnline = ({ onBack }) => {
             move.promotionType = type;
             executeMove(fromRow, fromCol, row, col, move);
         }
+    };
+
+    const renderChat = () => (
+        <>
+            {/* Chat Drawer */}
+            <div className={`fixed inset-y-0 right-0 w-80 bg-slate-900/95 backdrop-blur-xl border-l border-white/10 transform transition-transform duration-300 z-[100] flex flex-col shadow-2xl ${isChatOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+                <div className="p-4 border-b border-white/10 flex justify-between items-center bg-slate-800/50">
+                    <h3 className="font-bold text-white flex items-center gap-2"><MessageSquare size={18} className="text-emerald-400" /> Chat</h3>
+                    <button onClick={() => setIsChatOpen(false)} className="text-slate-400 hover:text-white transition-colors p-1 hover:bg-white/10 rounded-full">✕</button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    {chatMessages.length === 0 && (
+                        <div className="text-center text-slate-500 text-sm italic mt-10 opacity-50">No messages yet. Say hi!</div>
+                    )}
+                    {chatMessages.map((msg, i) => (
+                        <div key={i} className={`flex flex-col ${msg.sender === playerName ? 'items-end' : 'items-start'}`}>
+                            <div className={`max-w-[85%] px-3 py-2 rounded-xl text-sm shadow-sm ${msg.sender === playerName ? 'bg-emerald-600 text-white rounded-tr-none' : 'bg-slate-700 text-slate-200 rounded-tl-none'}`}>
+                                {msg.text}
+                            </div>
+                            <span className="text-[10px] text-slate-500 mt-1 px-1">{msg.sender === playerName ? 'You' : msg.sender} • {new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                        </div>
+                    ))}
+                </div>
+
+                <form onSubmit={handleSendMessage} className="p-3 border-t border-white/10 flex gap-2 bg-slate-800/30">
+                    <input
+                        value={chatInput}
+                        onChange={e => setChatInput(e.target.value)}
+                        placeholder="Type a message..."
+                        className="flex-1 bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-sm text-white focus:ring-1 focus:ring-emerald-500 outline-none transition-all focus:bg-slate-700"
+                    />
+                    <button type="submit" disabled={!chatInput.trim()} className="p-2 bg-emerald-600 rounded-lg text-white hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-lg shadow-emerald-900/20">
+                        <Send size={18} />
+                    </button>
+                </form>
+            </div>
+
+            {/* Chat Toggle Button (Floating if closed) */}
+            {!isChatOpen && (
+                <button
+                    onClick={() => setIsChatOpen(true)}
+                    className="fixed bottom-6 right-6 z-50 p-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full shadow-lg shadow-emerald-900/40 transition-all hover:scale-110 active:scale-95 flex items-center justify-center group"
+                >
+                    <MessageSquare size={24} />
+                    {chatMessages.length > 0 && (
+                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-[10px] flex items-center justify-center font-bold border-2 border-[#0B0C15] animate-bounce">
+                            !
+                        </span>
+                    )}
+                </button>
+            )}
+        </>
+    );
+
+
+
+    const handleRematch = () => {
+        socket.emit('chess_restart', { roomId });
+        // Optional: Set some "Waiting for rematch" local state if we want to show a spinner button
+    };
+
+    const renderGameOverModal = () => {
+        if (!gameOverData) return null;
+        const isWinner = gameOverData.winner === myColor;
+        const winnerText = gameOverData.winner === 'w' ? "White" : "Black";
+
+        return (
+            <div className="absolute inset-0 z-[150] flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
+                <div className="bg-slate-900 border border-white/10 p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center relative overflow-hidden">
+                    {/* Background Glow */}
+                    <div className={`absolute top-0 left-1/2 -translate-x-1/2 w-full h-full ${isWinner ? 'bg-emerald-500/10' : 'bg-red-500/10'} blur-3xl pointer-events-none`}></div>
+
+                    <div className="relative z-10">
+                        <div className={`mx-auto w-20 h-20 rounded-full flex items-center justify-center mb-6 border-4 ${isWinner ? 'border-emerald-500/30 bg-emerald-500/20' : 'border-slate-700 bg-slate-800'}`}>
+                            {isWinner ? <Users size={40} className="text-emerald-400" /> : <AlertCircle size={40} className="text-slate-400" />}
+                        </div>
+
+                        <h2 className="text-4xl font-black text-white mb-2 tracking-tight">
+                            {isWinner ? "VICTORY!" : "GAME OVER"}
+                        </h2>
+
+                        <p className="text-slate-400 mb-8 text-lg">
+                            {gameOverData.reason === 'checkmate' ? `Checkmate! ${winnerText} wins.` :
+                                gameOverData.reason === 'timeout' ? `Time out! ${winnerText} wins.` :
+                                    gameOverData.reason === 'stalemate' ? "Draw by Stalemate." :
+                                        `${gameOverData.reason}`}
+                        </p>
+
+                        <div className="space-y-3">
+                            <button
+                                onClick={handleRematch}
+                                className="w-full py-3.5 bg-emerald-600 hover:bg-emerald-500 rounded-xl text-white font-bold text-lg transition-all shadow-lg hover:shadow-emerald-500/25 flex items-center justify-center gap-2"
+                            >
+                                <RefreshCw size={20} /> Rematch
+                            </button>
+                            <button
+                                onClick={() => { setView('menu'); setGameOverData(null); }}
+                                className="w-full py-3.5 bg-slate-800 hover:bg-slate-700 rounded-xl text-slate-400 hover:text-white font-bold transition-all"
+                            >
+                                Back to Menu
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
     };
 
     // Renders
@@ -415,6 +556,7 @@ const ChessOnline = ({ onBack }) => {
                         Time Control: <span className="text-white font-bold">{timeControl} min</span>
                     </div>
                 </div>
+                {renderChat()}
             </div>
         );
     }
@@ -504,6 +646,8 @@ const ChessOnline = ({ onBack }) => {
                     </div>
                 </div>
             )}
+            {renderChat()}
+            {renderGameOverModal()}
         </div>
     );
 };

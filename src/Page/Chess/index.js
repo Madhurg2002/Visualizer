@@ -37,6 +37,12 @@ const ChessGame = () => {
     const [evalScore, setEvalScore] = useState(0); // Centipawns (roughly)
     const [bestMoveHint, setBestMoveHint] = useState(null);
 
+    // Timer State
+    const [timeControl, setTimeControl] = useState({ min: 10, sec: 0 });
+    const [whiteTime, setWhiteTime] = useState(10 * 60);
+    const [blackTime, setBlackTime] = useState(10 * 60);
+    const [timerActive, setTimerActive] = useState(false);
+
     // Derived State for Board Orientation
     const isFlipped = mode === 'local' ? turn === 'b' : manualFlip;
 
@@ -66,6 +72,11 @@ const ChessGame = () => {
         setBoardHistory([initialBoard]);
         setCurrentMoveIndex(0);
         setPgnInput("");
+        // Reset Timer
+        // Reset Timer
+        setWhiteTime(timeControl.min * 60 + timeControl.sec);
+        setBlackTime(timeControl.min * 60 + timeControl.sec);
+        setTimerActive(false);
         // AI Depth is persistent-ish but resets here if we want? Let's keep it.
     }, [mode]);
 
@@ -152,6 +163,44 @@ const ChessGame = () => {
         }
     }, [mode, turn, gameState, board, lastMove, engineDepth]);
 
+    // TIMER LOGIC
+    useEffect(() => {
+        let interval = null;
+        if (timerActive && (gameState === 'playing' || gameState === 'check')) {
+            interval = setInterval(() => {
+                if (turn === 'w') {
+                    setWhiteTime(prev => {
+                        if (prev <= 0) {
+                            clearInterval(interval);
+                            setGameState('timeout');
+                            setTimerActive(false);
+                            return 0;
+                        }
+                        return prev - 1;
+                    });
+                } else {
+                    setBlackTime(prev => {
+                        if (prev <= 0) {
+                            clearInterval(interval);
+                            setGameState('timeout');
+                            setTimerActive(false);
+                            return 0;
+                        }
+                        return prev - 1;
+                    });
+                }
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [timerActive, gameState, turn]);
+
+    // Format Time Helper
+    const formatTime = (seconds) => {
+        const m = Math.floor(Math.max(0, seconds) / 60);
+        const s = Math.floor(Math.max(0, seconds) % 60);
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
+    };
+
     // Core Logic: Apply move to a board and return result (Pure Function roughly)
     const calculateMoveResult = (currentBoard, currentTurn, moveDetails) => {
         const { from, to, isEnPassant, isCastling, isPromotion, promotionType, isDoubleJump } = moveDetails;
@@ -231,6 +280,14 @@ const ChessGame = () => {
         setTurn(nextTurn);
         setLastMove(thisMove);
         setGameState(newState);
+
+        // Timer Control
+        if (['checkmate', 'stalemate', 'timeout'].includes(newState)) {
+            setTimerActive(false);
+        } else {
+            // Start timer if not already active (first move)
+            if (!timerActive) setTimerActive(true);
+        }
 
         // History Update
         const newHistory = moveHistory.slice(0, currentMoveIndex);
@@ -380,15 +437,28 @@ const ChessGame = () => {
                     </h2>
 
                     {/* AI Status / Game Status */}
-                    <div className={`text-sm md:text-xl font-bold mt-1 ${gameState === 'checkmate' ? 'text-red-500' :
+                    <div className={`text-sm md:text-xl font-bold mt-1 ${gameState === 'checkmate' || gameState === 'timeout' ? 'text-red-500' :
                         gameState === 'check' ? 'text-orange-500' :
                             'text-slate-400'
                         }`}>
                         {gameState === 'checkmate' ? `Checkmate! ${turn === 'w' ? 'Black' : 'White'} Wins!` :
-                            gameState === 'check' ? `${turn === 'w' ? 'White' : 'Black'} is in Check!` :
-                                gameState === 'stalemate' ? "Stalemate!" :
-                                    `Turn: ${turn === 'w' ? 'White' : 'Black'}`}
+                            gameState === 'timeout' ? `Time Out! ${turn === 'w' ? 'Black' : 'White'} Wins!` :
+                                gameState === 'check' ? `${turn === 'w' ? 'White' : 'Black'} is in Check!` :
+                                    gameState === 'stalemate' ? "Stalemate!" :
+                                        `Turn: ${turn === 'w' ? 'White' : 'Black'}`}
                     </div>
+
+                    {/* Timers */}
+                    {(mode === 'local' || mode === 'ai') && (
+                        <div className="flex items-center justify-center gap-4 mt-2">
+                            <div className={`px-3 py-1 rounded-lg border font-mono font-bold ${turn === 'w' ? 'bg-white text-black border-white shadow-[0_0_10px_rgba(255,255,255,0.5)]' : 'bg-slate-800 text-slate-500 border-white/10'}`}>
+                                ⚪ {formatTime(whiteTime)}
+                            </div>
+                            <div className={`px-3 py-1 rounded-lg border font-mono font-bold ${turn === 'b' ? 'bg-white text-black border-white shadow-[0_0_10px_rgba(255,255,255,0.5)]' : 'bg-slate-800 text-slate-500 border-white/10'}`}>
+                                ⚫ {formatTime(blackTime)}
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Right Actions */}
@@ -403,9 +473,64 @@ const ChessGame = () => {
                                 max="20"
                                 value={engineDepth}
                                 onChange={(e) => setEngineDepth(parseInt(e.target.value))}
-                                className="w-24 accent-purple-500 cursor-pointer"
+                                className="w-16 accent-purple-500 cursor-pointer"
                             />
-                            <span className="text-xs font-bold text-white w-5 text-center">{engineDepth}</span>
+                            <span className="text-xs font-bold text-white w-4 text-center">{engineDepth}</span>
+                        </div>
+                    )}
+
+                    {/* Time Control (Local/AI) */}
+                    {(mode === 'local' || mode === 'ai') && (
+                        <div className="flex items-center gap-1 mr-2 bg-slate-800 px-3 py-1.5 rounded-lg border border-white/10">
+                            <span className="text-xs font-bold text-slate-400 uppercase mr-1">Time</span>
+
+                            {/* Minutes Input */}
+                            <div className="relative flex items-center">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="120"
+                                    value={timeControl.min}
+                                    onChange={(e) => {
+                                        const newMin = Math.max(0, parseInt(e.target.value) || 0);
+                                        setTimeControl(prev => ({ ...prev, min: newMin }));
+
+                                        // Update actual game time immediately for "Setup" feel
+                                        // Preserves existing seconds
+                                        const totalSeconds = newMin * 60 + timeControl.sec;
+                                        setWhiteTime(totalSeconds);
+                                        setBlackTime(totalSeconds);
+                                        setTimerActive(false);
+                                    }}
+                                    className="w-8 bg-transparent text-xs font-bold text-white text-center border-none outline-none focus:ring-0 p-0"
+                                />
+                                <span className="text-[10px] text-slate-500 font-bold">m</span>
+                            </div>
+
+                            <span className="text-slate-600">:</span>
+
+                            {/* Seconds Input */}
+                            <div className="relative flex items-center">
+                                <input
+                                    type="number"
+                                    min="0"
+                                    max="59"
+                                    value={timeControl.sec}
+                                    onChange={(e) => {
+                                        const newSec = Math.max(0, Math.min(59, parseInt(e.target.value) || 0));
+                                        setTimeControl(prev => ({ ...prev, sec: newSec }));
+
+                                        // Update actual game time immediately
+                                        // Preserves existing minutes
+                                        const totalSeconds = timeControl.min * 60 + newSec;
+                                        setWhiteTime(totalSeconds);
+                                        setBlackTime(totalSeconds);
+                                        setTimerActive(false);
+                                    }}
+                                    className="w-8 bg-transparent text-xs font-bold text-white text-center border-none outline-none focus:ring-0 p-0"
+                                />
+                                <span className="text-[10px] text-slate-500 font-bold">s</span>
+                            </div>
                         </div>
                     )}
 

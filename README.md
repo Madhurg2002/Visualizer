@@ -28,6 +28,19 @@ Interactive visualizations to help understand complex algorithms step-by-step:
 
 #### 🎮 Games
 A collection of logic puzzles and arcade-style games:
+*   **Chess**:
+    *   **Modes**: Local PvP, vs Stockfish AI (adjustable depth), Online Multiplayer, and Analysis Board.
+    *   **Features**:
+        *   Move validation, check/checkmate detection, and legal move highlighting.
+        *   **Stockfish Engine Integration**: Play against a powerful chess engine or use it to analyze positions.
+        *   **Real-time Online Multiplayer**: Create rooms, set time controls, and chat with opponents using the **In-Game Chat**.
+        *   **PGN Support**: Import and analyze game history.
+*   **Tic-Tac-Toe**:
+    *   Classic 3x3 game.
+    *   **Modes**:
+        *   **Solo**: Play against a Minimax AI (Unbeatable!).
+        *   **Local PvP**: Two players on the same device.
+        *   **Online Multiplayer**: Play with friends remotely.
 *   **Forbidden Words (Taboo)**:
     *   **Online Multiplayer**: Real-time gameplay with friends using Socket.IO. Create rooms, join via ID, and compete in teams.
     *   **Local Party Mode**: Pass-and-play on a single device.

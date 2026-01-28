@@ -60,6 +60,7 @@ const Navbar = () => {
             { name: 'Forbidden Words', path: '/ForbiddenWords' },
             { name: 'Tic-Tac-Toe', path: '/TicTacToe' },
             { name: 'Chess', path: '/Chess' },
+            { name: 'Kinetic Clock', path: '/KineticClock' },
         ]
     };
 

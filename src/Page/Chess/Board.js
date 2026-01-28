@@ -113,4 +113,4 @@ const Board = ({ board, onSquareClick, selectedSquare, possibleMoves, rotation =
     );
 };
 
-export default Board;
+export default React.memo(Board);

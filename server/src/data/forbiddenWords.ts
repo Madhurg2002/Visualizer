@@ -1,4 +1,8 @@
-const forbiddenWordsCards = [
+export interface ForbiddenWordCard {
+    word: string;
+    forbidden: string[];
+}
+export const forbiddenWordsCards: ForbiddenWordCard[] = [
     // --- ANIMALS ---
     { word: "Dog", forbidden: ["Pet", "Bark", "Puppy", "Bone", "Loyal"] },
     { word: "Cat", forbidden: ["Meow", "Kitten", "Purr", "Fur", "Pet"] },
@@ -435,5 +439,3 @@ const forbiddenWordsCards = [
     { word: "Stress", forbidden: ["Worry", "Work", "School", "Relax", "Calm"] },
     { word: "Hope", forbidden: ["Wish", "Dream", "Want", "Future", "Believe"] }
 ];
-
-module.exports = { forbiddenWordsCards };
