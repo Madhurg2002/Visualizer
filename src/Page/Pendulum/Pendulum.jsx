@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { PendulumState } from './PendulumPhysics';
+import { PendulumState, PendulumSegment } from './PendulumPhysics';
 import PendulumCanvas from './PendulumCanvas';
 import PendulumControls from './PendulumControls';
 
@@ -10,19 +10,36 @@ const Pendulum = () => {
         damping: 0.005,
         trailLength: 200,
         pendulums: [
-            { mass: 10, length: 150, angle: Math.PI / 2 },
-            { mass: 10, length: 150, angle: Math.PI / 2 }
+            { mass: 10, length: 150, angle: Math.PI / 2, velocity: 0 },
+            { mass: 10, length: 150, angle: Math.PI / 2, velocity: 0 }
         ]
     });
 
     const [paused, setPaused] = useState(false);
+
+    // Keyboard controls
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault(); // Prevent scrolling
+                setPaused(p => !p);
+            }
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+
     const [coords, setCoords] = useState([]);
     const [currentAngles, setCurrentAngles] = useState([]);
+    const [currentVelocities, setCurrentVelocities] = useState([]);
     const [fps, setFps] = useState(0);
     const [trail, setTrail] = useState([]);
 
     // Physics State Ref (mutable for performance loop)
-    const physicsRef = useRef(new PendulumState(2, [10, 10], [150, 150]));
+    const physicsRef = useRef(new PendulumState([
+        { mass: 10, length: 150, angle: Math.PI / 2, velocity: 0 },
+        { mass: 10, length: 150, angle: Math.PI / 2, velocity: 0 }
+    ]));
     const requestRef = useRef();
     const lastTimeRef = useRef();
     const frameCountRef = useRef(0);
@@ -30,9 +47,30 @@ const Pendulum = () => {
 
     // Sync physics engine with React config config when it changes significantly
     // (e.g., number of pendulums or hard reset)
+    // Dynamic Segment Update (Smart Diffing)
+    // Dynamic Segment Update (Smart Diffing)
     useEffect(() => {
-        handleReset();
-    }, [config.pendulums.length]); // Only reset fully if N changes
+        const pState = physicsRef.current;
+        const currentLen = pState.segments.length;
+        const targetLen = config.pendulums.length;
+
+        if (currentLen !== targetLen) {
+            // Add new segments
+            if (targetLen > currentLen) {
+                for (let i = currentLen; i < targetLen; i++) {
+                    const conf = config.pendulums[i];
+                    pState.segments.push(new PendulumSegment(conf));
+                }
+            }
+            // Remove segments
+            else {
+                pState.segments.splice(targetLen, currentLen - targetLen);
+            }
+
+            pState.n = pState.segments.length;
+            setCoords(pState.getCoordinates());
+        }
+    }, [config.pendulums.length]);
 
     // Update params on the fly without resetting position
     useEffect(() => {
@@ -40,43 +78,16 @@ const Pendulum = () => {
         const p = physicsRef.current;
         p.g = config.gravity;
         p.damping = config.damping;
-        p.lengths = config.pendulums.map(c => c.length);
-        p.masses = config.pendulums.map(c => c.mass);
 
-        // Only update angles if they have changed significantly from physics state (to avoid loop)
-        // Or if we assume config is the source of truth when changed via UI
-        // For simplicity, we'll sync angles effectively "teleporting" the pendulum
-        // but only if the user explicitly changed the config which causes this effect.
-        // To avoid jitter during animation, we can check if we are paused OR if the config change came from the slider
-
-        // Actually, let's only sync angles if the simulation is paused OR we assume the user is "grabbing" it.
-        // A simple way is to detecting if the angle in config is different from the current physics angle by a threshold
-        // But since config doesn't update from physics (only other way), this is safe.
-        // However, we don't want to reset angles if we just changed gravity.
-        // Ideally we need to know *which* property changed.
-
-        // Let's rely on the fact that we will update `config.pendulums` with the current physics angles 
-        // ONLY when we want to save state? No, that's complex.
-
-        // Better approach: access the updated angle directly in the handleSliderChange logic?
-        // No, we are in a declarative React world.
-
-        // Let's iterate and see if the config angle differs significantly from the previous config?
-        // Easier: Just update them. If the simulation is running, the physics engine will overwrite them next frame anyway. 
-        // BUT if we overwrite them here, we might reset the motion.
-
-        // Correct Logic:
-        // We only want to set physics angles if the user *dragged the angle slider*.
-        // If the user changed gravity, we shouldn't reset angles.
-        // We can check this by comparing `p.angles` to `config.pendulums[i].angle`.
-        // If they are wildly different, maybe user intervention?
-        // But physics changes angles every frame.
-
-        // Simplification for this task:
-        // We will update angles in `PendulumControls` using a callback that directly modifies physicsRef 
-        // OR we specifically handle angle changes separately.
-
-        // Let's try passing a specific `updateAngle` function to Controls.
+        // Update segment properties if array length matches
+        if (p.segments && p.segments.length === config.pendulums.length) {
+            p.segments.forEach((seg, i) => {
+                seg.length = config.pendulums[i].length;
+                seg.mass = config.pendulums[i].mass;
+                // velocity and angle are dynamic state, usually we don't sync them from config 
+                // during live play unless explicitly resetting or dragging.
+            });
+        }
     }, [config]);
 
     const animate = (time) => {
@@ -102,7 +113,8 @@ const Pendulum = () => {
 
         const currentCoords = physicsRef.current.getCoordinates();
         setCoords(currentCoords);
-        setCurrentAngles(Array.from(physicsRef.current.angles));
+        setCurrentAngles(physicsRef.current.segments.map(s => s.angle));
+        setCurrentVelocities(physicsRef.current.segments.map(s => s.velocity));
 
         // Update Trail (track the last pendulum bob)
         if (config.trailLength > 0) {
@@ -127,33 +139,55 @@ const Pendulum = () => {
     }, [paused]); // Restart loop if pause state toggles (logic handled inside animate for smoothness)
 
     const handleReset = () => {
-        const lengths = config.pendulums.map(p => p.length);
-        const masses = config.pendulums.map(p => p.mass);
+        // Create new state from config, effectively respecting any initial velocities in config
+        // If we want random angles on reset:
+        /*
+        const randomizedPendulums = config.pendulums.map(p => ({
+            ...p,
+            angle: Math.PI / 2 + (Math.random() - 0.5)
+        }));
+        physicsRef.current = new PendulumState(randomizedPendulums);
+        */
 
-        // Randomize initial angles slightly for interest
-        const angles = config.pendulums.map(() => Math.PI / 2 + (Math.random() - 0.5));
+        // Respecting Exact Config:
+        physicsRef.current = new PendulumState(config.pendulums);
 
-        physicsRef.current = new PendulumState(
-            config.pendulums.length,
-            masses,
-            lengths,
-            angles
-        );
         physicsRef.current.g = config.gravity;
         physicsRef.current.damping = config.damping;
 
         setTrail([]);
         setCoords(physicsRef.current.getCoordinates());
+        setCurrentAngles(physicsRef.current.segments.map(s => s.angle));
     };
 
     const handleAngleChange = (index, angleRad) => {
         // Direct physics update for smooth interaction
-        if (physicsRef.current) {
-            physicsRef.current.angles[index] = angleRad;
-            physicsRef.current.velocities[index] = 0; // consistent 'grab' feel
+        if (physicsRef.current && physicsRef.current.segments[index]) {
+            physicsRef.current.segments[index].angle = angleRad;
+            physicsRef.current.segments[index].velocity = 0; // consistent 'grab' feel
 
             // Also force update coords immediately so visual feedback is instant
             setCoords(physicsRef.current.getCoordinates());
+
+            // Update currentAngles so UI sliders strictly reflect the new position even when paused
+            setCurrentAngles(prev => {
+                const newAngles = [...prev];
+                // Ensure array is large enough if we just added segments and paused (edge case)
+                if (newAngles.length <= index) {
+                    // Fill gaps if necessary, though usually animate loop fills it. 
+                    // But if paused immediately after adding, prev might be short.
+                    // safely extending:
+                    for (let k = newAngles.length; k <= index; k++) newAngles[k] = 0;
+                }
+                newAngles[index] = angleRad;
+                return newAngles;
+            });
+        }
+    };
+
+    const handleVelocityChange = (index, velocity) => {
+        if (physicsRef.current && physicsRef.current.segments[index]) {
+            physicsRef.current.segments[index].velocity = velocity;
         }
     };
 
@@ -189,23 +223,38 @@ const Pendulum = () => {
     const [showControls, setShowControls] = useState(true);
     const [selectedSegment, setSelectedSegment] = useState(null);
 
+    const handleConfigChange = (newConfig) => {
+        console.log("App: Config Update Requested", newConfig);
+        setConfig(newConfig);
+    };
+
+    const handlePreset = (newConfig) => {
+        setConfig(newConfig);
+        // Force reset physics to match new preset immediately
+        physicsRef.current = new PendulumState(newConfig.pendulums);
+        physicsRef.current.g = newConfig.gravity;
+        physicsRef.current.damping = newConfig.damping;
+
+        setTrail([]);
+        setCoords(physicsRef.current.getCoordinates());
+        setCurrentAngles(physicsRef.current.segments.map(s => s.angle));
+        setCurrentVelocities(physicsRef.current.segments.map(s => s.velocity));
+
+        // If paused, ensure we see the new state
+        if (paused) {
+            // force render
+        }
+    };
+
     return (
         <div
-            className="pendulum-page"
+            className="pendulum-page h-screen w-screen bg-black text-white overflow-hidden relative"
             onMouseMove={handlePanelMouseMove}
             onMouseUp={handlePanelMouseUp}
             onMouseLeave={handlePanelMouseUp}
-            style={{
-                height: '100vh',
-                width: '100vw',
-                background: '#000',
-                color: 'white',
-                overflow: 'hidden',
-                position: 'relative'
-            }}
         >
             {/* Full Screen Canvas */}
-            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', zIndex: 1 }}>
+            <div className="absolute top-0 left-0 w-full h-full z-10">
                 <PendulumCanvas
                     stateCoords={coords}
                     config={config}
@@ -219,30 +268,15 @@ const Pendulum = () => {
             </div>
 
             {/* Title / Header (Minimal) */}
-            <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 5, pointerEvents: 'none' }}>
-                <h1 style={{ margin: 0, fontSize: '1.5rem', textShadow: '0 2px 4px rgba(0,0,0,0.8)', color: 'rgba(255,255,255,0.8)' }}>N-Pendulum</h1>
+            <div className="absolute top-5 left-5 z-20 pointer-events-none">
+                <h1 className="m-0 text-2xl text-white/80 shadow-black drop-shadow-md font-heading">N-Pendulum</h1>
             </div>
 
             {/* Toggle Button */}
             <button
                 onClick={() => setShowControls(!showControls)}
-                style={{
-                    position: 'absolute',
-                    top: 20,
-                    right: 20,
-                    zIndex: 20,
-                    background: 'rgba(255,255,255,0.1)',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    color: 'white',
-                    borderRadius: '50%',
-                    width: '40px',
-                    height: '40px',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backdropFilter: 'blur(5px)'
-                }}
+                className="absolute top-5 right-5 z-20 bg-white/10 border border-white/20 text-white rounded-full w-10 h-10 cursor-pointer flex items-center justify-center backdrop-blur-sm hover:bg-white/20 transition-colors"
+                title="Toggle Configuration"
             >
                 {showControls ? '✕' : '⚙️'}
             </button>
@@ -251,50 +285,32 @@ const Pendulum = () => {
             {showControls && (
                 <div
                     style={{
-                        position: 'absolute',
                         top: panelPos.y,
                         left: panelPos.x,
-                        width: '350px',
-                        maxHeight: '90vh',
-                        background: 'rgba(20, 20, 20, 0.9)',
-                        backdropFilter: 'blur(15px)',
-                        borderRadius: '12px',
-                        boxShadow: '0 20px 50px rgba(0,0,0,0.7)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        overflow: 'hidden',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        cursor: isDraggingPanel ? 'grabbing' : 'auto',
-                        zIndex: 10
                     }}
+                    className={`absolute w-[350px] max-h-[90vh] bg-[#141414]/90 backdrop-blur-xl rounded-xl shadow-2xl border border-white/10 overflow-hidden flex flex-col z-30 ${isDraggingPanel ? 'cursor-grabbing' : 'auto'}`}
                 >
                     {/* Drag Handle */}
                     <div
                         onMouseDown={handlePanelMouseDown}
-                        style={{
-                            padding: '12px 20px',
-                            background: 'rgba(255,255,255,0.03)',
-                            borderBottom: '1px solid rgba(255,255,255,0.05)',
-                            cursor: 'grab',
-                            userSelect: 'none',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center'
-                        }}
+                        className="px-5 py-3 bg-white/5 border-b border-white/5 cursor-grab select-none flex justify-between items-center"
                     >
-                        <span style={{ fontWeight: 600, fontSize: '0.9rem', opacity: 0.9 }}>Configuration</span>
-                        <div style={{ width: '40px', height: '4px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px' }} />
+                        <span className="font-semibold text-sm opacity-90">Configuration</span>
+                        <div className="w-10 h-1 bg-white/10 rounded-full" />
                     </div>
 
-                    <div style={{ padding: '0', overflowY: 'auto', flex: 1 }}>
+                    <div className="p-0 overflow-y-auto flex-1 scrollbar-hide">
                         <PendulumControls
                             config={config}
                             currentAngles={currentAngles}
-                            onConfigChange={setConfig}
+                            currentVelocities={currentVelocities}
+                            onConfigChange={handleConfigChange}
+                            onPreset={handlePreset}
                             onReset={handleReset}
                             onPause={() => setPaused(!paused)}
                             paused={paused}
                             onAngleChange={handleAngleChange}
+                            onVelocityChange={handleVelocityChange}
                             selectedSegment={selectedSegment}
                         />
                     </div>

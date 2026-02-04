@@ -1,10 +1,22 @@
+
+export class PendulumSegment {
+    constructor({ mass = 1, length = 100, angle = Math.PI / 2, velocity = 0, color = 'white' } = {}) {
+        this.mass = mass;
+        this.length = length;
+        this.angle = angle;
+        this.velocity = velocity; // Angular velocity (rad/s)
+        this.color = color;
+    }
+}
+
 export class PendulumState {
-    constructor(n, masses, lengths, angles) {
-        this.n = n;
-        this.masses = masses || Array(n).fill(1);
-        this.lengths = lengths || Array(n).fill(100);
-        this.angles = angles || Array(n).fill(Math.PI / 2);
-        this.velocities = Array(n).fill(0);
+    constructor(segments) {
+        // segments: Array of PendulumSegment or config objects
+        this.segments = segments.map(s => {
+            return s instanceof PendulumSegment ? s : new PendulumSegment(s);
+        });
+
+        this.n = this.segments.length;
         this.g = 1; // Default gravity, can be scaled
         this.damping = 0.005; // Air resistance
     }
@@ -13,65 +25,51 @@ export class PendulumState {
     // This is an O(N^3) operation roughly, but for small N (< 10) it's fine.
     // Equation form: A * alpha = B
     solve(dt) {
-        const { n, masses, lengths, angles, velocities, g, damping } = this;
+        const { n, segments, g, damping } = this;
 
         // A matrix (LHS) and B vector (RHS)
         const A = Array(n).fill(0).map(() => Array(n).fill(0));
         const B = Array(n).fill(0);
 
+        // Pre-calculate mass sums for optimization? 
+        // Or just loop. N is small.
+
         for (let i = 0; i < n; i++) {
             for (let j = 0; j < n; j++) {
                 // Determine coeff for alpha_j
-                // mass term: sum(m_k) for k = max(i, j) to n-1
-                let m_term = 0;
-                for (let k = Math.max(i, j); k < n; k++) {
-                    m_term += masses[k];
-                }
+                // func: (Sum_{k=max(i,j)}^{N-1} m_k) * L_i * L_j * cos(theta_i - theta_j)
 
-                const theta_diff = angles[i] - angles[j];
-                const cos_diff = Math.cos(theta_diff);
-
-                A[i][j] = m_term * lengths[j] * cos_diff;
-            }
-            A[i][i] *= lengths[i]; // Correct scaling for A[i][j] where one L is already included? 
-            // wait, the lagrangian derivation usually gives:
-            // (M_jk * L_j * L_k * cos(th_j - th_k)) * alpha_k
-            // Let's re-verify the standard form for N-pendulum.
-        }
-
-        // Correct approach for A[i][j]:
-        // A[i][j] = (Sum_{k=max(i,j)}^{N-1} m_k) * L_i * L_j * cos(theta_i - theta_j)
-        for (let i = 0; i < n; i++) {
-            for (let j = 0; j < n; j++) {
                 let mass_sum = 0;
                 for (let k = Math.max(i, j); k < n; k++) {
-                    mass_sum += masses[k];
+                    mass_sum += segments[k].mass;
                 }
-                A[i][j] = mass_sum * lengths[i] * lengths[j] * Math.cos(angles[i] - angles[j]);
+
+                A[i][j] = mass_sum * segments[i].length * segments[j].length * Math.cos(segments[i].angle - segments[j].angle);
             }
         }
 
         // Fill B vector (Coriolis, Centrifugal, Gravity forces)
-        // B[i] = - (Sum_{k=max(i,j)}^{N-1} m_k) * g * L_i * sin(theta_i) 
-        //        - Sum_{j=0}^{N-1} (Sum_{k=max(i,j)}^{N-1} m_k) * L_i * L_j * sin(theta_i - theta_j) * omega_j^2
         for (let i = 0; i < n; i++) {
-            let gravity_term = 0;
-            let mass_sum_i = 0;
-            for (let k = i; k < n; k++) mass_sum_i += masses[k];
+            // Gravity Term
+            // - (Sum_{k=i}^{N-1} m_k) * g * L_i * sin(theta_i) 
+            let sensitivity_mass = 0;
+            for (let k = i; k < n; k++) sensitivity_mass += segments[k].mass;
 
-            gravity_term = -mass_sum_i * g * lengths[i] * Math.sin(angles[i]);
+            const gravity_term = -sensitivity_mass * g * segments[i].length * Math.sin(segments[i].angle);
 
+            // Centrifugal / Coriolis Terms
+            // - Sum_{j=0}^{N-1} (Sum_{k=max(i,j)}^{N-1} m_k) * L_i * L_j * sin(theta_i - theta_j) * omega_j^2
             let centrifugal_term = 0;
             for (let j = 0; j < n; j++) {
                 let mass_sum_ij = 0;
                 for (let k = Math.max(i, j); k < n; k++) {
-                    mass_sum_ij += masses[k];
+                    mass_sum_ij += segments[k].mass;
                 }
-                centrifugal_term -= mass_sum_ij * lengths[i] * lengths[j] * Math.sin(angles[i] - angles[j]) * (velocities[j] * velocities[j]);
+                centrifugal_term -= mass_sum_ij * segments[i].length * segments[j].length * Math.sin(segments[i].angle - segments[j].angle) * (segments[j].velocity * segments[j].velocity);
             }
 
             // Damping (simple approximations)
-            const damping_term = -damping * velocities[i] * lengths[i]; // simplistic
+            const damping_term = -damping * segments[i].velocity * segments[i].length;
 
             B[i] = gravity_term + centrifugal_term + damping_term;
         }
@@ -79,22 +77,20 @@ export class PendulumState {
         // Gaussian elimination to solve A * x = B for x (accelerations)
         const alpha = this.gaussianElimination(A, B);
 
-        // Euler Integration (or RK4 if we want to be fancy, but simple Euler-Cromer is often stable enough for visuals)
-        // Semi-implicit Euler
         // Euler Integration
         for (let i = 0; i < n; i++) {
             if (!isFinite(alpha[i])) {
-                // Instability detected - dampen completely or stop
-                this.velocities[i] = 0;
+                // Instability detected - reset absolute velocity to 0 to recover
+                this.segments[i].velocity = 0;
                 continue;
             }
-            this.velocities[i] += alpha[i] * dt;
+            this.segments[i].velocity += alpha[i] * dt;
 
-            // Artificial velocity clamping to prevent explosion
-            if (this.velocities[i] > 50) this.velocities[i] = 50;
-            if (this.velocities[i] < -50) this.velocities[i] = -50;
+            // Velocity Clamping
+            if (this.segments[i].velocity > 50) this.segments[i].velocity = 50;
+            if (this.segments[i].velocity < -50) this.segments[i].velocity = -50;
 
-            this.angles[i] += this.velocities[i] * dt;
+            this.segments[i].angle += this.segments[i].velocity * dt;
         }
     }
 
@@ -153,10 +149,14 @@ export class PendulumState {
         let y = 0;
         const coords = [];
         for (let i = 0; i < this.n; i++) {
-            x += this.lengths[i] * Math.sin(this.angles[i]);
-            y += this.lengths[i] * Math.cos(this.angles[i]);
+            x += this.segments[i].length * Math.sin(this.segments[i].angle);
+            y += this.segments[i].length * Math.cos(this.segments[i].angle);
             coords.push({ x, y });
         }
         return coords;
     }
+
+    // Helper to get raw arrays if needed by legacy viewers, or just expose segments
+    get angles() { return this.segments.map(s => s.angle); }
+    get Velocities() { return this.segments.map(s => s.velocity); } // getter
 }

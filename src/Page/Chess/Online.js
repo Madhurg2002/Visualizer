@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 import { ArrowLeft, Copy, Check, Users, Wifi, Send, MessageSquare, RefreshCw, AlertCircle } from 'lucide-react';
 import Board from './Board';
@@ -7,11 +7,20 @@ import { getValidMoves, checkGameState, initialBoard } from './logic';
 const SERVER_URL = process.env.REACT_APP_SERVER_URL || 'http://localhost:3001';
 
 
-const socket = io(SERVER_URL);
-
-
-
 const ChessOnline = ({ onBack }) => {
+    const socketRef = useRef(null);
+    // Lazy init socket
+    if (!socketRef.current) {
+        socketRef.current = io(SERVER_URL);
+    }
+    const socket = socketRef.current;
+
+    useEffect(() => {
+        return () => {
+            if (socket.connected) socket.disconnect();
+        };
+    }, []);
+
     const [view, setView] = useState('menu'); // menu, lobby, game
     const [roomId, setRoomId] = useState('');
     const [playerName, setPlayerName] = useState('');
