@@ -38,6 +38,13 @@ const Home = () => {
             color: "from-green-400 to-emerald-600",
             icon: <Activity className="w-8 h-8 text-white" />
         },
+        {
+            title: "N-Pendulum",
+            description: "Chaos Theory & Physics Simulation. Customize N-linked pendulums.",
+            path: "/pendulum",
+            color: "from-orange-500 to-red-500",
+            icon: <Activity className="w-8 h-8 text-white" />
+        },
     ];
 
     const games = [

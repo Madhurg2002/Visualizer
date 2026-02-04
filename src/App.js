@@ -16,6 +16,7 @@ import FlappyBird from './Page/FlappyBird';
 import TicTacToe from './Page/TicTacToe';
 import Chess from './Page/Chess';
 import KineticClock from './Page/KineticClock';
+import Pendulum from './Page/Pendulum/Pendulum';
 
 export default function App() {
   return (
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="/TicTacToe/*" element={<TicTacToe />} />
           <Route path="/Chess/*" element={<Chess />} />
           <Route exact path="/KineticClock" element={<KineticClock />} />
+          <Route exact path="/pendulum" element={<Pendulum />} />
 
           <Route path="/*" element={<Navigate to="/" />} />
         </Routes>
