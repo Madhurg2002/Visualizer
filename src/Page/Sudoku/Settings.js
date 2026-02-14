@@ -36,9 +36,9 @@ export default function Settings({
           style={{
             width: "100%", textAlign: "left", marginBottom: 16,
             padding: "12px 16px", borderRadius: 12,
-            backgroundColor: continuousCheck ? "#dcfce7" : "#f1f5f9",
-            color: continuousCheck ? "#166534" : "#475569",
-            border: continuousCheck ? "2px solid #22c55e" : "1px solid #cbd5e1",
+            backgroundColor: theme === "dark" ? "#1e293b" : "#f8fafc",
+            color: theme === "dark" ? "#f1f5f9" : "#334155",
+            border: theme === "dark" ? "1px solid #475569" : "1px solid #94a3b8",
             fontWeight: 600, cursor: "pointer", fontSize: 16,
             display: "flex", justifyContent: "space-between", alignItems: "center",
           }}
@@ -52,9 +52,9 @@ export default function Settings({
           style={{
             width: "100%", textAlign: "left", marginBottom: 16,
             padding: "12px 16px", borderRadius: 12,
-            backgroundColor: highlightNumbers ? "#dbeafe" : "#f1f5f9",
-            color: highlightNumbers ? "#1e40af" : "#475569",
-            border: highlightNumbers ? "2px solid #3b82f6" : "1px solid #cbd5e1",
+            backgroundColor: theme === "dark" ? "#1e293b" : "#f8fafc",
+            color: theme === "dark" ? "#f1f5f9" : "#334155",
+            border: theme === "dark" ? "1px solid #475569" : "1px solid #94a3b8",
             fontWeight: 600, cursor: "pointer", fontSize: 16,
             display: "flex", justifyContent: "space-between", alignItems: "center",
           }}
@@ -68,9 +68,9 @@ export default function Settings({
           style={{
             width: "100%", textAlign: "left", marginBottom: 16,
             padding: "12px 16px", borderRadius: 12,
-            backgroundColor: highlightGuides ? "#dbeafe" : "#f1f5f9",
-            color: highlightGuides ? "#1e40af" : "#475569",
-            border: highlightGuides ? "2px solid #3b82f6" : "1px solid #cbd5e1",
+            backgroundColor: theme === "dark" ? "#1e293b" : "#f8fafc",
+            color: theme === "dark" ? "#f1f5f9" : "#334155",
+            border: theme === "dark" ? "1px solid #475569" : "1px solid #94a3b8",
             fontWeight: 600, cursor: "pointer", fontSize: 16,
             display: "flex", justifyContent: "space-between", alignItems: "center",
           }}
