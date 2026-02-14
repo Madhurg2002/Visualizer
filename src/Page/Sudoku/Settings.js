@@ -6,6 +6,7 @@ export default function Settings({
   continuousCheck, setContinuousCheck,
   theme, setTheme,
   highlightNumbers, setHighlightNumbers,
+  highlightGuides, setHighlightGuides,
 }) {
   if (!visible) return null;
   return (
@@ -19,9 +20,12 @@ export default function Settings({
     >
       <div
         style={{
-          background: "#fff", padding: 32, borderRadius: 16,
-          boxShadow: "0 8px 32px rgba(0,0,0,0.25)", minWidth: 320,
+          background: theme === "dark" ? "#1e293b" : "#fff",
+          color: theme === "dark" ? "#f1f5f9" : "#0f172a",
+          padding: 32, borderRadius: 16,
+          boxShadow: "0 8px 32px rgba(0,0,0,0.5)", minWidth: 320,
           position: "relative",
+          border: theme === "dark" ? "1px solid #334155" : "none",
         }}
         onClick={e => e.stopPropagation()}
       >
@@ -59,6 +63,22 @@ export default function Settings({
           <span>{highlightNumbers ? "ON" : "OFF"}</span>
         </button>
 
+        <button
+          onClick={() => setHighlightGuides(!highlightGuides)}
+          style={{
+            width: "100%", textAlign: "left", marginBottom: 16,
+            padding: "12px 16px", borderRadius: 12,
+            backgroundColor: highlightGuides ? "#dbeafe" : "#f1f5f9",
+            color: highlightGuides ? "#1e40af" : "#475569",
+            border: highlightGuides ? "2px solid #3b82f6" : "1px solid #cbd5e1",
+            fontWeight: 600, cursor: "pointer", fontSize: 16,
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+          }}
+        >
+          <span>Highlight Guides</span>
+          <span>{highlightGuides ? "ON" : "OFF"}</span>
+        </button>
+
         <div style={{ marginBottom: 24 }}>
         <button
           onClick={() => setTheme(theme === "light" ? "dark" : "light")}
@@ -67,7 +87,7 @@ export default function Settings({
             padding: "12px 16px", borderRadius: 12,
             backgroundColor: theme === "dark" ? "#1e293b" : "#f8fafc",
             color: theme === "dark" ? "#f1f5f9" : "#334155",
-            border: theme === "dark" ? "2px solid #64748b" : "1px solid #94a3b8",
+            border: theme === "dark" ? "1px solid #475569" : "1px solid #94a3b8",
             fontWeight: 600, cursor: "pointer", fontSize: 16,
             display: "flex", justifyContent: "space-between", alignItems: "center",
           }}

@@ -18,24 +18,32 @@ export const THEMES = {
     hintBg: "#e0f7fa",
     hintBorder: "#00bcd4",
     hintTextColor: "#0ea5e9",
+    // New
+    noteColor: "#64748b",
+    guideHighlightBg: "#f1f5f9", // subtle highlight for row/col/box
+    noteBtnActiveBg: "#6366f1",
   },
   dark: {
-    bg: "#0f172a", // Slate 900
-    boardBg: "#1e293b", // Slate 800 - Distinct board background
-    boardBorder: "#3b82f6", // Blue 500
-    lockedCellBg: "#334155", // Slate 700 - Distinct
-    lockedCellTextColor: "#f1f5f9", // Slate 100
-    selectedCellBorder: "#38bdf8", // Sky 400
-    wrongCellBg: "#7f1d1d", // Red 900
-    wrongCellTextColor: "#fecaca", // Red 200
-    normalCellBg: "#1e293b", // Slate 800 - Solid
-    numberBtnBg: "#334155", // Slate 700
+    bg: "#020617", // Slate 950 - Deep rich background
+    boardBg: "#0f172a", // Slate 900
+    boardBorder: "#334155", // Slate 700 - Subtler than blue
+    lockedCellBg: "#1e293b", // Slate 800
+    lockedCellTextColor: "#f8fafc", // Slate 50
+    selectedCellBorder: "#38bdf8", // Sky 400 - Pop of color for selection
+    wrongCellBg: "#450a0a", // Red 950 - Deepest red
+    wrongCellTextColor: "#fca5a5", // Red 300
+    normalCellBg: "#0f172a", // Match board bg
+    numberBtnBg: "#1e293b", // Slate 800
     numberBtnSelBg: "#3b82f6", // Blue 500
-    numberBtnColor: "#f1f5f9", // Slate 100
+    numberBtnColor: "#f1f5f9",
     numberBtnSelColor: "#ffffff",
-    numberHighlightBg: "#b45309", // Amber 700
-    hintBg: "#115e59", // Teal 800
+    numberHighlightBg: "#172554", // Blue 950 - Very subtle same-number highlight
+    hintBg: "#134e4a", // Teal 900
     hintBorder: "#2dd4bf", // Teal 400
-    hintTextColor: "#ccfbf1", // Teal 100
+    hintTextColor: "#ccfbf1",
+    // New
+    noteColor: "#94a3b8", // Slate 400 - Distinct from value
+    guideHighlightBg: "#1e293b", // Subtle guide highlight (same as locked cell)
+    noteBtnActiveBg: "#a855f7", // Purple 500
   },
 };

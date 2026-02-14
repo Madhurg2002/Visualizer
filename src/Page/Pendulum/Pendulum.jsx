@@ -48,7 +48,6 @@ const Pendulum = () => {
     // Sync physics engine with React config config when it changes significantly
     // (e.g., number of pendulums or hard reset)
     // Dynamic Segment Update (Smart Diffing)
-    // Dynamic Segment Update (Smart Diffing)
     useEffect(() => {
         const pState = physicsRef.current;
         const currentLen = pState.segments.length;
@@ -72,20 +71,17 @@ const Pendulum = () => {
         }
     }, [config.pendulums.length]);
 
-    // Update params on the fly without resetting position
+    // Update params on the fly
     useEffect(() => {
-        // Update physics parameters
         const p = physicsRef.current;
         p.g = config.gravity;
         p.damping = config.damping;
 
-        // Update segment properties if array length matches
+        // Update segment properties
         if (p.segments && p.segments.length === config.pendulums.length) {
             p.segments.forEach((seg, i) => {
                 seg.length = config.pendulums[i].length;
                 seg.mass = config.pendulums[i].mass;
-                // velocity and angle are dynamic state, usually we don't sync them from config 
-                // during live play unless explicitly resetting or dragging.
             });
         }
     }, [config]);
@@ -139,25 +135,14 @@ const Pendulum = () => {
     }, [paused]); // Restart loop if pause state toggles (logic handled inside animate for smoothness)
 
     const handleReset = () => {
-        // Create new state from config, effectively respecting any initial velocities in config
-        // If we want random angles on reset:
-        /*
-        const randomizedPendulums = config.pendulums.map(p => ({
-            ...p,
-            angle: Math.PI / 2 + (Math.random() - 0.5)
-        }));
-        physicsRef.current = new PendulumState(randomizedPendulums);
-        */
-
-        // Respecting Exact Config:
         physicsRef.current = new PendulumState(config.pendulums);
-
-        physicsRef.current.g = config.gravity;
         physicsRef.current.damping = config.damping;
+        physicsRef.current.g = config.gravity;
 
         setTrail([]);
         setCoords(physicsRef.current.getCoordinates());
         setCurrentAngles(physicsRef.current.segments.map(s => s.angle));
+        setCurrentVelocities(physicsRef.current.segments.map(s => s.velocity));
     };
 
     const handleAngleChange = (index, angleRad) => {

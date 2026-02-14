@@ -105,12 +105,52 @@ const PendulumCanvas = ({ stateCoords, config, trail, onAngleChange, onSelectSeg
             const nextY = drawStartY + coord.y;
             const mass = config.pendulums[index].mass;
 
-            // Rod
+            // Draw Connection (Rod, Spring, or String)
             ctx.beginPath();
-            ctx.moveTo(currentX, currentY);
-            ctx.lineTo(nextX, nextY);
-            ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+
+            if (config.mode === 'spring') {
+                // Draw Zig-Zag Spring
+                const dx = nextX - currentX;
+                const dy = nextY - currentY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                const angle = Math.atan2(dy, dx);
+
+                const coils = 10;
+                const width = 6 / scale; // Visual width of spring coil
+
+                ctx.save();
+                ctx.translate(currentX, currentY);
+                ctx.rotate(angle);
+
+                ctx.moveTo(0, 0);
+                for (let i = 1; i <= coils; i++) {
+                    const x = (dist / coils) * i;
+                    const y = (i % 2 === 0 ? 1 : -1) * width;
+                    // Ease in/out at ends
+                    if (i === coils) ctx.lineTo(dist, 0);
+                    else ctx.lineTo(x, y);
+                }
+
+                ctx.restore();
+                ctx.strokeStyle = 'rgba(100, 200, 255, 0.8)';
+            } else if (config.mode === 'string') {
+                // Draw String (thinner, maybe slack visual if we had data, but straight for now)
+                ctx.moveTo(currentX, currentY);
+                ctx.lineTo(nextX, nextY);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.setLineDash([5, 5]); // Dashed for string? Or just thin. 
+                // Let's stick to solid but thin and white.
+                ctx.setLineDash([]);
+                ctx.lineWidth = 2 / scale;
+            } else {
+                // Rod (Rigid)
+                ctx.moveTo(currentX, currentY);
+                ctx.lineTo(nextX, nextY);
+                ctx.strokeStyle = 'rgba(255,255,255,0.8)';
+            }
+
             ctx.stroke();
+            ctx.setLineDash([]); // Reset
 
             // Bob
             ctx.beginPath();

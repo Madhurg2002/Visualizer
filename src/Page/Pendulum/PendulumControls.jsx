@@ -40,7 +40,8 @@ const PendulumControls = ({
     };
 
     const handleGlobalChange = (key, value) => {
-        onConfigChange({ ...config, [key]: parseFloat(value) });
+        const val = key === 'mode' ? value : parseFloat(value);
+        onConfigChange({ ...config, [key]: val });
     };
 
     const handleCountChange = (value) => {
@@ -236,6 +237,8 @@ const PendulumControls = ({
                         </strong>
 
                         <ControlRow>
+
+                        <ControlRow>
                             <Label><span>Length</span> <span>{p.length}px</span></Label>
                             <input
                                 type="range" min="10" max="300"
@@ -255,7 +258,7 @@ const PendulumControls = ({
                             />
                         </ControlRow>
 
-                        <ControlRow>
+
                             <Label><span>Angle</span> <span>{angleDeg}°</span></Label>
                             <input
                                 type="range" min="-180" max="180"

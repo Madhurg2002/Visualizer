@@ -1,14 +1,7 @@
 
 import React, { useState } from 'react';
 import { useSort } from './hooks/useSort';
-import { ALGORITHM_DESCRIPTIONS } from './utils/sortingAlgorithms';
-import { ALGORITHM_OPTIONS } from './utils/sortingAlgorithms';
-// Icons removed to avoid dependency issues
-
-
-// Simple icons if heroicons not installed, but using text for now or simple SVG if needed.
-// Actually, let's stick to simple text or standard unicode if we want to avoid deps, 
-// but I'll use simple inline SVGs for a "Premium" feel.
+import SortingControls from './SortingControls';
 
 const Sort = () => {
     const {
@@ -25,155 +18,28 @@ const Sort = () => {
         stepSort
     } = useSort(50);
 
-    const [showDesc, setShowDesc] = useState(false);
-    const [customInput, setCustomInput] = useState("");
 
     const maxVal = Math.max(...array, 1); // Avoid division by zero
 
-    const handleCustomArray = () => {
-        const nums = customInput.split(',')
-            .map(s => parseInt(s.trim()))
-            .filter(n => !isNaN(n));
-
-        if (nums.length > 0) {
-            setArray(nums);
-            setSize(nums.length);
-        }
-    };
-
     return (
-        <div className="flex flex-col items-center justify-center p-6 w-full h-full">
-            {/* Controls Header */}
-            <div className="w-full max-w-6xl bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-xl shadow-lg p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-6 transition-all duration-300">
-
-                {/* Inputs Group */}
-                <div className="flex flex-wrap items-center gap-6 justify-center md:justify-start">
-                    <div className="flex flex-col space-y-1 relative"
-                        onMouseEnter={() => setShowDesc(true)}
-                        onMouseLeave={() => setShowDesc(false)}
-                    >
-                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider flex items-center gap-1 cursor-help">
-                            Algorithm <span className="text-slate-400 text-[10px]">(Hover for info)</span>
-                        </label>
-                        <select
-                            disabled={sorting}
-                            value={algorithm}
-                            onChange={(e) => setAlgorithm(e.target.value)}
-                            className="bg-slate-100 border border-slate-200 text-slate-700 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-40 p-2.5 outline-none transition-all disabled:opacity-50"
-                        >
-                            {ALGORITHM_OPTIONS.map((algo) => (
-                                <option key={algo} value={algo}>{algo}</option>
-                            ))}
-                        </select>
-
-                        {/* Description Popover */}
-                        {showDesc && (
-                            <div className="absolute top-full left-0 mt-2 w-96 z-50 bg-white border-l-4 border-blue-500 p-4 rounded shadow-xl animate-fade-in pointer-events-none">
-                                <h3 className="text-lg font-bold text-blue-800 mb-1">{algorithm}</h3>
-                                <p className="text-sm text-blue-700 leading-relaxed">
-                                    {ALGORITHM_DESCRIPTIONS[algorithm]}
-                                </p>
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="flex flex-col space-y-1 w-32">
-                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Size: {size}</label>
-                        <input
-                            type="range"
-                            min="10"
-                            max="100"
-                            disabled={sorting}
-                            value={size}
-                            onChange={(e) => setSize(Number(e.target.value))}
-                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600 disabled:opacity-50"
-                        />
-                    </div>
-
-                    <div className="flex flex-col space-y-1 w-32">
-                        <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Speed: {speed}</label>
-                        <input
-                            type="range"
-                            min="1"
-                            max="100"
-                            value={speed}
-                            onChange={(e) => setSpeed(Number(e.target.value))}
-                            className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-purple-600"
-                        />
-                    </div>
-                </div>
-
-                {/* Custom Input */}
-                <div className="flex gap-2">
-                    <input
-                        type="text"
-                        placeholder="e.g. 10, 5, 8, 20"
-                        value={customInput}
-                        onChange={(e) => setCustomInput(e.target.value)}
-                        className="px-3 py-2 border rounded text-sm w-48 text-slate-700 disabled:opacity-50"
-                        disabled={sorting}
-                    />
-                    <button
-                        onClick={handleCustomArray}
-                        disabled={sorting}
-                        className="px-3 py-2 bg-slate-700 text-white rounded text-sm hover:bg-slate-800 disabled:opacity-50"
-                    >
-                        Set
-                    </button>
-                </div>
-
-                {/* Actions Group */}
-                <div className="flex items-center gap-3">
-                    {!sorting && (
-                        <button
-                            onClick={startSort}
-                            className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
-                        >
-                            <span>Start</span>
-                        </button>
-                    )}
-
-                    {sorting && !paused && (
-                        <button
-                            onClick={pauseSort}
-                            className="flex items-center gap-2 px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-medium rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
-                        >
-                            <span>Pause</span>
-                        </button>
-                    )}
-
-                    {sorting && paused && (
-                        <>
-                            <button
-                                onClick={startSort}
-                                className="flex items-center gap-2 px-6 py-2.5 bg-green-500 hover:bg-green-600 text-white font-medium rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
-                            >
-                                <span>Resume</span>
-                            </button>
-                            <button
-                                onClick={stepSort}
-                                className="flex items-center gap-2 px-4 py-2.5 bg-slate-600 hover:bg-slate-700 text-white font-medium rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200"
-                            >
-                                <span>Step</span>
-                            </button>
-                        </>
-                    )}
-
-                    <button
-                        onClick={reset}
-                        disabled={sorting && !paused}
-                        className={`flex items-center gap-2 px-4 py-2.5 font-medium rounded-lg shadow-sm border border-slate-200 transition-all duration-200 ${sorting && !paused
-                            ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                            : "bg-white text-slate-700 hover:bg-slate-50 hover:text-red-500"
-                            }`}
-                    >
-                        <span>Reset</span>
-                    </button>
-                </div>
-            </div>
-
-            {/* Description */}
-            {/* Description - Removed fixed block, moved to hover tooltip */}
+        <div className="flex flex-col items-center justify-center p-6 w-full h-full min-h-screen bg-[#0B0C15]">
+            <SortingControls
+                algorithm={algorithm}
+                setAlgorithm={setAlgorithm}
+                size={size}
+                setSize={setSize}
+                speed={speed}
+                setSpeed={setSpeed}
+                sorting={sorting}
+                paused={paused}
+                startSort={startSort}
+                pauseSort={pauseSort}
+                resumeSort={startSort} // startSort acts as resume in the hook logic usually, or we can check the hook
+                stepSort={stepSort}
+                reset={reset}
+                array={array}
+                setArray={setArray}
+            />
 
             {/* Legend */}
             <div className="flex gap-6 mb-4 text-sm font-medium text-slate-400 bg-slate-900 px-6 py-2 rounded-full shadow-sm border border-white/10">

@@ -23,26 +23,9 @@ import NumberSelector from "./NumberSelector";
 import Settings from "./Settings";
 import { THEMES } from "./themes";
 
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+import { SettingsIcon } from "./Icons";
 
-function SettingsIcon({ size = 24, color = "currentColor" }) {
-  return (
-    <svg
-      height={size}
-      width={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke={color}
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      style={{ display: "block" }}
-    >
-      <circle cx="12" cy="12" r="3" />{" "}
-      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h.09A1.65 1.65 0 0 0 12 3V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51z" />{" "}
-    </svg>
-  );
-}
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export default function Sudoku() {
   const navigate = useNavigate();
@@ -76,6 +59,12 @@ export default function Sudoku() {
   const themeColors = THEMES[theme];
   const [continuousCheck, setContinuousCheck] = useState(false);
   const [highlightNumbers, setHighlightNumbers] = useState(true);
+  const [highlightGuides, setHighlightGuides] = useState(false);
+
+  // Notes state: Map of "r-c" -> Set(numbers)
+  // We use object for easier serialization if needed, or simple Map
+  const [notes, setNotes] = useState({});
+  const [isNoteMode, setIsNoteMode] = useState(false);
 
   const [board, setBoard] = useState([]);
   const [solution, setSolution] = useState([]);
@@ -211,8 +200,28 @@ export default function Sudoku() {
     });
   };
 
+  const toggleNote = useCallback((r, c, num) => {
+    const key = `${r}-${c}`;
+    setNotes(prev => {
+      const newNotes = { ...prev };
+      const cellNotes = new Set(newNotes[key] || []);
+      if (cellNotes.has(num)) cellNotes.delete(num);
+      else cellNotes.add(num);
+      newNotes[key] = cellNotes;
+      return newNotes;
+    });
+  }, []);
+
   const fillCell = useCallback((r, c, num) => {
     if (lockedCells.has(`${r}-${c}`)) return;
+    
+    // Clear notes for this cell when filled
+    setNotes(prev => {
+        const newNotes = { ...prev };
+        delete newNotes[`${r}-${c}`];
+        return newNotes;
+    });
+
     const newBoard = board.map((row) => row.slice());
     newBoard[r][c] = newBoard[r][c] === num ? 0 : num;
     setBoard(newBoard);
@@ -223,12 +232,24 @@ export default function Sudoku() {
       setHintCell(null);
     }
     if (isComplete(newBoard, solution)) setWin(true);
-  }, [board, lockedCells, hintCell, solution]); // Cell click should only select
+  }, [board, lockedCells, hintCell, solution]); 
 
   const handleCellClick = (r, c) => {
     setSelectedCell([r, c]);
-    if (selectedNumber !== null) {
-      fillCell(r, c, selectedNumber);
+    
+    const cellValue = board[r][c];
+    if (cellValue !== 0) {
+        // Smart Interaction: Select the number
+        setSelectedNumber(cellValue);
+    } else {
+        // Empty cell
+        if (selectedNumber !== null) {
+            if (isNoteMode) {
+                toggleNote(r, c, selectedNumber);
+            } else {
+                fillCell(r, c, selectedNumber);
+            }
+        }
     }
   };
 
@@ -240,7 +261,17 @@ export default function Sudoku() {
         selectedCell &&
         !lockedCells.has(`${selectedCell[0]}-${selectedCell[1]}`)
       ) {
-        fillCell(selectedCell[0], selectedCell[1], num);
+        const [r, c] = selectedCell;
+        // If cell is empty or we are overwriting
+        // Check mode
+        if (board[r][c] === 0) {
+             if (isNoteMode) toggleNote(r, c, num);
+             else fillCell(r, c, num);
+        } else {
+            // Cell occupied, overwrite if not locked (handled by fillCell check)
+            // If Note Mode, usually we don't put notes on filled cells.
+             if (!isNoteMode) fillCell(r, c, num);
+        }
       }
     }
   };
@@ -295,14 +326,9 @@ export default function Sudoku() {
             for (let n = 1; n <= 9; n++) {
               if (!solvingRef.current) return false;
 
-              // Visualization: Highlight current attempt (optional, or just show number)
-              // We update the board state to trigger re-render
-
               if (isValid(currentBoard, r, c, n)) {
                 currentBoard[r][c] = n;
                 setBoard(currentBoard.map(row => row.slice())); // Update UI
-                // Highlight the cell being tried? 
-                // We can use setSelectedCell([r, c]) to show focus
                 setSelectedCell([r, c]);
 
                 await sleep(20); // Delay for visualization
@@ -337,17 +363,30 @@ export default function Sudoku() {
       if (!selectedCell || win) return;
       const [r, c] = selectedCell;
       if (lockedCells.has(`${r}-${c}`)) return;
+      
+      // Toggle Note Mode with 'N'
+      if (e.key === 'n' || e.key === 'N') {
+          setIsNoteMode(prev => !prev);
+          return;
+      }
+
       if (/^[1-9]$/.test(e.key)) {
-        fillCell(r, c, Number(e.key));
+        const num = Number(e.key);
+        if (isNoteMode && board[r][c] === 0) {
+            toggleNote(r, c, num);
+        } else {
+            fillCell(r, c, num);
+        }
       } else if (e.key === "Backspace" || e.key === "Delete") {
-        fillCell(r, c, 0);
+        fillCell(r, c, 0); // Clears cell and notes
       } else if (e.key === "ArrowUp" && r > 0) setSelectedCell([r - 1, c]);
       else if (e.key === "ArrowDown" && r < 8) setSelectedCell([r + 1, c]);
       else if (e.key === "ArrowLeft" && c > 0) setSelectedCell([r, c - 1]);
       else if (e.key === "ArrowRight" && c < 8) setSelectedCell([r, c + 1]);
     };
     window.addEventListener("keydown", handleKey);
-  }, [selectedCell, win, board, lockedCells, fillCell]);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [selectedCell, win, board, lockedCells, fillCell, isNoteMode, toggleNote]);
 
   const handleButtonClick = useCallback((btnName, cb) => {
     setPoppedButton(btnName);
@@ -381,6 +420,12 @@ export default function Sudoku() {
       {win && (
         <WinningModal
           onClose={() => setWin(false)}
+          onNewGame={() => {
+              const newSeed = randomSeed();
+              setSeed(newSeed);
+              setSeedInput(newSeed);
+              setWin(false);
+          }}
           timeElapsed={timeElapsed}
           stats={statistics[difficulty]}
           hasUsedSolver={hasUsedSolver.current}
@@ -408,7 +453,10 @@ export default function Sudoku() {
         setTheme={setTheme}
         highlightNumbers={highlightNumbers}
         setHighlightNumbers={setHighlightNumbers}
+        highlightGuides={highlightGuides}
+        setHighlightGuides={setHighlightGuides}
       />
+
       {/* Header with menu and difficulty */}
       <div
         style={{
@@ -488,9 +536,10 @@ export default function Sudoku() {
         onVisualizeSolver={visualizeSolver}
         solving={solving}
         poppedButton={poppedButton}
-        poppedButton={poppedButton}
         handleButtonClick={handleButtonClick}
         onApplySeed={handleApplySeed}
+        isNoteMode={isNoteMode}
+        onToggleNoteMode={() => setIsNoteMode(prev => !prev)}
       />
       {/* Timer above the Sudoku */}
       <div
@@ -541,6 +590,9 @@ export default function Sudoku() {
           win={win}
           themeColors={themeColors}
           highlightValue={highlightValue}
+          theme={theme}
+          notes={notes}
+          highlightGuides={highlightGuides}
         />
       </div>
       {/* Numbers below the Sudoku */}

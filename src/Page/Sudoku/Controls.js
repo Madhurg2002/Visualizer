@@ -1,5 +1,6 @@
 // src/Page/Sudoku/Controls.js
 import React from "react";
+import { PencilIcon } from "./Icons";
 
 export default function Controls({
   difficulty,
@@ -18,6 +19,8 @@ export default function Controls({
   poppedButton,
   handleButtonClick,
   onApplySeed,
+  isNoteMode,
+  onToggleNoteMode,
 }) {
   const baseButtonStyle = {
     padding: "10px 20px",
@@ -109,6 +112,23 @@ export default function Controls({
         Difficulty: {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
       </button>
       <button
+        onClick={() => {
+            if (onToggleNoteMode) onToggleNoteMode();
+        }}
+        style={{
+          ...baseButtonStyle,
+          backgroundColor: isNoteMode ? "#4f46e5" : "#64748b",
+          color: "white",
+          transform: isNoteMode ? "scale(1.05)" : "scale(1)",
+          display: "flex", alignItems: "center", gap: 8
+        }}
+        title="Toggle Note Mode (N)"
+      >
+        <PencilIcon size={18} />
+        {isNoteMode ? "Notes: ON" : "Notes"}
+      </button>
+
+      <button
         onClick={() => handleButtonClick("undo", onUndo)}
         disabled={undoDisabled}
         style={{
@@ -147,6 +167,8 @@ export default function Controls({
       >
         Show Hint
       </button>
+
+
 
     </div>
   );

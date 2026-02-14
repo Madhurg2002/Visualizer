@@ -184,6 +184,92 @@ export function* shellSort(array) {
   yield { arr: arr.slice(), active: [] };
 }
 
+
+export function* cocktailShakerSort(array) {
+  let arr = array.slice();
+  let start = 0;
+  let end = arr.length - 1;
+  let swapped = true;
+
+  while (swapped) {
+    swapped = false;
+
+    // Forward pass
+    for (let i = start; i < end; i++) {
+        yield { arr: arr.slice(), active: [i, i + 1] };
+      if (arr[i] > arr[i + 1]) {
+        [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]];
+        yield { arr: arr.slice(), active: [i, i + 1] };
+        swapped = true;
+      }
+    }
+
+    if (!swapped) break;
+
+    swapped = false;
+    end--;
+
+    // Backward pass
+    for (let i = end - 1; i >= start; i--) {
+        yield { arr: arr.slice(), active: [i, i + 1] };
+      if (arr[i] > arr[i + 1]) {
+        [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]];
+        yield { arr: arr.slice(), active: [i, i + 1] };
+        swapped = true;
+      }
+    }
+    start++;
+  }
+  yield { arr: arr.slice(), active: [] };
+}
+
+export function* radixSort(array) {
+  let arr = array.slice();
+  
+  const getMax = (arr) => {
+    let max = 0;
+    for (let num of arr) {
+      max = Math.max(max, num);
+    }
+    return max;
+  };
+
+  const MULTIPLIER = 1000000;
+  
+  let maxVal = getMax(arr) * MULTIPLIER; 
+  
+  for (let exp = 1; Math.floor(maxVal / exp) > 0; exp *= 10) {
+    let output = new Array(arr.length).fill(0);
+    let count = new Array(10).fill(0);
+    
+    for (let i = 0; i < arr.length; i++) {
+      let val = Math.floor(arr[i] * MULTIPLIER);
+      let digit = Math.floor(val / exp) % 10;
+      count[digit]++;
+      yield { arr: arr.slice(), active: [i] };
+    }
+    
+    for (let i = 1; i < 10; i++) {
+        count[i] += count[i - 1];
+    }
+    
+    for (let i = arr.length - 1; i >= 0; i--) {
+      let val = Math.floor(arr[i] * MULTIPLIER);
+      let digit = Math.floor(val / exp) % 10;
+      output[count[digit] - 1] = arr[i];
+      count[digit]--;
+      yield { arr: arr.slice(), active: [i] };
+    }
+    
+    for (let i = 0; i < arr.length; i++) {
+        arr[i] = output[i];
+        yield { arr: arr.slice(), active: [i] };
+    }
+  }
+  
+  yield { arr: arr.slice(), active: [] };
+}
+
 export const ALGORITHMS = {
   "Bubble Sort": bubbleSort,
   "Selection Sort": selectionSort,
@@ -192,6 +278,8 @@ export const ALGORITHMS = {
   "Merge Sort": mergeSort,
   "Heap Sort": heapSort,
   "Shell Sort": shellSort,
+  "Cocktail Shaker Sort": cocktailShakerSort,
+  "Radix Sort": radixSort,
 };
 
 export const ALGORITHM_OPTIONS = Object.keys(ALGORITHMS);
@@ -204,4 +292,6 @@ export const ALGORITHM_DESCRIPTIONS = {
   "Merge Sort": "An efficient, stable, comparison-based, divide-and-conquer sorting algorithm. Most implementations produce a stable sort, meaning that the implementation preserves the input order of equal elements in the sorted output. Complexity: O(n log n)",
   "Heap Sort": "A comparison-based sorting technique based on a Binary Heap data structure. It is similar to selection sort where we first find the maximum element and place the maximum element at the end. Complexity: O(n log n)",
   "Shell Sort": "An in-place comparison sort. It can be seen as either a generalization of sorting by exchange (bubble sort) or sorting by insertion (insertion sort). The method starts by sorting pairs of elements far apart from each other, then progressively reducing the gap between elements to be compared. Complexity: O(n log n)",
+  "Cocktail Shaker Sort": "A variation of Bubble Sort that sorts in both directions on each pass through the list. While it improves on Bubble Sort by handling 'turtles', it still has the same worst-case complexity. Complexity: O(n²)",
+  "Radix Sort": "A non-comparative sorting algorithm. It avoids comparison by creating and distributing elements into buckets according to their radix. For 0-1 floats, we treat them as integers scaled up. Complexity: O(nk)",
 };
