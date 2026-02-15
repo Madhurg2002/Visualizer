@@ -6,6 +6,7 @@ import React, {
   useCallback,
 } from "react";
 import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from 'lucide-react'; // Added import
 import {
   randomSeed,
   generateFull,
@@ -34,7 +35,7 @@ export default function Sudoku() {
   const urlSeed = query.get("seed") || "";
   const urlDiff = query.get("difficulty") || "easy";
 
-  const urlTheme = query.get("theme") || "light";
+  const urlTheme = query.get("theme") || "dark";
 
   // If urlSeed exists, use it. Otherwise use the initial random seed.
   const initialSeed = useMemo(() => urlSeed || randomSeed(), [urlSeed]);
@@ -405,18 +406,9 @@ export default function Sudoku() {
     return wrongs;
   }, [board, solution, continuousCheck]);
 
+
   return (
-    <div
-      style={{
-        padding: "0 32px 32px 32px",
-        width: "100%",
-        background: themeColors.bg,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        gap: 24,
-      }}
-    >
+    <div className="flex flex-col items-center w-full min-h-screen bg-[#0B0C15] font-sans pb-8">
       {win && (
         <WinningModal
           onClose={() => setWin(false)}
@@ -457,64 +449,33 @@ export default function Sudoku() {
         setHighlightGuides={setHighlightGuides}
       />
 
-      {/* Header with menu and difficulty */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          width: "100%",
-          maxWidth: 480,
-          marginBottom: 20,
-          padding: "0 8px",
-        }}
-      >
-        <h2
-          style={{
-            margin: 0,
-            color: themeColors.boardBorder,
-            fontWeight: 700,
-            fontSize: "2rem",
-            flexGrow: 1,
-            textAlign: "center",
-            userSelect: "none",
-          }}
-        >
-          Sudoku
-        </h2>
-        <span
-          style={{
-            fontSize: "1.2rem",
-            fontWeight: "600",
-            color: themeColors.boardBorder,
-            userSelect: "none",
-          }}
-        >
-          {difficulty.toUpperCase()}
-        </span>
-        <button
-          onClick={() => setSettingsVisible(true)}
-          aria-label="Open Settings"
-          title="Settings"
-          style={{
-            background: "transparent",
-            border: "none",
-            cursor: "pointer",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: themeColors.boardBorder,
-            width: 32,
-            height: 32,
-            transition: "color 0.2s ease",
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "#1e40af")}
-          onMouseLeave={(e) =>
-            (e.currentTarget.style.color = themeColors.boardBorder)
-          }
-        >
-          <SettingsIcon size={24} />
-        </button>
+      {/* Header */}
+      <div className="w-full max-w-6xl flex flex-col md:flex-row justify-between items-start gap-4 p-6 mb-4 z-10">
+           <button
+              onClick={() => navigate('/')}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all w-fit"
+          >
+              <ArrowLeft size={18} /> Back
+          </button>
+
+          <div className="text-center flex-1">
+              <h1 className="text-3xl md:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-sm mb-2">
+                  Sudoku
+              </h1>
+               <div className="flex justify-center items-center gap-2">
+                    <span className="text-slate-400 font-bold uppercase tracking-wider text-sm bg-slate-900/50 px-3 py-1 rounded-full border border-white/5">
+                        {difficulty}
+                    </span>
+               </div>
+          </div>
+
+          <button
+            onClick={() => setSettingsVisible(true)}
+            className="flex items-center justify-center p-3 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all shadow-lg"
+            title="Settings"
+          >
+            <SettingsIcon size={20} />
+          </button>
       </div>
       {/* Controls below numbers */}
       <Controls
@@ -540,6 +501,8 @@ export default function Sudoku() {
         onApplySeed={handleApplySeed}
         isNoteMode={isNoteMode}
         onToggleNoteMode={() => setIsNoteMode(prev => !prev)}
+        theme={theme}
+        themeColors={themeColors}
       />
       {/* Timer above the Sudoku */}
       <div

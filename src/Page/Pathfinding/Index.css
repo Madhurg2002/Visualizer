@@ -10,26 +10,29 @@
     flex: 1;
     /* Force square aspect ratio */
     aspect-ratio: 1 / 1;
-    /* min-width: 20px; REMOVED */
-    /* min-height: 20px; REMOVED */
     border-width: 0.5px;
-    border-color: #e2e8f0;
-    /* slate-200 */
+    border-color: rgba(255, 255, 255, 0.05); /* Very subtle borders */
     margin: 0;
     padding: 0;
     transition: all 0.1s ease-in-out;
+    background-color: transparent; /* Default to transparent */
 }
 
 /* Specific node styles */
 .empty {
-    background-color: white;
+    background-color: rgba(255, 255, 255, 0.02); /* Very faint tile */
+}
+
+.empty:hover {
+    background-color: rgba(255, 255, 255, 0.1);
 }
 
 .blockage {
     background-color: #334155;
     /* slate-700 */
-    border-color: #334155;
+    border-color: #475569;
     animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: inset 0 0 5px rgba(0,0,0,0.5);
 }
 
 .end {
@@ -41,21 +44,20 @@
     background-position: center;
     animation: popIn 0.3s;
     border: none;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.6);
 }
 
 .searching-path {
-    background: #93c5fd;
-    /* blue-300 */
-    border-color: #bfdbfe;
-    /* animation: pulse 1.5s infinite; */
+    background: rgba(99, 102, 241, 0.5); /* Indigo-500 transparent */
+    border-color: rgba(129, 140, 248, 0.3);
 }
 
 .searching-path-current {
-    background: #3b82f6;
-    /* blue-500 */
+    background: #8b5cf6; /* Violet-500 */
     transform: scale(1.1);
     z-index: 10;
     border-radius: 20%;
+    box-shadow: 0 0 10px #8b5cf6;
 }
 
 .path {

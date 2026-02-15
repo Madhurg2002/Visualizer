@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 
-const AnimatedHand = ({ targetAngle, length, width }) => {
+const AnimatedHand = ({ targetAngle, length, width, color = "bg-slate-200" }) => {
     const currentAngle = useRef(targetAngle);
 
     // Check if wrapping needed
@@ -17,9 +17,9 @@ const AnimatedHand = ({ targetAngle, length, width }) => {
 
     return (
         <motion.div
-            className="absolute top-1/2 left-1/2 origin-bottom bg-slate-900 rounded-full shadow-sm dark:bg-black"
+            className={`absolute top-1/2 left-1/2 origin-bottom rounded-full shadow-[0_0_10px_rgba(0,0,0,0.5)] ${color}`}
             animate={{ rotate: currentAngle.current }}
-            transition={{ type: "spring", stiffness: 80, damping: 20, mass: 1.2 }} // Tuned for mechanical feel
+            transition={{ type: "spring", stiffness: 60, damping: 15, mass: 1 }} // Smoother motion
             style={{
                 width: width,
                 height: length,
@@ -33,15 +33,18 @@ const AnimatedHand = ({ targetAngle, length, width }) => {
 const Clock = ({ h, m, size = 100 }) => {
     return (
         <div
-            className="relative bg-slate-200 rounded-full shadow-inner border border-slate-300"
+            className="relative bg-[#1a1c2e] rounded-full shadow-[inset_0_2px_5px_rgba(0,0,0,0.5),0_5px_15px_rgba(0,0,0,0.3)] border border-white/5"
             style={{ width: size, height: size }}
         >
             {/* Center Cap */}
-            <div className="absolute top-1/2 left-1/2 w-3 h-3 bg-slate-800 rounded-full dark:bg-black z-20 -translate-x-1/2 -translate-y-1/2 shadow-md"></div>
+            <div className="absolute top-1/2 left-1/2 w-2 h-2 bg-slate-900 rounded-full z-20 -translate-x-1/2 -translate-y-1/2 shadow-md border border-white/10"></div>
 
             {/* Hands */}
-            <AnimatedHand targetAngle={h} length={size * 0.45} width={size * 0.12} />
-            <AnimatedHand targetAngle={m} length={size * 0.45} width={size * 0.12} />
+            {/* Hour Hand - Cyan Neon */}
+            <AnimatedHand targetAngle={h} length={size * 0.40} width={size * 0.12} color="bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.6)]" />
+            
+            {/* Minute Hand - Purple Neon */}
+            <AnimatedHand targetAngle={m} length={size * 0.40} width={size * 0.12} color="bg-purple-500 shadow-[0_0_8px_rgba(168,85,247,0.6)]" />
         </div>
     );
 };

@@ -1,5 +1,7 @@
 
 import React, { useState } from 'react';
+import { ArrowLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { useSort } from './hooks/useSort';
 import SortingControls from './SortingControls';
 
@@ -19,64 +21,100 @@ const Sort = () => {
     } = useSort(50);
 
 
-    const maxVal = Math.max(...array, 1); // Avoid division by zero
+    const navigate = useNavigate();
+    const maxVal = Math.max(...array, 1); 
 
     return (
-        <div className="flex flex-col items-center justify-center p-6 w-full h-full min-h-screen bg-[#0B0C15]">
-            <SortingControls
-                algorithm={algorithm}
-                setAlgorithm={setAlgorithm}
-                size={size}
-                setSize={setSize}
-                speed={speed}
-                setSpeed={setSpeed}
-                sorting={sorting}
-                paused={paused}
-                startSort={startSort}
-                pauseSort={pauseSort}
-                resumeSort={startSort} // startSort acts as resume in the hook logic usually, or we can check the hook
-                stepSort={stepSort}
-                reset={reset}
-                array={array}
-                setArray={setArray}
-            />
+        <div className="flex h-screen w-full bg-[#0B0C15] font-sans overflow-hidden">
+            
+            {/* Main Content Area (Left) */}
+            <div className="flex-1 flex flex-col p-6 relative h-full">
+                
+                {/* Header */}
+                <div className="w-full flex flex-col md:flex-row justify-between items-start gap-4 mb-6 z-10">
+                    <button
+                        onClick={() => navigate('/')}
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all w-fit"
+                    >
+                        <ArrowLeft size={18} /> Back
+                    </button>
 
-            {/* Legend */}
-            <div className="flex gap-6 mb-4 text-sm font-medium text-slate-400 bg-slate-900 px-6 py-2 rounded-full shadow-sm border border-white/10">
-                <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-purple-600 rounded-sm"></div>
-                    <span>Active/Compare</span>
+                    <div className="text-center flex-1 pr-20"> {/* PR-20 to balance Back button */}
+                        <h1 className="text-3xl md:text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-sm mb-1">
+                            Sorting Visualizer
+                        </h1>
+                        <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">
+                            Real-time Algorithm Comparison
+                        </p>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-blue-600 rounded-sm"></div>
-                    <span>Unsorted</span>
+
+                {/* Legend */}
+                <div className="flex justify-center mb-6">
+                    <div className="flex gap-6 text-xs font-bold text-slate-400 bg-slate-900/60 px-6 py-2 rounded-full shadow-sm border border-white/5">
+                        <div className="flex items-center gap-2">
+                            <div className="w-2.5 h-2.5 bg-purple-600 rounded-sm shadow-[0_0_8px_rgba(168,85,247,0.6)]"></div>
+                            <span>Active</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2.5 h-2.5 bg-blue-600 rounded-sm"></div>
+                            <span>Unsorted</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <div className="w-2.5 h-2.5 bg-emerald-500 rounded-sm shadow-[0_0_8px_rgba(16,185,129,0.6)]"></div>
+                            <span>Sorted</span>
+                        </div>
+                    </div>
                 </div>
-                <div className="flex items-center gap-2">
-                    <span className="text-xs text-slate-400">Sorted state is implied by order</span>
+
+                {/* Visualizer Board */}
+                <div className="flex-grow relative bg-slate-900/30 rounded-2xl shadow-xl overflow-hidden border border-white/5 flex flex-col backdrop-blur-sm">
+                    <div className="absolute inset-0 flex items-end justify-center gap-[1px] sm:gap-[2px] p-6 pb-0">
+                        {array.map((val, idx) => {
+                            const isActive = activeIndices.includes(idx);
+                            return (
+                                <div
+                                    key={idx}
+                                    style={{
+                                        height: `${(val / maxVal) * 100}%`,
+                                        width: `${100 / size}%`
+                                    }}
+                                    className={`rounded-t-[2px] transition-all duration-200 ease-in-out ${isActive
+                                        ? 'bg-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.8)] z-10'
+                                        : 'bg-gradient-to-t from-blue-700 to-blue-500 opacity-90 hover:opacity-100'
+                                        }`}
+                                ></div>
+                            );
+                        })}
+                    </div>
                 </div>
             </div>
 
-            {/* Visualizer Board */}
-            <div className="relative w-full max-w-6xl flex-grow bg-slate-900/50 rounded-xl shadow-2xl overflow-hidden border border-white/10 flex flex-col" style={{ height: '60vh', minHeight: '400px' }}>
-                <div className="flex-1 w-full flex items-end justify-center gap-[1px] sm:gap-[2px] p-4 pb-0">
-                    {array.map((val, idx) => {
-                        const isActive = activeIndices.includes(idx);
-                        return (
-                            <div
-                                key={idx}
-                                style={{
-                                    height: `${(val / maxVal) * 100}%`,
-                                    width: `${100 / size}%`
-                                }}
-                                className={`rounded-t-sm transition-all duration-200 ease-in-out ${isActive
-                                    ? 'bg-purple-600 shadow-[0_0_15px_rgba(168,85,247,0.5)]'
-                                    : 'bg-blue-600 opacity-90 hover:opacity-100'
-                                    }`}
-                            ></div>
-                        );
-                    })}
+            {/* Sidebar Controls (Right) */}
+            <div className="w-80 h-full bg-slate-900/80 backdrop-blur-xl border-l border-white/10 p-6 flex flex-col shadow-2xl z-20">
+                <div className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-6 border-b border-white/10 pb-2">
+                    Configuration
                 </div>
+                
+                <SortingControls
+                    algorithm={algorithm}
+                    setAlgorithm={setAlgorithm}
+                    size={size}
+                    setSize={setSize}
+                    speed={speed}
+                    setSpeed={setSpeed}
+                    sorting={sorting}
+                    paused={paused}
+                    startSort={startSort}
+                    pauseSort={pauseSort}
+                    resumeSort={startSort}
+                    stepSort={stepSort}
+                    reset={reset}
+                    array={array}
+                    setArray={setArray}
+                />
             </div>
+
         </div>
     );
 };

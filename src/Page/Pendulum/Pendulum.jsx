@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { ArrowLeft, Settings as SettingsIcon } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { PendulumState, PendulumSegment } from './PendulumPhysics';
 import PendulumCanvas from './PendulumCanvas';
 import PendulumControls from './PendulumControls';
@@ -231,76 +233,98 @@ const Pendulum = () => {
         }
     };
 
+    const navigate = useNavigate(); // Added hook using React Router
+
     return (
         <div
-            className="pendulum-page h-screen w-screen bg-black text-white overflow-hidden relative"
+            className="pendulum-page flex flex-col h-screen w-full bg-[#0B0C15] text-white overflow-hidden relative font-sans"
             onMouseMove={handlePanelMouseMove}
             onMouseUp={handlePanelMouseUp}
             onMouseLeave={handlePanelMouseUp}
         >
-            {/* Full Screen Canvas */}
-            <div className="absolute top-0 left-0 w-full h-full z-10">
-                <PendulumCanvas
-                    stateCoords={coords}
-                    config={config}
-                    trail={trail}
-                    onAngleChange={handleAngleChange}
-                    onSelectSegment={(index) => {
-                        setSelectedSegment(index);
-                        setShowControls(true); // Auto-open controls if hidden
-                    }}
-                />
-            </div>
-
-            {/* Title / Header (Minimal) */}
-            <div className="absolute top-5 left-5 z-20 pointer-events-none">
-                <h1 className="m-0 text-2xl text-white/80 shadow-black drop-shadow-md font-heading">N-Pendulum</h1>
-            </div>
-
-            {/* Toggle Button */}
-            <button
-                onClick={() => setShowControls(!showControls)}
-                className="absolute top-5 right-5 z-20 bg-white/10 border border-white/20 text-white rounded-full w-10 h-10 cursor-pointer flex items-center justify-center backdrop-blur-sm hover:bg-white/20 transition-colors"
-                title="Toggle Configuration"
-            >
-                {showControls ? '✕' : '⚙️'}
-            </button>
-
-            {/* Draggable Controls */}
-            {showControls && (
-                <div
-                    style={{
-                        top: panelPos.y,
-                        left: panelPos.x,
-                    }}
-                    className={`absolute w-[350px] max-h-[90vh] bg-[#141414]/90 backdrop-blur-xl rounded-xl shadow-2xl border border-white/10 overflow-hidden flex flex-col z-30 ${isDraggingPanel ? 'cursor-grabbing' : 'auto'}`}
+             {/* Header */}
+            <div className="w-full flex-none flex flex-col md:flex-row justify-between items-center gap-4 p-6 z-20 bg-[#0B0C15]/80 backdrop-blur-md border-b border-white/5">
+                 <button
+                    onClick={() => navigate('/')}
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all w-fit pointer-events-auto"
                 >
-                    {/* Drag Handle */}
-                    <div
-                        onMouseDown={handlePanelMouseDown}
-                        className="px-5 py-3 bg-white/5 border-b border-white/5 cursor-grab select-none flex justify-between items-center"
-                    >
-                        <span className="font-semibold text-sm opacity-90">Configuration</span>
-                        <div className="w-10 h-1 bg-white/10 rounded-full" />
-                    </div>
+                    <ArrowLeft size={18} /> Back
+                </button>
 
-                    <div className="p-0 overflow-y-auto flex-1 scrollbar-hide">
-                        <PendulumControls
-                            config={config}
-                            currentAngles={currentAngles}
-                            currentVelocities={currentVelocities}
-                            onConfigChange={handleConfigChange}
-                            onPreset={handlePreset}
-                            onReset={handleReset}
-                            onPause={() => setPaused(!paused)}
-                            paused={paused}
-                            onAngleChange={handleAngleChange}
-                            onVelocityChange={handleVelocityChange}
-                            selectedSegment={selectedSegment}
-                        />
-                    </div>
+                <div className="text-center flex-1 pointer-events-none">
+                    <h1 className="text-3xl md:text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 drop-shadow-sm mb-1 font-heading">
+                        N-Pendulum
+                    </h1>
+                     <p className="text-slate-500 text-xs font-medium uppercase tracking-widest hidden md:block">
+                        Physics Simulation
+                    </p>
                 </div>
-            )}
+
+                <button
+                    onClick={() => setShowControls(!showControls)}
+                    className={`flex items-center justify-center p-3 rounded-full border transition-all shadow-lg pointer-events-auto ${showControls ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/50' : 'bg-slate-800/80 text-slate-300 border-white/10 hover:text-white'}`}
+                    title="Toggle Configuration"
+                >
+                    <SettingsIcon size={20} />
+                </button>
+            </div>
+
+            {/* Canvas Area (Flex 1) */}
+            <div className="flex-1 relative w-full h-full z-10">
+                <div className="absolute inset-0">
+                    <PendulumCanvas
+                        stateCoords={coords}
+                        config={config}
+                        trail={trail}
+                        onAngleChange={handleAngleChange}
+                        onSelectSegment={(index) => {
+                            setSelectedSegment(index);
+                            setShowControls(true); 
+                        }}
+                    />
+                </div>
+
+                {/* Draggable Controls (Absolute within canvas area) */}
+                {showControls && (
+                    <div
+                        style={{
+                            top: panelPos.y, // Relative to this container? No, drag logic uses clientY. 
+                            left: panelPos.x,
+                            // Note: panelPos is initially set based on window. 20px top might be too high relative to container if container starts below header.
+                            // But usually controls are "absolute" relative to the nearest relative parent.
+                            // If I want global drag, I might need to adjust offsets or keep it fixed. 
+                            // The current logic simply adds/subtracts delta. 
+                            // For simplicity, we keep it absolute here.
+                        }}
+                        className={`absolute w-[350px] max-h-[80vh] bg-[#141414]/90 backdrop-blur-xl rounded-xl shadow-2xl border border-white/10 overflow-hidden flex flex-col z-30 ${isDraggingPanel ? 'cursor-grabbing' : 'auto'}`}
+                    >
+                        {/* Drag Handle */}
+                        <div
+                            onMouseDown={handlePanelMouseDown}
+                            className="px-5 py-3 bg-white/5 border-b border-white/5 cursor-grab select-none flex justify-between items-center"
+                        >
+                            <span className="font-semibold text-sm opacity-90 text-cyan-400">Simulation Config</span>
+                            <div className="w-10 h-1 bg-white/10 rounded-full" />
+                        </div>
+
+                        <div className="p-0 overflow-y-auto flex-1 scrollbar-hide">
+                            <PendulumControls
+                                config={config}
+                                currentAngles={currentAngles}
+                                currentVelocities={currentVelocities}
+                                onConfigChange={handleConfigChange}
+                                onPreset={handlePreset}
+                                onReset={handleReset}
+                                onPause={() => setPaused(!paused)}
+                                paused={paused}
+                                onAngleChange={handleAngleChange}
+                                onVelocityChange={handleVelocityChange}
+                                selectedSegment={selectedSegment}
+                            />
+                        </div>
+                    </div>
+                )}
+            </div>
         </div>
     );
 };

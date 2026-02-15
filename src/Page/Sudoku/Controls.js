@@ -21,6 +21,8 @@ export default function Controls({
   onApplySeed,
   isNoteMode,
   onToggleNoteMode,
+  theme,
+  themeColors,
 }) {
   const baseButtonStyle = {
     padding: "10px 20px",
@@ -36,6 +38,11 @@ export default function Controls({
     transition: "transform 0.15s ease-in-out",
   };
 
+  const labelColor = theme === "dark" ? "#cbd5e1" : "#475569";
+  const inputBg = theme === "dark" ? "#1e293b" : "#fff";
+  const inputBorder = theme === "dark" ? "#475569" : "#a5b4fc";
+  const inputColor = theme === "dark" ? "#f8fafc" : "#000";
+
   return (
     <div
       style={{
@@ -48,7 +55,7 @@ export default function Controls({
       }}
     >
       <label
-        style={{ fontWeight: "600", color: "#475569", display: "flex", alignItems: "center", gap: 6 }}
+        style={{ fontWeight: "600", color: labelColor, display: "flex", alignItems: "center", gap: 6 }}
       >
         Seed:
         <input
@@ -62,7 +69,9 @@ export default function Controls({
             padding: 4,
             width: 120,
             borderRadius: 6,
-            border: "1px solid #a5b4fc",
+            border: `1px solid ${inputBorder}`,
+            backgroundColor: inputBg,
+            color: inputColor,
             outline: "none",
           }}
         />

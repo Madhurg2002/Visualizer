@@ -88,7 +88,7 @@ const SudokuCell = React.memo(({
                 transition: "background-color 0s, box-shadow 0.25s, outline-color 0s", // Removed bg transition for snappier feel
                 boxShadow:
                     isHighlight
-                        ? "0 0 0 3px #facc15" // Yellow highlight for selected number
+                        ? (theme === "dark" ? "0 0 0 3px #06b6d4" : "0 0 0 3px #facc15") // Cyan for dark, Yellow for light
                         : isHint
                             ? `0 0 0 3px ${themeColors.hintBorder}`
                             : boxShadow,

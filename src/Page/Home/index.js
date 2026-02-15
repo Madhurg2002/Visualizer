@@ -12,7 +12,11 @@ import {
     Crown,
     MessageSquare,
     Gamepad2,
-    Clock
+    Clock,
+    Share2,
+    Hexagon,
+    Grip,
+    Tornado
 } from 'lucide-react';
 
 const ALGORITHMS = [
@@ -43,6 +47,41 @@ const ALGORITHMS = [
         path: "/pendulum",
         color: "from-orange-500 to-red-500",
         icon: <Activity className="w-8 h-8 text-white" />
+    },
+    {
+        title: "MST Visualizer",
+        description: "Prim's & Kruskal's Algorithms. Find the minimum spanning tree of a graph.",
+        path: "/mst",
+        color: "from-teal-400 to-emerald-500",
+        icon: <Share2 className="w-8 h-8 text-white" />
+    },
+    {
+        title: "Convex Hull",
+        description: "Smallest polygon containing a set of points. Graham Scan & Jarvis March.",
+        path: "/convex-hull",
+        color: "from-fuchsia-500 to-pink-600",
+        icon: <Hexagon className="w-8 h-8 text-white" />
+    },
+    {
+        title: "N-Queens",
+        description: "Backtracking visualization. Place N queens on an NxN board safely.",
+        path: "/nqueens",
+        color: "from-rose-500 to-red-600",
+        icon: <Grip className="w-8 h-8 text-white" />
+    },
+    {
+        title: "Kinetic Clock",
+        description: "A mesmerizing digital clock display made of 24 analog clocks.",
+        path: "/KineticClock",
+        color: "from-slate-600 to-slate-800",
+        icon: <Clock className="w-8 h-8 text-white" />
+    },
+    {
+        title: "Prime Spirals",
+        description: "Visualize the distribution of prime numbers in a spiral pattern.",
+        path: "/prime-spirals",
+        color: "from-violet-500 to-purple-600",
+        icon: <Tornado className="w-8 h-8 text-white" />
     },
 ];
 

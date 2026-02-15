@@ -3,9 +3,10 @@ import Cell from "./Cell";
 
 export default function Board({ board, onCellClick, onCellRightClick }) {
   return (
-    <div className="flex flex-col bg-slate-800 p-2 rounded shadow-lg border-2 border-slate-600 select-none">
+    <div className="flex flex-col select-none relative">
+      <div className="absolute inset-0 bg-black/40 rounded-xl pointer-events-none" />
       {board.map((row, r) => (
-        <div key={r} className="flex">
+        <div key={r} className="flex z-10">
           {row.map((cell, c) => (
             <Cell
               key={`${r}-${c}`}

@@ -24,26 +24,26 @@ export const THEMES = {
     noteBtnActiveBg: "#6366f1",
   },
   dark: {
-    bg: "#020617", // Slate 950 - Deep rich background
-    boardBg: "#0f172a", // Slate 900
-    boardBorder: "#334155", // Slate 700 - Subtler than blue
-    lockedCellBg: "#1e293b", // Slate 800
-    lockedCellTextColor: "#f8fafc", // Slate 50
-    selectedCellBorder: "#38bdf8", // Sky 400 - Pop of color for selection
-    wrongCellBg: "#450a0a", // Red 950 - Deepest red
-    wrongCellTextColor: "#fca5a5", // Red 300
-    normalCellBg: "#0f172a", // Match board bg
-    numberBtnBg: "#1e293b", // Slate 800
-    numberBtnSelBg: "#3b82f6", // Blue 500
+    bg: "#0B0C15", // Main App Background
+    boardBg: "#151925", // Darker panel
+    boardBorder: "#38bdf8", // Cyan border
+    lockedCellBg: "#151925", // Match board
+    lockedCellTextColor: "#94a3b8", // Slate 400
+    selectedCellBorder: "#c084fc", // Purple
+    wrongCellBg: "#450a0a",
+    wrongCellTextColor: "#fca5a5",
+    normalCellBg: "#1e293b", // Slate 800
+    numberBtnBg: "#1e293b",
+    numberBtnSelBg: "#38bdf8", // Cyan
     numberBtnColor: "#f1f5f9",
-    numberBtnSelColor: "#ffffff",
-    numberHighlightBg: "#172554", // Blue 950 - Very subtle same-number highlight
-    hintBg: "#134e4a", // Teal 900
-    hintBorder: "#2dd4bf", // Teal 400
+    numberBtnSelColor: "#000000",
+    numberHighlightBg: "#172554", // Blue 950
+    hintBg: "#134e4a",
+    hintBorder: "#2dd4bf",
     hintTextColor: "#ccfbf1",
     // New
-    noteColor: "#94a3b8", // Slate 400 - Distinct from value
-    guideHighlightBg: "#1e293b", // Subtle guide highlight (same as locked cell)
-    noteBtnActiveBg: "#a855f7", // Purple 500
+    noteColor: "#94a3b8",
+    guideHighlightBg: "#1e293b",
+    noteBtnActiveBg: "#a855f7",
   },
 };

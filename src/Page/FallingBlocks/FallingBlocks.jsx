@@ -3,109 +3,26 @@ import Board from "./components/Board";
 import NextPiece from "./components/NextPiece";
 import useInterval from "./hooks/useInterval";
 import { assignRandomColorsToPieces } from "./utils/colorUtils";
-import { PRECOMPUTED_TETROMINOS, TETROMINO_NAMES } from "./data/tetrominoes";
-
-const ROWS = 20;
-const COLS = 10;
-
-const createBoard = () =>
-  Array(ROWS)
-    .fill(null)
-    .map(() => Array(COLS).fill("bg-gray-900"));
-
-const createRandomPiece = (colorMap) => {
-  const key = TETROMINO_NAMES[Math.floor(Math.random() * TETROMINO_NAMES.length)];
-  const weights = [0.25, 0.25, 0.25, 0.25]; // equal weights, can customize per piece
-  const rotationIndex = weightedRandom(weights);
-  const color = colorMap[key];
-  return { key, rotationIndex, color, pos: { x: 3, y: -2 } };
-};
-
-function weightedRandom(weights) {
-  let sum = 0;
-  const r = Math.random();
-  for (let i = 0; i < weights.length; i++) {
-    sum += weights[i];
-    if (r <= sum) return i;
-  }
-  return weights.length - 1;
-}
-
-const checkCollision = (board, shape, pos) => {
-  for (let y = 0; y < shape.length; y++) {
-    for (let x = 0; x < shape[y].length; x++) {
-      if (shape[y][x] !== 0) {
-        const px = pos.x + x;
-        const py = pos.y + y;
-        if (
-          px < 0 ||
-          px >= COLS ||
-          py >= ROWS ||
-          (py >= 0 && board[py][px] !== "bg-gray-900")
-        ) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
-};
-
-const mergePiece = (board, piece) => {
-  const newBoard = board.map((row) => row.slice());
-  const shape = PRECOMPUTED_TETROMINOS[piece.key][piece.rotationIndex];
-  shape.forEach((row, y) => {
-    row.forEach((val, x) => {
-      if (val !== 0) {
-        const px = piece.pos.x + x;
-        const py = piece.pos.y + y;
-        if (py >= 0 && py < ROWS && px >= 0 && px < COLS)
-          newBoard[py][px] =
-            piece.color + " transition-colors duration-300 ease-in-out";
-      }
-    });
-  });
-  return newBoard;
-};
-
-const clearRows = (board) => {
-  const newBoard = [];
-  let cleared = 0;
-  for (let y = 0; y < board.length; y++) {
-    if (board[y].every((cell) => cell !== "bg-gray-900")) cleared++;
-    else newBoard.push(board[y]);
-  }
-  for (let i = 0; i < cleared; i++)
-    newBoard.unshift(Array(COLS).fill("bg-gray-900"));
-  return { newBoard, cleared };
-};
-const displayBoardWithPiece = (board, piece) => {
-  if (!piece || !piece.key || typeof piece.rotationIndex !== "number")
-    return board;
-  const tetrominoGroup = PRECOMPUTED_TETROMINOS[piece.key];
-  if (!tetrominoGroup) return board;
-  const shape = tetrominoGroup[piece.rotationIndex];
-  if (!shape) return board;
-
-  const newBoard = board.map((row) => row.slice());
-  shape.forEach((row, y) => {
-    row.forEach((val, x) => {
-      if (val !== 0) {
-        const px = piece.pos.x + x;
-        const py = piece.pos.y + y;
-        if (py >= 0 && py < ROWS && px >= 0 && px < COLS) {
-          newBoard[py][px] = piece.color;
-        }
-      }
-    });
-  });
-  return newBoard;
-};
+import { PRECOMPUTED_TETROMINOS } from "./data/tetrominoes";
+import { 
+    createBoard, 
+    createRandomPiece, 
+    checkCollision, 
+    mergePiece, 
+    clearRows, 
+    getGhostPosition,
+    displayBoardWithPiece
+} from "./utils/gameLogic";
+import { motion, AnimatePresence } from "framer-motion";
+import { ArrowLeft, RefreshCw, Pause, Play, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function FallingBlocks() {
+  const navigate = useNavigate();
   const [colorMap, setColorMap] = useState(() => assignRandomColorsToPieces());
   const [board, setBoard] = useState(createBoard());
   const [piece, setPiece] = useState(null);
+  const [ghostPiece, setGhostPiece] = useState(null);
   const [pieceQueue, setPieceQueue] = useState([]);
   const [dropTime, setDropTime] = useState(null);
   const [gameOver, setGameOver] = useState(false);
@@ -117,7 +34,6 @@ export default function FallingBlocks() {
   const [highScore, setHighScore] = useState(() => parseInt(localStorage.getItem('fallingBlocksHighScore') || '0', 10));
 
   useEffect(() => {
-    // ... (existing reset logic)
     setColorMap(assignRandomColorsToPieces());
     setBoard(createBoard());
     setScore(0);
@@ -126,10 +42,20 @@ export default function FallingBlocks() {
     setPaused(false);
     setPieceQueue([]);
     setPiece(null);
+    setGhostPiece(null);
     setDropTime(null);
     setCountdown(3);
     countdownStarted.current = false;
   }, []);
+
+  // Update Ghost Piece whenever piece or board changes
+  useEffect(() => {
+      if (piece && !gameOver && !paused) {
+          setGhostPiece(getGhostPosition(board, piece));
+      } else {
+          setGhostPiece(null);
+      }
+  }, [piece, board, gameOver, paused]);
 
   const startGame = useCallback(() => {
     const initialQueue = [];
@@ -252,6 +178,7 @@ export default function FallingBlocks() {
     setPaused(false);
     setPieceQueue([]);
     setPiece(null);
+    setGhostPiece(null);
     setDropTime(null);
     setCountdown(3);
     countdownStarted.current = false;
@@ -288,117 +215,186 @@ export default function FallingBlocks() {
     };
   });
 
-  // Render Section
+  const ControlButton = ({ onClick, icon: Icon, label, color = "slate", large = false, ...props }) => (
+    <motion.button
+      whileHover={{ scale: 1.05 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={(e) => { e.preventDefault(); onClick && onClick(e); }}
+      onTouchStart={(e) => { e.preventDefault(); onClick && onClick(e); }}
+      className={`
+        relative overflow-hidden rounded-2xl shadow-lg border border-white/10 backdrop-blur-md
+        flex items-center justify-center transition-all duration-200
+        ${large ? 'w-full h-16' : 'w-14 h-14 md:w-16 md:h-16'}
+        bg-gradient-to-br from-${color}-500/20 to-${color}-600/10 hover:from-${color}-500/30 hover:to-${color}-600/20
+        ${props.className || ''}
+      `}
+      {...props}
+    >
+        <Icon size={large ? 32 : 28} className={`text-${color}-400 filter drop-shadow-md`} />
+    </motion.button>
+  );
+
   return (
-    <div className="text-white flex flex-col items-center space-y-6 p-4 md:p-8 select-none min-h-screen touch-none">
-      <h1 className="text-4xl font-bold mb-2">Falling Blocks</h1>
-      <div className="flex gap-8 flex-wrap justify-center">
-        <Board
-          board={displayBoardWithPiece(
-            board,
-            piece || { shape: [], pos: { x: 0, y: 0 }, color: "" }
-          )}
-        />
-        <div className="flex flex-col items-center space-y-6 max-w-xs">
-          <div className="space-y-4 w-full">
-            <NextPiece
-              pieceQueue={pieceQueue.filter(Boolean).map((next) => ({
-                ...next,
-                shape: PRECOMPUTED_TETROMINOS[next.key][next.rotationIndex],
-              }))}
-            />
-          </div>
-          <div className="text-center">
-            <p className="font-semibold text-lg">Score: {score}</p>
-            <p className="font-semibold text-lg text-yellow-400">High Score: {highScore}</p>
-            <p className="font-semibold text-lg">Level: {level}</p>
-            {paused && <p className="mt-4 text-yellow-400 text-xl">Paused</p>}
-          </div>
-          <div className="flex space-x-4">
-            {/* ... existing buttons ... */}
-            <button
-              onClick={togglePause}
-              className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded"
-            >
-              {paused ? "Resume" : "Pause"}
-            </button>
-            <button
-              onClick={restartGame}
-              className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded"
-            >
-              Restart
-            </button>
-          </div>
-        </div>
+    <div className="min-h-screen bg-[#0B0C15] text-white flex flex-col items-center justify-center p-4 md:p-8 select-none touch-none overflow-hidden relative">
+      
+      {/* Background Ambience */}
+      <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-purple-900/20 rounded-full blur-[100px]" />
+          <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-blue-900/20 rounded-full blur-[100px]" />
       </div>
 
-      {/* Mobile Controls */}
-      <div className="md:hidden grid grid-cols-3 gap-4 mt-8">
-        <div className="flex items-center justify-center">
-          <button
-            className="w-16 h-16 bg-slate-700 rounded-full active:bg-slate-600 shadow-lg"
-            onTouchStart={(e) => { e.preventDefault(); rotatePiece(); }}
-            onClick={(e) => { e.preventDefault(); rotatePiece(); }}
-          >
-            ↻
-          </button>
+      <div className="w-full max-w-5xl z-10 flex flex-col items-center">
+        
+        {/* Header */}
+        <div className="w-full flex items-center justify-between mb-8 max-w-2xl">
+            <button onClick={() => navigate('/')} className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-slate-400 hover:text-white">
+                <ArrowLeft size={24} />
+            </button>
+            <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 tracking-tight">
+                Falling Blocks
+            </h1>
+            <div className="w-12"></div> {/* Spacer */}
         </div>
-        <div className="flex items-center justify-center">
-          <button
-            className="w-16 h-16 bg-slate-700 rounded-full active:bg-slate-600 shadow-lg font-bold text-xl"
-            onTouchStart={(e) => { e.preventDefault(); move(0); /* No-op just for symmetry mapping? Or maybe Up is rotate? */ rotatePiece(); }}
-            onClick={rotatePiece}
-          >
-            ▲
-          </button>
-        </div>
-        <div className="flex items-center justify-center">
-          {/* Empty or auxiliary */}
-        </div>
+        
+        <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 items-start justify-center w-full">
+            
+            {/* Game Board Container */}
+            <motion.div 
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="relative p-1 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 shadow-2xl backdrop-blur-xl border border-white/10"
+            >
+                <div className="bg-[#0f172a]/80 rounded-xl overflow-hidden">
+                    <Board
+                        board={displayBoardWithPiece(
+                            board,
+                            piece || { shape: [], pos: { x: 0, y: 0 }, color: "" },
+                            ghostPiece
+                        )}
+                    />
+                </div>
 
-        <div className="flex items-center justify-center">
-          <button
-            className="w-16 h-16 bg-slate-700 rounded-full active:bg-slate-600 shadow-lg font-bold text-xl"
-            onTouchStart={(e) => { e.preventDefault(); move(-1); }}
-            onClick={() => move(-1)}
-          >
-            ◀
-          </button>
-        </div>
-        <div className="flex items-center justify-center">
-          <button
-            className="w-16 h-16 bg-slate-700 rounded-full active:bg-slate-600 shadow-lg font-bold text-xl"
-            onTouchStart={(e) => { e.preventDefault(); dropPiece(); }}
-            onClick={dropPiece}
-          >
-            ▼
-          </button>
-        </div>
-        <div className="flex items-center justify-center">
-          <button
-            className="w-16 h-16 bg-slate-700 rounded-full active:bg-slate-600 shadow-lg font-bold text-xl"
-            onTouchStart={(e) => { e.preventDefault(); move(1); }}
-            onClick={() => move(1)}
-          >
-            ▶
-          </button>
-        </div>
+                {/* Overlays */}
+                <AnimatePresence>
+                    {countdown > 0 && (
+                        <motion.div 
+                            initial={{ opacity: 0, scale: 0.5 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 1.5 }}
+                            key={countdown}
+                            className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-xl z-20"
+                        >
+                            <span className="text-9xl font-black text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.5)]">
+                                {countdown}
+                            </span>
+                        </motion.div>
+                    )}
+                    
+                    {gameOver && (
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-md rounded-xl z-30 p-6 text-center"
+                        >
+                            <h2 className="text-4xl font-black text-white mb-2">Game Over</h2>
+                            <p className="text-slate-300 mb-6">Final Score: <span className="text-blue-400 font-bold">{score}</span></p>
+                            <button 
+                                onClick={restartGame}
+                                className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl font-bold text-white shadow-lg hover:shadow-blue-500/20 hover:scale-105 transition-all"
+                            >
+                                Play Again
+                            </button>
+                        </motion.div>
+                    )}
 
-        <div className="col-span-3 flex justify-center mt-2">
-          <button
-            className="w-full max-w-[200px] h-16 bg-red-600 rounded-full active:bg-red-500 shadow-lg font-bold text-xl"
-            onTouchStart={(e) => { e.preventDefault(); hardDrop(); }}
-            onClick={hardDrop}
-          >
-            DROP
-          </button>
+                    {paused && !gameOver && (
+                        <motion.div 
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="absolute inset-0 flex items-center justify-center bg-black/40 backdrop-blur-sm rounded-xl z-20"
+                        >
+                            <div className="bg-black/50 p-6 rounded-2xl border border-white/10 backdrop-blur-md">
+                                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+                                    <Pause size={24} /> Paused
+                                </h2>
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </motion.div>
+
+            {/* Side Panel (Score, Next, Controls) */}
+            <div className="flex flex-col gap-6 w-full max-w-sm">
+                
+                {/* Stats Card */}
+                <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-6 shadow-xl">
+                    <div className="grid grid-cols-2 gap-4 text-center mb-6">
+                        <div className="bg-black/20 rounded-xl p-3 border border-white/5">
+                            <span className="text-xs text-slate-400 uppercase tracking-wider font-bold block mb-1">Score</span>
+                            <span className="text-2xl font-mono font-bold text-white">{score}</span>
+                        </div>
+                        <div className="bg-black/20 rounded-xl p-3 border border-white/5">
+                            <span className="text-xs text-slate-400 uppercase tracking-wider font-bold block mb-1">Best</span>
+                            <span className="text-2xl font-mono font-bold text-yellow-400">{highScore}</span>
+                        </div>
+                        <div className="bg-black/20 rounded-xl p-3 border border-white/5 col-span-2 flex justify-between items-center px-6">
+                            <span className="text-xs text-slate-400 uppercase tracking-wider font-bold">Level</span>
+                            <span className="text-2xl font-mono font-bold text-purple-400">{level}</span>
+                        </div>
+                    </div>
+
+                     {/* Next Piece */}
+                    <div className="bg-black/20 rounded-xl p-4 border border-white/5 flex flex-col items-center min-h-[120px] justify-center">
+                        <span className="text-xs text-slate-400 uppercase tracking-wider font-bold mb-2 w-full text-left">Next</span>
+                         <NextPiece
+                            pieceQueue={pieceQueue.filter(Boolean).map((next) => ({
+                                ...next,
+                                shape: PRECOMPUTED_TETROMINOS[next.key][next.rotationIndex],
+                            }))}
+                        />
+                    </div>
+                </div>
+
+                {/* PC/Tablet Action Buttons */}
+                <div className="flex gap-3">
+                    <button
+                        onClick={togglePause}
+                        className={`flex-1 py-3 rounded-xl font-bold border border-white/10 transition-all flex items-center justify-center gap-2
+                            ${paused ? 'bg-green-500/20 text-green-400 hover:bg-green-500/30' : 'bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30'}
+                        `}
+                    >
+                        {paused ? <><Play size={18}/> Resume</> : <><Pause size={18}/> Pause</>}
+                    </button>
+                    <button
+                        onClick={restartGame}
+                        className="flex-1 py-3 bg-red-500/20 text-red-400 border border-red-500/20 rounded-xl font-bold hover:bg-red-500/30 transition-all flex items-center justify-center gap-2"
+                    >
+                        <RefreshCw size={18} /> Restart
+                    </button>
+                </div>
+
+                {/* Mobile D-Pad Controls (Hidden on larger desktop, visible on touch/mobile) */}
+                <div className="grid grid-cols-3 gap-3 md:hidden mt-4">
+                     <ControlButton onClick={rotatePiece} icon={RefreshCw} color="purple" />
+                     <ControlButton onClick={rotatePiece} icon={ChevronUp} color="slate" />
+                     <div /> {/* Spacer */}
+                     
+                     <ControlButton onClick={() => move(-1)} icon={ChevronLeft} color="slate" />
+                     <ControlButton onClick={dropPiece} icon={ChevronDown} color="slate" />
+                     <ControlButton onClick={() => move(1)} icon={ChevronRight} color="slate" />
+                     
+                     <div className="col-span-3 mt-2">
+                        <ControlButton onClick={hardDrop} icon={Zap} color="blue" large={true} />
+                     </div>
+                </div>
+                
+                <p className="text-slate-500 text-sm text-center hidden md:block mt-4">
+                    Use Arrow Keys to Move & Rotate <br/> Space to Drop • P to Pause
+                </p>
+
+            </div>
         </div>
       </div>
-
-      <p className="text-gray-400 mt-4 select-text-none max-w-xl text-center hidden md:block">
-        Controls: Arrow keys to move/rotate, Space for hard drop, P to
-        pause/resume
-      </p>
     </div>
   );
 }

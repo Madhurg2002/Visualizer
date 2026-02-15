@@ -36,9 +36,15 @@ export default function Settings({
           style={{
             width: "100%", textAlign: "left", marginBottom: 16,
             padding: "12px 16px", borderRadius: 12,
-            backgroundColor: theme === "dark" ? "#1e293b" : "#f8fafc",
-            color: theme === "dark" ? "#f1f5f9" : "#334155",
-            border: theme === "dark" ? "1px solid #475569" : "1px solid #94a3b8",
+            backgroundColor: continuousCheck 
+              ? (theme === "dark" ? "#064e3b" : "#dcfce7") 
+              : (theme === "dark" ? "#1e293b" : "#f1f5f9"),
+            color: continuousCheck 
+              ? (theme === "dark" ? "#6ee7b7" : "#166534") 
+              : (theme === "dark" ? "#94a3b8" : "#475569"),
+            border: continuousCheck 
+              ? (theme === "dark" ? "1px solid #059669" : "2px solid #22c55e") 
+              : (theme === "dark" ? "1px solid #334155" : "1px solid #cbd5e1"),
             fontWeight: 600, cursor: "pointer", fontSize: 16,
             display: "flex", justifyContent: "space-between", alignItems: "center",
           }}
@@ -52,9 +58,15 @@ export default function Settings({
           style={{
             width: "100%", textAlign: "left", marginBottom: 16,
             padding: "12px 16px", borderRadius: 12,
-            backgroundColor: theme === "dark" ? "#1e293b" : "#f8fafc",
-            color: theme === "dark" ? "#f1f5f9" : "#334155",
-            border: theme === "dark" ? "1px solid #475569" : "1px solid #94a3b8",
+            backgroundColor: highlightNumbers 
+              ? (theme === "dark" ? "#1e3a8a" : "#dbeafe") 
+              : (theme === "dark" ? "#1e293b" : "#f1f5f9"),
+            color: highlightNumbers 
+              ? (theme === "dark" ? "#93c5fd" : "#1e40af") 
+              : (theme === "dark" ? "#94a3b8" : "#475569"),
+            border: highlightNumbers 
+              ? (theme === "dark" ? "1px solid #2563eb" : "2px solid #3b82f6") 
+              : (theme === "dark" ? "1px solid #334155" : "1px solid #cbd5e1"),
             fontWeight: 600, cursor: "pointer", fontSize: 16,
             display: "flex", justifyContent: "space-between", alignItems: "center",
           }}
@@ -68,9 +80,15 @@ export default function Settings({
           style={{
             width: "100%", textAlign: "left", marginBottom: 16,
             padding: "12px 16px", borderRadius: 12,
-            backgroundColor: theme === "dark" ? "#1e293b" : "#f8fafc",
-            color: theme === "dark" ? "#f1f5f9" : "#334155",
-            border: theme === "dark" ? "1px solid #475569" : "1px solid #94a3b8",
+            backgroundColor: highlightGuides 
+              ? (theme === "dark" ? "#1e3a8a" : "#dbeafe") 
+              : (theme === "dark" ? "#1e293b" : "#f1f5f9"),
+            color: highlightGuides 
+              ? (theme === "dark" ? "#93c5fd" : "#1e40af") 
+              : (theme === "dark" ? "#94a3b8" : "#475569"),
+            border: highlightGuides 
+              ? (theme === "dark" ? "1px solid #2563eb" : "2px solid #3b82f6") 
+              : (theme === "dark" ? "1px solid #334155" : "1px solid #cbd5e1"),
             fontWeight: 600, cursor: "pointer", fontSize: 16,
             display: "flex", justifyContent: "space-between", alignItems: "center",
           }}
