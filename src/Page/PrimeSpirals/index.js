@@ -22,6 +22,9 @@ const PrimeSpirals = () => {
         setZoom(prev => Math.min(Math.max(0.1, prev + delta), 5));
     };
 
+    // Dimensions state to trigger re-draw on resize
+    const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+
     // Draw Loop
     useEffect(() => {
         const canvas = canvasRef.current;
@@ -84,16 +87,20 @@ const PrimeSpirals = () => {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(centerX - 1, centerY - 1, 2, 2);
 
-    }, [mode, maxNumber, zoom, primes, themeColor]);
+    }, [mode, maxNumber, zoom, primes, themeColor, dimensions]);
 
 
-    // handle resize
+
+
+    // Handle Resize
     useEffect(() => {
         const handleResize = () => {
             if (canvasRef.current) {
                 const parent = canvasRef.current.parentElement;
-                canvasRef.current.width = parent.clientWidth;
-                canvasRef.current.height = parent.clientHeight;
+                const { clientWidth, clientHeight } = parent;
+                canvasRef.current.width = clientWidth;
+                canvasRef.current.height = clientHeight;
+                setDimensions({ width: clientWidth, height: clientHeight });
             }
         };
         window.addEventListener('resize', handleResize);

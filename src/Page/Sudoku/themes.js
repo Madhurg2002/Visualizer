@@ -22,6 +22,7 @@ export const THEMES = {
     noteColor: "#64748b",
     guideHighlightBg: "#f1f5f9", // subtle highlight for row/col/box
     noteBtnActiveBg: "#6366f1",
+    text: "#0f172a",
   },
   dark: {
     bg: "#0B0C15", // Main App Background
@@ -45,5 +46,6 @@ export const THEMES = {
     noteColor: "#94a3b8",
     guideHighlightBg: "#1e293b",
     noteBtnActiveBg: "#a855f7",
+    text: "#ffffff",
   },
 };

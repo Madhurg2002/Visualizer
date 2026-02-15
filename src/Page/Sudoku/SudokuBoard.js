@@ -63,6 +63,7 @@ export default function SudokuBoard({
                     isHighlight={isHighlight}
                     isGuide={isGuide}
                     notes={cellNotes}
+                    highlightValue={highlightValue}
                     themeColors={themeColors}
                     theme={theme}
                     onCellClick={onCellClick}

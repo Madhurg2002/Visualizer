@@ -7,7 +7,8 @@ const SudokuCell = React.memo(({
     themeColors, theme,
     onCellClick,
     win,
-    size = 3
+    size = 3,
+    highlightValue 
 }) => {
     // Styles
     const thickBorderColor = themeColors.boardBorder;
@@ -56,11 +57,22 @@ const SudokuCell = React.memo(({
                 lineHeight: 1,
                 color: theme === 'dark' ? '#94a3b8' : '#64748b'
             }}>
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => (
-                    <div key={n} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        {notes.has(n) ? n : ''}
-                    </div>
-                ))}
+                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map(n => {
+                    const isNoteHighlight = highlightValue === n;
+                    return (
+                        <div key={n} style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            fontWeight: isNoteHighlight ? 'bold' : 'normal',
+                            color: isNoteHighlight 
+                                ? (theme === 'dark' ? '#38bdf8' : '#2563eb') // Blue-500/Sky-400
+                                : (theme === 'dark' ? '#94a3b8' : '#64748b') 
+                        }}>
+                            {notes.has(n) ? n : ''}
+                        </div>
+                    );
+                })}
             </div>
         );
     };
