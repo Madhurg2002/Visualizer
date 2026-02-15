@@ -84,16 +84,22 @@ const ConvexHull = () => {
             clearInterval(timerRef.current);
         } else {
             if (status === 'Idle' || status === 'Finished') {
-                // If finished, reset? No, Start usually means from scratch or resume. 
-                // Creating new generator if Idle
                 if (status === 'Finished') {
-                     reset();
-                     setTimeout(() => {
-                        startAlgo();
-                     }, 100);
+                     // If finished, we want to reset the visualization state but KEEP the points
+                     // so we can compare algorithms on the same dataset.
+                     // Or if the user wants new points, they can click Reset.
+                     // Let's assume hitting "Start" after finish implies "Re-run" (potentially with new algo).
+                     
+                     // We need to clear the display state first.
+                     setDisplayState({ hull: [], current: null, check: null, best: null, message: 'Ready' });
+                     
+                     // We reuse the EXISTING points for comparison.
+                     // So we don't call full reset().
+                     
+                     startAlgo(points); // Pass current points explicitly
                      return;
                 }
-                startAlgo();
+                startAlgo(points);
             } else {
                 // Paused -> Resume
                 setStatus('Running');
@@ -102,11 +108,13 @@ const ConvexHull = () => {
         }
     };
 
-    const startAlgo = () => {
+    const startAlgo = (pointsToUse) => {
         setStatus('Running');
-        if (algoName === 'graham') generatorRef.current = grahamScan(points);
-        else if (algoName === 'gift') generatorRef.current = giftWrapping(points);
-        else generatorRef.current = monotoneChain(points);
+        const p = pointsToUse || points; // Use passed points or state points
+        
+        if (algoName === 'graham') generatorRef.current = grahamScan(p);
+        else if (algoName === 'gift') generatorRef.current = giftWrapping(p);
+        else generatorRef.current = monotoneChain(p);
         
         timerRef.current = setInterval(nextStep, speed);
     };
@@ -203,102 +211,120 @@ const ConvexHull = () => {
 
 
     return (
-        <div className="min-h-screen bg-[#0B0C15] text-white flex flex-col p-4 relative overflow-hidden font-sans">
+        <div className="flex h-screen w-full bg-[#0B0C15] font-sans overflow-hidden">
             
-            {/* Header / Controls */}
-            <div className="z-10 flex flex-col md:flex-row justify-between items-start gap-4 mb-4">
-                <div className="flex flex-col gap-4">
-                     <button
+            {/* Main Content (Left) */}
+            <div className="flex-1 flex flex-col relative h-full z-10">
+                
+                {/* Header Overlay */}
+                <div className="absolute top-6 left-6 z-20">
+                    <button
                         onClick={() => navigate('/')}
-                        className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white w-fit"
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all w-fit"
                     >
                         <ArrowLeft size={18} /> Back
                     </button>
                     
-                    <div className="bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-xl min-w-[300px]">
-                        <h1 className="text-2xl font-black mb-1 bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-emerald-500">
-                            Convex Hull
-                        </h1>
-                        <p className="text-xs text-slate-500 mb-4 h-4">{displayState.message || "Ready"}</p>
-                        
-                        <div className="flex flex-col gap-4">
-                            {/* Algo Select */}
-                            <div className="flex bg-slate-800/50 rounded-lg p-1 border border-white/5">
-                                {['graham', 'gift', 'monotone'].map(algo => (
-                                    <button
-                                        key={algo}
-                                        onClick={() => { if(status !== 'Running') setAlgoName(algo); }}
-                                        className={`flex-1 py-1.5 rounded-md text-[10px] font-bold uppercase transition-all
-                                            ${algoName === algo ? 'bg-green-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}
-                                            ${status === 'Running' ? 'opacity-50 cursor-not-allowed' : ''}
-                                        `}
-                                    >
-                                        {algo}
-                                    </button>
-                                ))}
-                            </div>
-                            
-                            {/* Sliders */}
-                            <div className="space-y-3">
-                                <div>
-                                    <div className="flex justify-between text-xs font-bold text-slate-400 mb-1">
-                                        <span>Points</span>
-                                        <span>{pointCount}</span>
-                                    </div>
-                                    <input 
-                                        type="range" min="10" max="200" 
-                                        value={pointCount} 
-                                        onChange={(e) => { if(status!=='Running') setPointCount(Number(e.target.value)); }}
-                                        disabled={status === 'Running'}
-                                        className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500"
-                                    />
-                                </div>
-                                <div>
-                                    <div className="flex justify-between text-xs font-bold text-slate-400 mb-1">
-                                        <span>Speed</span>
-                                        <span>{205 - speed}ms</span>
-                                    </div>
-                                    <input 
-                                        type="range" min="5" max="200" 
-                                        value={205 - speed} 
-                                        onChange={(e) => setSpeed(205 - Number(e.target.value))}
-                                        className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500"
-                                    />
-                                </div>
-                            </div>
-
-                            {/* Actions */}
-                            <div className="grid grid-cols-2 gap-2 mt-2">
-                                <button
-                                    onClick={toggleRun}
-                                    className={`py-2 rounded-lg font-bold flex items-center justify-center gap-2 transition-all
-                                        ${status === 'Running' 
-                                            ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50' 
-                                            : 'bg-green-500 hover:bg-green-400 text-white shadow-lg shadow-green-500/20'
-                                        }
-                                    `}
-                                >
-                                    {status === 'Running' ? <><Pause size={16} /> Pause</> : <><Play size={16} /> {status === 'Paused' ? 'Resume' : 'Start'}</>}
-                                </button>
-                                <button
-                                    onClick={reset}
-                                    disabled={status === 'Running'}
-                                    className="py-2 rounded-lg font-bold bg-slate-700/50 text-slate-300 border border-white/10 hover:bg-slate-600 hover:text-white flex items-center justify-center gap-2 disabled:opacity-50"
-                                >
-                                    <RotateCcw size={16} /> Reset
-                                </button>
-                            </div>
-
-                        </div>
+                    <div className="mt-4 bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-3 inline-block">
+                        <p className="text-xs text-slate-400 font-mono">
+                            {displayState.message || "Ready"}
+                        </p>
                     </div>
+                </div>
+
+                {/* Canvas Container */}
+                <div className="w-full h-full relative bg-[#0F111A]">
+                     <div className="absolute inset-4 rounded-2xl border border-white/5 overflow-hidden shadow-inner bg-[#0F111A]">
+                        <canvas ref={canvasRef} className="w-full h-full block" />
+                     </div>
                 </div>
             </div>
 
-            {/* Canvas */}
-            <div className="absolute inset-0 z-0 md:pl-[340px] md:pt-4 md:pr-4 md:pb-4 pt-[320px] px-4 pb-4">
-                 <div className="w-full h-full bg-[#0F111A] rounded-2xl border border-white/5 relative overflow-hidden shadow-inner">
-                    <canvas ref={canvasRef} className="w-full h-full block" />
-                 </div>
+            {/* Sidebar Controls (Right) */}
+            <div className="w-80 h-full bg-slate-900/80 backdrop-blur-xl border-l border-white/10 p-6 flex flex-col shadow-2xl z-20 overflow-y-auto">
+                <div className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-6 border-b border-white/10 pb-2">
+                    Configuration
+                </div>
+
+                <div className="flex flex-col gap-6">
+                    <div>
+                        <h1 className="text-2xl font-black mb-1 bg-clip-text text-transparent bg-gradient-to-r from-green-400 to-emerald-500">
+                            Convex Hull
+                        </h1>
+                        <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Computational Geometry</p>
+                    </div>
+
+                    {/* Algo Select */}
+                    <div className="flex flex-col gap-2">
+                        <label className="text-xs font-bold text-slate-500 uppercase">Algorithm</label>
+                        <div className="flex flex-col bg-slate-800/50 rounded-lg p-1 border border-white/5 gap-1">
+                            {['graham', 'gift', 'monotone'].map(algo => (
+                                <button
+                                    key={algo}
+                                    onClick={() => { if(status !== 'Running') setAlgoName(algo); }}
+                                    className={`py-2 rounded-md text-xs font-bold uppercase transition-all
+                                        ${algoName === algo ? 'bg-green-500 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/5'}
+                                        ${status === 'Running' ? 'opacity-50 cursor-not-allowed' : ''}
+                                    `}
+                                >
+                                    {algo === 'monotone' ? 'Monotone Chain' : algo === 'gift' ? 'Gift Wrapping' : 'Graham Scan'}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    {/* Sliders */}
+                    <div className="space-y-4">
+                        <div>
+                            <div className="flex justify-between text-xs font-bold text-slate-500 mb-1">
+                                <span>Points</span>
+                                <span className="text-green-400 font-mono">{pointCount}</span>
+                            </div>
+                            <input 
+                                type="range" min="10" max="200" 
+                                value={pointCount} 
+                                onChange={(e) => { if(status!=='Running') setPointCount(Number(e.target.value)); }}
+                                disabled={status === 'Running'}
+                                className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+                            />
+                        </div>
+                        <div>
+                            <div className="flex justify-between text-xs font-bold text-slate-500 mb-1">
+                                <span>Speed</span>
+                                <span className="text-green-400 font-mono">{205 - speed}ms</span>
+                            </div>
+                            <input 
+                                type="range" min="5" max="200" 
+                                value={205 - speed} 
+                                onChange={(e) => setSpeed(205 - Number(e.target.value))}
+                                className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+                            />
+                        </div>
+                    </div>
+
+                    {/* Actions */}
+                    <div className="grid grid-cols-2 gap-2 mt-auto">
+                        <button
+                            onClick={toggleRun}
+                            className={`py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all
+                                ${status === 'Running' 
+                                    ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50 hover:bg-yellow-500/30' 
+                                    : 'bg-green-500 hover:bg-green-400 text-white shadow-lg shadow-green-500/20'
+                                }
+                            `}
+                        >
+                            {status === 'Running' ? <><Pause size={18} /> Pause</> : <><Play size={18} /> {status === 'Paused' ? 'Resume' : 'Start'}</>}
+                        </button>
+                        <button
+                            onClick={reset}
+                            disabled={status === 'Running'}
+                            className="py-3 rounded-xl font-bold bg-slate-700/50 text-slate-300 border border-white/10 hover:bg-slate-600 hover:text-white flex items-center justify-center gap-2 disabled:opacity-50"
+                        >
+                            <RotateCcw size={18} /> Reset
+                        </button>
+                    </div>
+
+                </div>
             </div>
 
         </div>

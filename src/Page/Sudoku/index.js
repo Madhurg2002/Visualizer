@@ -421,6 +421,8 @@ export default function Sudoku() {
           timeElapsed={timeElapsed}
           stats={statistics[difficulty]}
           hasUsedSolver={hasUsedSolver.current}
+          theme={theme}
+          themeColors={themeColors}
         />
       )}
       {manualCheckResult !== null && (

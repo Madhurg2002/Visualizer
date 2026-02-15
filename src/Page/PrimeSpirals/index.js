@@ -102,24 +102,58 @@ const PrimeSpirals = () => {
     }, []);
 
     return (
-        <div className="min-h-screen bg-[#0B0C15] text-white flex flex-col items-center relative overflow-hidden font-sans">
-            
-            {/* Controls Overlay */}
-            <div className="absolute top-4 left-4 z-20 flex flex-col gap-4 max-w-xs pointer-events-none md:pointer-events-auto">
-                <button
-                    onClick={() => navigate('/')}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all font-bold w-fit pointer-events-auto"
-                >
-                    <ArrowLeft size={18} /> Back
-                </button>
+        <div className="flex h-screen w-full bg-[#0B0C15] font-sans overflow-hidden">
+             
+            {/* Background Ambience */}
+            <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-50">
+                <div className="absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-cyan-900/10 rounded-full blur-[120px]" />
+                <div className="absolute bottom-[-20%] right-[-10%] w-[800px] h-[800px] bg-blue-900/10 rounded-full blur-[120px]" />
+            </div>
 
-                <div className="bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-6 shadow-xl pointer-events-auto">
-                    <h1 className="text-2xl font-black mb-4 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
-                        Prime Spirals
-                    </h1>
-                    
+            {/* Main Content (Left) */}
+            <div className="flex-1 flex flex-col relative h-full z-10">
+                
+                {/* Header Overlay (Optional, or just Back button) */}
+                <div className="absolute top-6 left-6 z-20">
+                    <button
+                        onClick={() => navigate('/')}
+                        className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all w-fit"
+                    >
+                        <ArrowLeft size={18} /> Back
+                    </button>
+                </div>
+
+                {/* Canvas Container */}
+                <div className="w-full h-full relative">
+                    <canvas ref={canvasRef} className="w-full h-full block" />
+                     {/* Info Card Overlay on bottom left */}
+                    <div className="absolute bottom-6 left-6 z-20 max-w-sm bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-xl pointer-events-auto">
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                            {mode === 'ulam' 
+                                ? "The Ulam spiral reveals patterns in prime numbers when arranging positive integers in a square spiral. Notice the diagonal lines of primes."
+                                : "The Sacks spiral arranges integers on an Archimedean spiral. It highlights alignment of primes along specific curves (like Euler's polynomial)."
+                            }
+                        </p>
+                   </div>
+                </div>
+            </div>
+
+            {/* Sidebar Controls (Right) */}
+            <div className="w-80 h-full bg-slate-900/80 backdrop-blur-xl border-l border-white/10 p-6 flex flex-col shadow-2xl z-20 overflow-y-auto">
+                <div className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-6 border-b border-white/10 pb-2">
+                    Configuration
+                </div>
+
+                <div className="flex flex-col gap-6">
+                    <div>
+                        <h1 className="text-2xl font-black mb-1 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500">
+                            Prime Spirals
+                        </h1>
+                        <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">Number Theory Visualization</p>
+                    </div>
+
                     {/* Mode Toggle */}
-                    <div className="flex bg-slate-800/50 rounded-lg p-1 mb-6 border border-white/5">
+                    <div className="flex bg-slate-800/50 rounded-lg p-1 border border-white/5">
                         <button 
                             onClick={() => setMode('ulam')}
                             className={`flex-1 py-1.5 rounded-md text-sm font-bold transition-all ${mode === 'ulam' ? 'bg-cyan-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
@@ -135,56 +169,45 @@ const PrimeSpirals = () => {
                     </div>
 
                     {/* Max Number Slider */}
-                    <div className="mb-6">
+                    <div>
                         <div className="flex justify-between mb-2">
-                             <span className="text-xs font-bold text-slate-400 uppercase">Max Number</span>
+                             <span className="text-xs font-bold text-slate-500 uppercase">Max Number</span>
                              <span className="text-xs font-mono text-cyan-400">{maxNumber.toLocaleString()}</span>
                         </div>
                         <input 
                             type="range" min="1000" max="100000" step="1000"
                             value={maxNumber}
                             onChange={(e) => setMaxNumber(Number(e.target.value))}
-                            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                            className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
                         />
                     </div>
 
                     {/* Zoom & Color */}
-                    <div className="flex gap-4 items-center justify-between">
-                         <div className="flex gap-2">
-                            <button onClick={() => handleZoom(-0.2)} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 border border-white/10">
+                    <div className="flex flex-col gap-4">
+                        <label className="text-xs font-bold text-slate-500 uppercase">View Controls</label>
+                        <div className="flex gap-2">
+                            <button onClick={() => handleZoom(-0.2)} className="flex-1 p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 border border-white/10 flex justify-center items-center" title="Zoom Out">
                                 <ZoomOut size={18} />
                             </button>
-                            <button onClick={() => setZoom(1)} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 border border-white/10">
+                            <button onClick={() => setZoom(1)} className="flex-1 p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 border border-white/10 flex justify-center items-center" title="Reset Zoom">
                                 <Maximize size={18} />
                             </button>
-                            <button onClick={() => handleZoom(0.2)} className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 border border-white/10">
+                            <button onClick={() => handleZoom(0.2)} className="flex-1 p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 border border-white/10 flex justify-center items-center" title="Zoom In">
                                 <ZoomIn size={18} />
                             </button>
                         </div>
                         
-                        <input 
-                            type="color" 
-                            value={themeColor}
-                            onChange={(e) => setThemeColor(e.target.value)}
-                            className="w-10 h-10 rounded-lg cursor-pointer bg-transparent border-none"
-                        />
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-bold text-slate-500 uppercase">Theme Color</span>
+                             <input 
+                                type="color" 
+                                value={themeColor}
+                                onChange={(e) => setThemeColor(e.target.value)}
+                                className="w-8 h-8 rounded cursor-pointer bg-transparent border-none p-0"
+                            />
+                        </div>
                     </div>
                 </div>
-                
-                {/* Info Card */}
-               <div className="bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-4 shadow-xl pointer-events-auto">
-                    <p className="text-xs text-slate-400 leading-relaxed">
-                        {mode === 'ulam' 
-                            ? "The Ulam spiral reveals patterns in prime numbers when arranging positive integers in a square spiral. Notice the diagonal lines of primes."
-                            : "The Sacks spiral arranges integers on an Archimedean spiral. It highlights alignment of primes along specific curves (like Euler's polynomial)."
-                        }
-                    </p>
-               </div>
-            </div>
-
-            {/* Canvas Container */}
-            <div className="absolute inset-0 z-0">
-                <canvas ref={canvasRef} className="w-full h-full block" />
             </div>
         </div>
     );
