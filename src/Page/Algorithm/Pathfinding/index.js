@@ -3,7 +3,7 @@ import "./Index.css"
 import { Algorithms } from "./algorithms";
 import { Play, Pause, RotateCcw, MonitorPlay, MousePointer2, Flag, ArrowRightLeft, Grid3x3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import Confetti from '../../Components/Confetti';
+import Confetti from '../../../Components/Confetti';
 
 export default function PathFinding() {
     const navigate = useNavigate();

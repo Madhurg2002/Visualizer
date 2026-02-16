@@ -4,7 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSort } from './hooks/useSort';
 import SortingControls from './SortingControls';
-import Confetti from '../../Components/Confetti';
+import Confetti from '../../../Components/Confetti' ;
 
 const Sort = () => {
     const {

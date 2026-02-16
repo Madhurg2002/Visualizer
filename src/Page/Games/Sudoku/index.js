@@ -25,7 +25,7 @@ import Settings from "./Settings";
 import { THEMES } from "./themes";
 
 import { SettingsIcon } from "./Icons";
-import Confetti from "../../Components/Confetti";
+import Confetti from "../../../Components/Confetti";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 

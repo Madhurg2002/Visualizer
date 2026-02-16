@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WORDS } from './words';
 import { filterWords, getBestGuess, sortCandidates } from './solver';
-import Confetti from '../../Components/Confetti';
+import Confetti from '../../../Components/Confetti';
 
 
 const WordleHelper = () => {

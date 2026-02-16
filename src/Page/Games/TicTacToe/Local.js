@@ -5,7 +5,7 @@ import { ArrowLeft, RefreshCw, User, Cpu } from 'lucide-react';
 import Board from './Board';
 import { checkWinner, isDraw } from './utils';
 import { getComputersMove } from './Minimax';
-import Confetti from '../../Components/Confetti';
+import Confetti from '../../../Components/Confetti';
 
 const LocalTicTacToe = ({ mode, onBack }) => {
     const [squares, setSquares] = useState(Array(9).fill(null));

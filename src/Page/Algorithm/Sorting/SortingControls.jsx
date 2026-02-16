@@ -1,7 +1,7 @@
 
 import React, { useState } from 'react';
 import { ALGORITHM_OPTIONS, ALGORITHM_DESCRIPTIONS } from './utils/sortingAlgorithms';
-import Button from '../../Components/Button';
+import Button from '../../../Components/Button';
 import { Play, Pause, RotateCcw, SkipForward, Check } from 'lucide-react';
 
 const SortingControls = ({
