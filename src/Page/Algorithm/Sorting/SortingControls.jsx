@@ -82,7 +82,7 @@ const SortingControls = ({
                 <div className="flex flex-col space-y-2 w-full">
                     <div className="flex justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
                         <span>Speed</span>
-                        <span className="text-slate-300">{speed}ms</span>
+                        <span className="text-slate-300">{Math.max(1, 100 - speed)}ms Delay</span>
                     </div>
                     <input
                         type="range"
@@ -92,6 +92,10 @@ const SortingControls = ({
                         onChange={(e) => setSpeed(Number(e.target.value))}
                         className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
                     />
+                    <div className="flex justify-between text-[10px] text-slate-500 font-bold uppercase">
+                        <span>Slow</span>
+                        <span>Fast</span>
+                    </div>
                 </div>
             </div>
 

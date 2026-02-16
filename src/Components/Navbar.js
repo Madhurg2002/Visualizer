@@ -50,13 +50,12 @@ const Navbar = () => {
 
     const menuGroups = {
         algorithms: ALGORITHMS.map(ALGORITHM => ({
-             name: ALGORITHM.title.replace(" Visualizer", ""), 
              name: ALGORITHM.title,
-             path: ALGORITHM.linkPath || route.path
+             path: ALGORITHM.linkPath || ALGORITHM.path
         })),
         games: GAMES.map(GAME => ({
             name: GAME.title,
-            path: GAME.linkPath || route.path
+            path: GAME.linkPath || GAME.path
         }))
     };
 

@@ -36,6 +36,8 @@ const itemVariants = {
     show: { opacity: 1, y: 0, transition: { type: "spring", bounce: 0.4 } }
 };
 
+
+
 const VisualizerSection = ({ title, items }) => (
     <div className="mb-20">
         <motion.h2

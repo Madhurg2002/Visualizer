@@ -20,7 +20,7 @@ export default function PathFinding() {
     
     const [Grid, setGrid] = useState();
     const [size, setSize] = useState(20);
-    const [speed, setSpeed] = useState(500);
+    const [speed, setSpeed] = useState(100);
     const [algo, setAlgo] = useState(1);
     const [showDesc, setShowDesc] = useState(false);
     const [isVisualizing, setIsVisualizing] = useState(false);
@@ -32,7 +32,7 @@ export default function PathFinding() {
     const mdRef = useRef(false);
     const startNodePos = useRef({ i: -1, j: -1 });
     const endNodePos = useRef({ i: -1, j: -1 });
-    const SleepTime = useRef(500);
+    const SleepTime = useRef(0);
     
     const SetPoint = useRef(1);
     const AlgoNum = useRef(1);
@@ -188,8 +188,10 @@ export default function PathFinding() {
     }
 
     function handleChangeSpeed(e) {
-        setSpeed(e.target.value);
-        SleepTime.current = e.target.value;
+        const val = Number(e.target.value);
+        setSpeed(val);
+        // Calculate delay: Speed 100 -> 0ms, Speed 0 -> 500ms
+        SleepTime.current = Math.max(0, 500 - (val * 5));
     }
 
     // Grid Generation Effect
@@ -355,19 +357,23 @@ export default function PathFinding() {
                      {/* Speed */}
                      <div className="flex flex-col space-y-2">
                         <div className="flex justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
-                            <span>Delay</span>
-                            <span className="text-slate-300">{speed}ms</span>
+                            <span>Speed</span>
+                            <span className="text-slate-300">{Math.max(0, 500 - (speed * 5))}ms Delay</span>
                         </div>
                         <input
                             type="range"
                             min="0"
-                            max="500"
-                            step="10"
+                            max="100"
+                            step="1"
                             defaultValue={speed}
                             onChange={handleChangeSpeed}
                             disabled={isVisualizing}
                              className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
                         />
+                        <div className="flex justify-between text-[10px] text-slate-500 font-bold uppercase">
+                            <span>Slow</span>
+                            <span>Fast</span>
+                        </div>
                     </div>
 
                      {/* Tools */}
