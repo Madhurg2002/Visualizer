@@ -3,6 +3,8 @@ import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, ChevronDown } from 'lucide-react';
 
+import { ALGORITHMS, GAMES } from '../data/visualizers';
+
 const Navbar = () => {
     const [isOpen, setIsOpen] = useState(false);
     const [activeDropdown, setActiveDropdown] = useState(null);
@@ -47,27 +49,15 @@ const Navbar = () => {
     }, [lastScrollY]);
 
     const menuGroups = {
-        algorithms: [
-            { name: 'Sorting', path: '/sort' },
-            { name: 'Pathfinding', path: '/PathFinding' },
-            { name: 'MST', path: '/mst' },
-            { name: 'Convex Hull', path: '/convex-hull' },
-            { name: 'Prime Spirals', path: '/prime-spirals' },
-            { name: 'N-Queens', path: '/nqueens' },
-            { name: 'Game of Life', path: '/CellularAutomata' },
-        ],
-        games: [
-            { name: 'Sudoku', path: '/Sudoku' },
-            { name: 'Chess', path: '/Chess' },
-            { name: 'Minesweeper', path: '/Minesweeper' },
-            { name: 'Tic-Tac-Toe', path: '/TicTacToe' },
-            { name: 'Falling Blocks', path: '/FallingBlocks' },
-            { name: 'Flappy Bird', path: '/FlappyBird' },
-            { name: 'Forbidden Words', path: '/ForbiddenWords' },
-            { name: 'Pendulum', path: '/pendulum' },
-            { name: 'Wordle Helper', path: '/wordle-helper' },
-            { name: 'Kinetic Clock', path: '/KineticClock' },
-        ]
+        algorithms: ALGORITHMS.map(ALGORITHM => ({
+             name: ALGORITHM.title.replace(" Visualizer", ""), 
+             name: ALGORITHM.title,
+             path: ALGORITHM.linkPath || route.path
+        })),
+        games: GAMES.map(GAME => ({
+            name: GAME.title,
+            path: GAME.linkPath || route.path
+        }))
     };
 
     const isPathActive = (path) => location.pathname === path;
