@@ -143,6 +143,13 @@ const GAMES = [
         color: "from-slate-600 to-slate-800",
         icon: <Clock className="w-8 h-8 text-white" />
     },
+    {
+        title: "Wordle Helper",
+        description: "Master Wordle with smart analysis, solver hints, and a full game mode.",
+        path: "/wordle-helper",
+        color: "from-green-500 to-emerald-600",
+        icon: <MessageSquare className="w-8 h-8 text-white" /> 
+    },
 ];
 
 const containerVariants = {

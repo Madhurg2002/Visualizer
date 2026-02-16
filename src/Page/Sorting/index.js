@@ -4,6 +4,7 @@ import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useSort } from './hooks/useSort';
 import SortingControls from './SortingControls';
+import Confetti from '../../Components/Confetti';
 
 const Sort = () => {
     const {
@@ -17,7 +18,8 @@ const Sort = () => {
         startSort,
         pauseSort,
         reset,
-        stepSort
+        stepSort,
+        isSorted
     } = useSort(50);
 
 
@@ -25,12 +27,12 @@ const Sort = () => {
     const maxVal = Math.max(...array, 1); 
 
     return (
-        <div className="flex h-screen w-full bg-[#0B0C15] font-sans overflow-hidden">
+
+        <div className="flex flex-col lg:flex-row h-screen w-full bg-[#0B0C15] font-sans overflow-x-hidden">
+            {isSorted && <Confetti />}
             
-            {/* Main Content Area (Left) */}
             <div className="flex-1 flex flex-col p-6 relative h-full">
                 
-                {/* Header */}
                 <div className="w-full flex flex-col md:flex-row justify-between items-start gap-4 mb-6 z-10">
                     <button
                         onClick={() => navigate('/')}
@@ -39,7 +41,7 @@ const Sort = () => {
                         <ArrowLeft size={18} /> Back
                     </button>
 
-                    <div className="text-center flex-1 pr-20"> {/* PR-20 to balance Back button */}
+                    <div className="text-center flex-1 pr-20">
                         <h1 className="text-3xl md:text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-sm mb-1">
                             Sorting Visualizer
                         </h1>
@@ -49,7 +51,6 @@ const Sort = () => {
                     </div>
                 </div>
 
-                {/* Legend */}
                 <div className="flex justify-center mb-6">
                     <div className="flex gap-6 text-xs font-bold text-slate-400 bg-slate-900/60 px-6 py-2 rounded-full shadow-sm border border-white/5">
                         <div className="flex items-center gap-2">
@@ -67,7 +68,6 @@ const Sort = () => {
                     </div>
                 </div>
 
-                {/* Visualizer Board */}
                 <div className="flex-grow relative bg-slate-900/30 rounded-2xl shadow-xl overflow-hidden border border-white/5 flex flex-col backdrop-blur-sm">
                     <div className="absolute inset-0 flex items-end justify-center gap-[1px] sm:gap-[2px] p-6 pb-0">
                         {array.map((val, idx) => {
@@ -90,8 +90,7 @@ const Sort = () => {
                 </div>
             </div>
 
-            {/* Sidebar Controls (Right) */}
-            <div className="w-80 h-full bg-slate-900/80 backdrop-blur-xl border-l border-white/10 p-6 flex flex-col shadow-2xl z-20">
+            <div className="w-full lg:w-80 h-auto lg:h-full bg-slate-900/80 backdrop-blur-xl border-t lg:border-l border-white/10 p-6 flex flex-col shadow-2xl z-20">
                 <div className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-6 border-b border-white/10 pb-2">
                     Configuration
                 </div>

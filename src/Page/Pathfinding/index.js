@@ -3,18 +3,19 @@ import "./Index.css"
 import { Algorithms } from "./algorithms";
 import { Play, Pause, RotateCcw, MonitorPlay, MousePointer2, Flag, ArrowRightLeft, Grid3x3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import Confetti from '../../Components/Confetti';
 
 export default function PathFinding() {
     const navigate = useNavigate();
     // Algorithm Descriptions
     const PATH_ALGO_DESCRIPTIONS = {
-        1: "Dijkstra's Algorithm (Weighted): The father of pathfinding algorithms; guarantees the shortest path. It explores nodes in all directions, favoring those with lower accumulated cost.",
-        2: "Depth-First Search (Unweighted): Explores as far as possible along each branch before backtracking. It is NOT guaranteed to find the shortest path and can be very inefficient for pathfinding.",
-        3: "A* Search (Weighted): The gold standard for pathfinding. It uses heuristics to guide the search towards the target, making it much faster than Dijkstra while still guaranteeing the shortest path.",
-        4: "Breadth-First Search (Unweighted): Explores all neighbor nodes at the present depth prior to moving on to the nodes at the next depth level. Guarantees the shortest path for unweighted graphs.",
-        5: "Recursive Division (Maze Gen): A method for generating mazes. It works by recursively dividing the grid into chambers with walls, leaving gaps for passage.",
-        6: "Greedy Best-First Search (Weighted): Expands the node that is closest to the goal, as estimated by a heuristic. It is faster than A* but does not guarantee the shortest path.",
-        7: "Bidirectional BFS (Unweighted): Runs two simultaneous breadth-first searches: one forward from the initial state, and one backward from the goal, stopping when the two meet. Can be much faster than standard BFS."
+        1: "Dijkstra's Algorithm (Weighted): Guarantees the shortest path.",
+        2: "Depth-First Search (Unweighted): Not guaranteed to find the shortest path.",
+        3: "A* Search (Weighted): Uses heuristics, faster than Dijkstra.",
+        4: "Breadth-First Search (Unweighted): Guarantees shortest path for unweighted graphs.",
+        5: "Recursive Division (Maze Gen): Generates mazes.",
+        6: "Greedy Best-First Search (Weighted): Faster than A* but no guarantee.",
+        7: "Bidirectional BFS (Unweighted): Two simultaneous searches."
     };
     
     const [Grid, setGrid] = useState();
@@ -23,7 +24,9 @@ export default function PathFinding() {
     const [algo, setAlgo] = useState(1);
     const [showDesc, setShowDesc] = useState(false);
     const [isVisualizing, setIsVisualizing] = useState(false);
-    const [mode, setMode] = useState(1); // 1: Blockage, 2: Start, 3: End
+
+    const [mode, setMode] = useState(1);
+    const [isSolved, setIsSolved] = useState(false);
 
     // Refs for persistent state without re-renders
     const mdRef = useRef(false);
@@ -31,7 +34,6 @@ export default function PathFinding() {
     const endNodePos = useRef({ i: -1, j: -1 });
     const SleepTime = useRef(500);
     
-    // Replaces global SetPoint and AlgoNum
     const SetPoint = useRef(1);
     const AlgoNum = useRef(1);
 
@@ -45,6 +47,7 @@ export default function PathFinding() {
         Array.from(blocks).forEach(e => { e.className = "empty"; e.value = "" })
         blocks = document.getElementsByClassName("path")
         Array.from(blocks).forEach(e => { e.className = "empty"; e.value = "" })
+        setIsSolved(false);
     }
 
     function resetGrid() {
@@ -157,6 +160,7 @@ export default function PathFinding() {
             if (solved && !signal.aborted) {
                 // Trace path
                 await Algorithms.PathFind(ei, ej, parseInt(end.value) - 1, size, SleepTime.current, signal);
+                setIsSolved(true);
             }
         } catch (error) {
             if (error.message === "Aborted") {
@@ -236,7 +240,8 @@ export default function PathFinding() {
     }, [size]);
 
     return (
-        <div className="flex h-screen w-full bg-[#0B0C15] font-sans overflow-hidden">
+        <div className="flex flex-col lg:flex-row min-h-screen w-full bg-[#0B0C15] font-sans overflow-x-hidden">
+             {isSolved && <Confetti />}
              
             {/* Background Ambience */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden z-0 opacity-50">
@@ -286,7 +291,7 @@ export default function PathFinding() {
             </div>
 
             {/* Sidebar Controls (Right) */}
-            <div className="w-80 h-full bg-slate-900/80 backdrop-blur-xl border-l border-white/10 p-6 flex flex-col shadow-2xl z-20 overflow-y-auto">
+            <div className="w-full lg:w-80 h-auto lg:h-full bg-slate-900/80 backdrop-blur-xl border-t lg:border-l border-white/10 p-6 flex flex-col shadow-2xl z-20 overflow-y-auto">
                  <div className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-6 border-b border-white/10 pb-2">
                     Configuration
                 </div>

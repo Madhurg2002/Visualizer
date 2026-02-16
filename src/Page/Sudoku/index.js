@@ -25,6 +25,7 @@ import Settings from "./Settings";
 import { THEMES } from "./themes";
 
 import { SettingsIcon } from "./Icons";
+import Confetti from "../../Components/Confetti";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -47,7 +48,7 @@ export default function Sudoku() {
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [theme, setTheme] = useState(urlTheme);
 
-  // Sync state to URL
+
   useEffect(() => {
     const params = new URLSearchParams();
     if (seed) params.set("seed", seed);
@@ -62,8 +63,7 @@ export default function Sudoku() {
   const [highlightNumbers, setHighlightNumbers] = useState(true);
   const [highlightGuides, setHighlightGuides] = useState(false);
 
-  // Notes state: Map of "r-c" -> Set(numbers)
-  // We use object for easier serialization if needed, or simple Map
+
   const [notes, setNotes] = useState({});
   const [isNoteMode, setIsNoteMode] = useState(false);
 
@@ -127,7 +127,7 @@ export default function Sudoku() {
     setLockedCells(locks);
   }, [seed, clues, navigate, urlSeed, difficulty]);
 
-  // Manual seed application
+
   const handleApplySeed = () => {
     if (seedInput.trim() && seedInput !== seed) {
       setSeed(seedInput.trim());
@@ -286,7 +286,7 @@ export default function Sudoku() {
         }
       }
     setManualCheckResult(true);
-  }; // Show hint cell
+  };
 
   const showHint = () => {
     if (hintCell !== null) return;
@@ -407,8 +407,11 @@ export default function Sudoku() {
   }, [board, solution, continuousCheck]);
 
 
+
+
   return (
     <div className="flex flex-col items-center w-full min-h-screen bg-[#0B0C15] font-sans pb-8">
+      {win && <Confetti />}
       {win && (
         <WinningModal
           onClose={() => setWin(false)}
@@ -452,20 +455,20 @@ export default function Sudoku() {
       />
 
       {/* Header */}
-      <div className="w-full max-w-6xl flex flex-col md:flex-row justify-between items-start gap-4 p-6 mb-4 z-10">
+      <div className="w-full max-w-4xl flex items-center justify-between p-4 md:p-6 mb-2 relative z-10">
            <button
               onClick={() => navigate('/')}
               className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all w-fit"
           >
-              <ArrowLeft size={18} /> Back
+              <ArrowLeft size={18} /> <span className="hidden md:inline">Back</span>
           </button>
 
-          <div className="text-center flex-1">
-              <h1 className="text-3xl md:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-sm mb-2">
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
+              <h1 className="text-3xl md:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-sm">
                   Sudoku
               </h1>
-               <div className="flex justify-center items-center gap-2">
-                    <span className="text-slate-400 font-bold uppercase tracking-wider text-sm bg-slate-900/50 px-3 py-1 rounded-full border border-white/5">
+               <div className="flex justify-center items-center gap-2 mt-1">
+                    <span className="text-slate-400 font-bold uppercase tracking-wider text-xs bg-slate-900/50 px-3 py-1 rounded-full border border-white/5">
                         {difficulty}
                     </span>
                </div>

@@ -82,9 +82,8 @@ const SudokuCell = React.memo(({
             tabIndex={isLocked || win ? -1 : 0}
             onClick={() => !win && onCellClick(r, c)}
             style={{
-                width: 48,
-                height: 48,
-                fontSize: isHint ? 26 : 24,
+                aspectRatio: "1 / 1",
+                fontSize: "clamp(12px, 4vw, 24px)",
                 fontWeight: isLocked ? "700" : isHint ? "900" : "500",
                 backgroundColor: bgColor,
                 borderTop,

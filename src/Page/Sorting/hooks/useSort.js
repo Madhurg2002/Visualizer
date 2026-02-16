@@ -12,6 +12,7 @@ export const useSort = (initialSize = 50) => {
     const [activeIndices, setActiveIndices] = useState([]);
     const [algorithm, setAlgorithm] = useState("Bubble Sort");
     const [speed, setSpeed] = useState(20);
+    const [isSorted, setIsSorted] = useState(false);
 
     const genRef = useRef(null);
     const initialArrayRef = useRef(array);
@@ -26,15 +27,16 @@ export const useSort = (initialSize = 50) => {
         genRef.current = null;
         setPaused(false);
         setSorting(false);
+        setIsSorted(false);
     }, [size]);
 
     const startSort = () => {
         if (!genRef.current) {
-            // Initialize generator if not already started
             genRef.current = ALGORITHMS[algorithm](array);
         }
         setSorting(true);
         setPaused(false);
+        setIsSorted(false);
     };
 
     const pauseSort = () => setPaused(true);
@@ -43,9 +45,10 @@ export const useSort = (initialSize = 50) => {
         setSorting(false);
         setPaused(false);
         setActiveIndices([]);
-        setArray(generateRandomArray(size)); // Generate new random array on reset for variety
+        setArray(generateRandomArray(size));
         genRef.current = null;
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        setIsSorted(false);
     };
 
     const stepSort = useCallback(() => {
@@ -59,6 +62,7 @@ export const useSort = (initialSize = 50) => {
             setPaused(false);
             setActiveIndices([]);
             genRef.current = null;
+            setIsSorted(true);
         }
     }, []);
 
@@ -68,8 +72,6 @@ export const useSort = (initialSize = 50) => {
 
         const runStep = () => {
             if (!genRef.current) return;
-            // Speed control: faster speed = lower timeout
-            // We can do multiple steps per frame for high speeds if needed, but for now simple timeout
             const { value, done } = genRef.current.next();
 
             if (!done) {
@@ -81,6 +83,7 @@ export const useSort = (initialSize = 50) => {
                 setPaused(false);
                 setActiveIndices([]);
                 genRef.current = null;
+                setIsSorted(true);
             }
         };
 
@@ -101,6 +104,7 @@ export const useSort = (initialSize = 50) => {
         startSort,
         pauseSort,
         reset,
-        stepSort
+        stepSort,
+        isSorted
     };
 };

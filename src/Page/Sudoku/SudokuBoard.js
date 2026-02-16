@@ -30,6 +30,7 @@ export default function SudokuBoard({
         overflow: "hidden",
         width: "100%",
         maxWidth: 450,
+        tableLayout: "fixed", // Ensure equal width cells
         background: themeColors.boardBg,
         boxShadow: `0px 8px 32px rgba(0, 0, 0, 0.12)`,
         border: `4px solid ${themeColors.boardBorder}`,
