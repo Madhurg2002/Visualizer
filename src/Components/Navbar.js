@@ -50,16 +50,22 @@ const Navbar = () => {
         algorithms: [
             { name: 'Sorting', path: '/sort' },
             { name: 'Pathfinding', path: '/PathFinding' },
+            { name: 'MST', path: '/mst' },
+            { name: 'Convex Hull', path: '/convex-hull' },
+            { name: 'Prime Spirals', path: '/prime-spirals' },
+            { name: 'N-Queens', path: '/nqueens' },
             { name: 'Game of Life', path: '/CellularAutomata' },
         ],
         games: [
             { name: 'Sudoku', path: '/Sudoku' },
-            { name: 'Falling Blocks', path: '/FallingBlocks' },
+            { name: 'Chess', path: '/Chess' },
             { name: 'Minesweeper', path: '/Minesweeper' },
+            { name: 'Tic-Tac-Toe', path: '/TicTacToe' },
+            { name: 'Falling Blocks', path: '/FallingBlocks' },
             { name: 'Flappy Bird', path: '/FlappyBird' },
             { name: 'Forbidden Words', path: '/ForbiddenWords' },
-            { name: 'Tic-Tac-Toe', path: '/TicTacToe' },
-            { name: 'Chess', path: '/Chess' },
+            { name: 'Pendulum', path: '/pendulum' },
+            { name: 'Wordle Helper', path: '/wordle-helper' },
             { name: 'Kinetic Clock', path: '/KineticClock' },
         ]
     };

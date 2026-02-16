@@ -21,6 +21,7 @@ const PrimeSpirals = lazy(() => import('./Page/PrimeSpirals'));
 const ConvexHull = lazy(() => import('./Page/ConvexHull'));
 const MST = lazy(() => import('./Page/MST'));
 const Pendulum = lazy(() => import('./Page/Pendulum/Pendulum'));
+const WordleHelper = lazy(() => import('./Page/WordleHelper'));
 
 export default function App() {
   return (
@@ -47,6 +48,7 @@ export default function App() {
             <Route exact path="/convex-hull" element={<ConvexHull />} />
             <Route exact path="/mst" element={<MST />} />
             <Route exact path="/pendulum" element={<Pendulum />} />
+            <Route exact path="/wordle-helper" element={<WordleHelper />} />
 
             <Route path="/*" element={<Navigate to="/" />} />
           </Routes>
