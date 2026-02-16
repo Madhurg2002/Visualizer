@@ -363,7 +363,7 @@ export default function PathFinding() {
                         <input
                             type="range"
                             min="0"
-                            max="100"
+                            max="100" // Right = Fast (Speed 100 -> Delay 0)
                             step="1"
                             defaultValue={speed}
                             onChange={handleChangeSpeed}

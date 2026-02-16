@@ -109,7 +109,7 @@ const SudokuCell = React.memo(({
             aria-selected={isSelected}
             title={isHint ? "Hint" : undefined}
         >
-            {val !== 0 ? (isHint ? val : val) : renderNotes()}
+            {val !== 0 ? (isHint ? val : val) : (renderNotes() || "\u200B")}
         </td>
     );
 });

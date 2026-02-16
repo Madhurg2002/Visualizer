@@ -342,7 +342,7 @@ const NQueens = () => {
                                 type="range"
                                 min="10"
                                 max="1000"
-                                value={1010 - speed} 
+                                value={1010 - speed}
                                 onChange={(e) => setSpeed(1010 - Number(e.target.value))}
                                 className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
                             />
