@@ -66,6 +66,15 @@ export default function Sudoku() {
 
   const [notes, setNotes] = useState({});
   const [isNoteMode, setIsNoteMode] = useState(false);
+  
+  const [autoRemoveNotes, setAutoRemoveNotes] = useState(() => {
+    const saved = localStorage.getItem("sudokuAutoRemoveNotes");
+    return saved !== null ? JSON.parse(saved) : true;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("sudokuAutoRemoveNotes", JSON.stringify(autoRemoveNotes));
+  }, [autoRemoveNotes]);
 
   const [board, setBoard] = useState([]);
   const [solution, setSolution] = useState([]);
@@ -115,7 +124,7 @@ export default function Sudoku() {
     setHintCell(null);
     setWin(false);
     userEditedAfterHint.current = false;
-    setHistory([puzzle]);
+    setHistory([{ board: puzzle, notes: {} }]);
     setTimeElapsed(0); // reset timer on new puzzle
     hasUsedSolver.current = false; // Reset solver flag
     const locks = new Set();
@@ -191,7 +200,9 @@ export default function Sudoku() {
     setHistory((prev) => {
       if (prev.length <= 1) return prev;
       const newHist = prev.slice(0, prev.length - 1);
-      setBoard(newHist[newHist.length - 1]);
+      const prevState = newHist[newHist.length - 1];
+      setBoard(prevState.board);
+      setNotes(prevState.notes || {});
       setManualCheckResult(null);
       userEditedAfterHint.current = true;
       setHintCell(null);
@@ -208,7 +219,13 @@ export default function Sudoku() {
       const cellNotes = new Set(newNotes[key] || []);
       if (cellNotes.has(num)) cellNotes.delete(num);
       else cellNotes.add(num);
-      newNotes[key] = cellNotes;
+      if (cellNotes.size === 0) delete newNotes[key];
+      else newNotes[key] = cellNotes;
+      
+      setHistory(prevHist => {
+         const currentBoard = prevHist[prevHist.length - 1].board;
+         return [...prevHist, { board: currentBoard, notes: newNotes }];
+      });
       return newNotes;
     });
   }, []);
@@ -216,24 +233,49 @@ export default function Sudoku() {
   const fillCell = useCallback((r, c, num) => {
     if (lockedCells.has(`${r}-${c}`)) return;
     
-    // Clear notes for this cell when filled
-    setNotes(prev => {
-        const newNotes = { ...prev };
-        delete newNotes[`${r}-${c}`];
-        return newNotes;
-    });
+    let newNotes = { ...notes };
+    if (autoRemoveNotes && num !== 0) {
+        const startR = Math.floor(r / 3) * 3;
+        const startC = Math.floor(c / 3) * 3;
+        for (let i = 0; i < 9; i++) {
+           const rKey = `${r}-${i}`;
+           const cKey = `${i}-${c}`;
+           const bR = startR + Math.floor(i / 3);
+           const bC = startC + (i % 3);
+           const bKey = `${bR}-${bC}`;
+
+           [rKey, cKey, bKey].forEach(key => {
+               if (newNotes[key] && newNotes[key].has(num)) {
+                   const cellNotes = new Set(newNotes[key]);
+                   cellNotes.delete(num);
+                   if (cellNotes.size === 0) delete newNotes[key];
+                   else newNotes[key] = cellNotes;
+               }
+           });
+        }
+    }
+    delete newNotes[`${r}-${c}`];
+    
+    setNotes(newNotes);
 
     const newBoard = board.map((row) => row.slice());
-    newBoard[r][c] = newBoard[r][c] === num ? 0 : num;
+    newBoard[r][c] = num;
     setBoard(newBoard);
-    setHistory((prev) => [...prev, newBoard]);
+    
+    setHistory((prev) => [...prev, { board: newBoard, notes: newNotes }]);
     setManualCheckResult(null);
     if (hintCell !== null) {
       userEditedAfterHint.current = true;
       setHintCell(null);
     }
     if (isComplete(newBoard, solution)) setWin(true);
-  }, [board, lockedCells, hintCell, solution]); 
+  }, [board, lockedCells, hintCell, solution, notes, autoRemoveNotes]); 
+
+  const handleErase = () => {
+    if (selectedCell && !lockedCells.has(`${selectedCell[0]}-${selectedCell[1]}`)) {
+      fillCell(selectedCell[0], selectedCell[1], 0);
+    }
+  };
 
   const handleCellClick = (r, c) => {
     setSelectedCell([r, c]);
@@ -452,6 +494,8 @@ export default function Sudoku() {
         setHighlightNumbers={setHighlightNumbers}
         highlightGuides={highlightGuides}
         setHighlightGuides={setHighlightGuides}
+        autoRemoveNotes={autoRemoveNotes}
+        setAutoRemoveNotes={setAutoRemoveNotes}
       />
 
       {/* Header */}
@@ -567,6 +611,7 @@ export default function Sudoku() {
       <NumberSelector
         selected={selectedNumber}
         setSelected={handleNumberSelect}
+        onErase={handleErase}
         themeColors={themeColors}
       />
       <style>{`

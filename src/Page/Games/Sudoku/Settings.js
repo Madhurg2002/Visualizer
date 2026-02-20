@@ -7,6 +7,7 @@ export default function Settings({
   theme, setTheme,
   highlightNumbers, setHighlightNumbers,
   highlightGuides, setHighlightGuides,
+  autoRemoveNotes, setAutoRemoveNotes,
 }) {
   if (!visible) return null;
   return (
@@ -95,6 +96,28 @@ export default function Settings({
         >
           <span>Highlight Guides</span>
           <span>{highlightGuides ? "ON" : "OFF"}</span>
+        </button>
+
+        <button
+          onClick={() => setAutoRemoveNotes(!autoRemoveNotes)}
+          style={{
+            width: "100%", textAlign: "left", marginBottom: 16,
+            padding: "12px 16px", borderRadius: 12,
+            backgroundColor: autoRemoveNotes 
+              ? (theme === "dark" ? "#1e3a8a" : "#dbeafe") 
+              : (theme === "dark" ? "#1e293b" : "#f1f5f9"),
+            color: autoRemoveNotes 
+              ? (theme === "dark" ? "#93c5fd" : "#1e40af") 
+              : (theme === "dark" ? "#94a3b8" : "#475569"),
+            border: autoRemoveNotes 
+              ? (theme === "dark" ? "1px solid #2563eb" : "2px solid #3b82f6") 
+              : (theme === "dark" ? "1px solid #334155" : "1px solid #cbd5e1"),
+            fontWeight: 600, cursor: "pointer", fontSize: 16,
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+          }}
+        >
+          <span>Auto-Remove Notes</span>
+          <span>{autoRemoveNotes ? "ON" : "OFF"}</span>
         </button>
 
         <div style={{ marginBottom: 24 }}>
