@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Title, RefreshCw, Play, Trophy } from 'lucide-react';
+import { Title, RefreshCw, Play, Trophy, Pause } from 'lucide-react';
 import GameCanvas from './GameCanvas';
 
 // Constants shared with Canvas for UI sizing if needed, or just hardcode
@@ -77,16 +77,24 @@ export default function FlappyBird() {
         }
     }, [gameState, canRestart, triggerStart]);
 
+    const togglePause = useCallback(() => {
+        if (gameState === 'PLAYING') setGameState('PAUSED');
+        else if (gameState === 'PAUSED') setGameState('PLAYING');
+    }, [gameState]);
+
     useEffect(() => {
         const handleKeyDown = (e) => {
             if (e.code === 'Space') {
                 e.preventDefault();
                 jump();
+            } else if (e.key === 'p' || e.key === 'P' || e.key === 'Escape') {
+                e.preventDefault();
+                togglePause();
             }
         };
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [jump]);
+    }, [jump, togglePause]);
 
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-[#0B0C15] font-sans p-4 select-none"
@@ -111,15 +119,39 @@ export default function FlappyBird() {
 
                 {/* UI Overlay Layer */}
                 <div className="absolute inset-0 z-10 pointer-events-none">
-                     {/* Score */}
-                    {(gameState === 'PLAYING' || gameState === 'GAME_OVER') && (
-                        <div className="absolute top-8 left-1/2 -translate-x-1/2 text-6xl font-black text-white/10 drop-shadow-sm">
+                    {/* Score */}
+                    {(gameState === 'PLAYING' || gameState === 'GAME_OVER' || gameState === 'PAUSED') && (
+                        <div className="absolute top-8 left-1/2 -translate-x-1/2 text-6xl font-black text-white/10 drop-shadow-sm pointer-events-none">
                             {score}
                         </div>
                     )}
-                    {(gameState === 'PLAYING' || gameState === 'GAME_OVER') && (
-                        <div className="absolute top-8 left-1/2 -translate-x-1/2 text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 opacity-80">
+                    {(gameState === 'PLAYING' || gameState === 'GAME_OVER' || gameState === 'PAUSED') && (
+                        <div className="absolute top-8 left-1/2 -translate-x-1/2 text-6xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-400 opacity-80 pointer-events-none">
                             {score}
+                        </div>
+                    )}
+
+                    {/* Pause Button */}
+                    {(gameState === 'PLAYING' || gameState === 'PAUSED') && (
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); togglePause(); }}
+                            className="absolute top-4 right-4 bg-white/10 hover:bg-white/20 p-2 rounded-full cursor-pointer pointer-events-auto backdrop-blur-md border border-white/20 transition-colors z-50 text-white"
+                            title="Pause/Resume (P)"
+                        >
+                            {gameState === 'PLAYING' ? <Pause size={20} /> : <Play size={20} />}
+                        </button>
+                    )}
+
+                    {/* Paused Screen */}
+                    {gameState === 'PAUSED' && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/40 backdrop-blur-sm pointer-events-auto z-40">
+                            <div className="text-5xl font-black text-white tracking-widest drop-shadow-lg mb-6">PAUSED</div>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); togglePause(); }}
+                                className="bg-white/10 hover:bg-white/20 px-8 py-3 rounded-xl text-white font-bold tracking-wider transition-all border border-white/20 shadow-lg active:scale-95 flex items-center justify-center gap-2"
+                            >
+                                <Play fill="white" size={20} /> RESUME
+                            </button>
                         </div>
                     )}
 

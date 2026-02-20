@@ -330,8 +330,9 @@ export default function Sudoku() {
     setManualCheckResult(true);
   };
 
+  const hintTimeoutRef = useRef(null);
+
   const showHint = () => {
-    if (hintCell !== null) return;
     const emptyCells = [];
     board.forEach((row, r) =>
       row.forEach((val, c) => {
@@ -344,10 +345,19 @@ export default function Sudoku() {
     }
     const idx = Math.floor(Math.random() * emptyCells.length);
     const [r, c] = emptyCells[idx];
+    
+    // Fill the cell
     fillCell(r, c, solution[r][c]);
+    
+    // Highlight it as a hint
     setHintCell(`${r}-${c}`);
     userEditedAfterHint.current = false;
-    userEditedAfterHint.current = false;
+    
+    // Clear after 3 seconds
+    if (hintTimeoutRef.current) clearTimeout(hintTimeoutRef.current);
+    hintTimeoutRef.current = setTimeout(() => {
+      setHintCell(null);
+    }, 3000);
   };
 
   const visualizeSolver = async () => {
@@ -613,6 +623,8 @@ export default function Sudoku() {
         setSelected={handleNumberSelect}
         onErase={handleErase}
         themeColors={themeColors}
+        board={board}
+        solution={solution}
       />
       <style>{`
         @keyframes hintBlink {

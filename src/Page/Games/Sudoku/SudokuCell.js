@@ -43,17 +43,18 @@ const SudokuCell = React.memo(({
                 ? themeColors.hintTextColor
                 : themeColors.numberBtnColor;
 
-    // Notes rendering
     const renderNotes = () => {
         if (val !== 0 || !notes || notes.size === 0) return null;
         
         return (
             <div style={{
+                position: 'absolute',
+                top: 0, left: 0, right: 0, bottom: 0,
                 display: 'grid',
                 gridTemplateColumns: 'repeat(3, 1fr)',
-                width: '100%',
-                height: '100%',
-                fontSize: 8,
+                gridTemplateRows: 'repeat(3, 1fr)',
+                padding: '10%', // Add internal padding
+                fontSize: 'clamp(8px, 2.5vw, 12px)',
                 lineHeight: 1,
                 color: theme === 'dark' ? '#94a3b8' : '#64748b'
             }}>
