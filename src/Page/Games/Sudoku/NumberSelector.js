@@ -6,6 +6,7 @@ export default function NumberSelector({ selected, setSelected, onErase, themeCo
   const numberCounts = Array(10).fill(0);
   if (board && solution) {
       for (let r = 0; r < 9; r++) {
+          if (!board[r] || !solution[r]) continue;
           for (let c = 0; c < 9; c++) {
               const val = board[r][c];
               if (val !== 0 && val === solution[r][c]) {
