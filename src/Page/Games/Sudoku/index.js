@@ -99,7 +99,8 @@ export default function Sudoku() {
     return saved ? JSON.parse(saved) : {
       easy: { won: 0, bestTime: null },
       medium: { won: 0, bestTime: null },
-      hard: { won: 0, bestTime: null }
+      hard: { won: 0, bestTime: null },
+      extreme: { won: 0, bestTime: null }
     };
   });
   const hasUsedSolver = useRef(false);

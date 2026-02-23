@@ -107,7 +107,7 @@ export default function Controls({
       </button>
       <button
         onClick={() => {
-          const levels = ["easy", "medium", "hard"];
+          const levels = ["easy", "medium", "hard", "extreme"];
           const nextIndex = (levels.indexOf(difficulty) + 1) % levels.length;
           setDifficulty(levels[nextIndex]);
         }}

@@ -1,7 +1,7 @@
 // src/Page/Sudoku/utils.js
 export const size = 3;
 export const N = 9;
-export const DIFFICULTY = { easy: 39, medium: 32, hard: 28 };
+export const DIFFICULTY = { easy: 39, medium: 32, hard: 28, extreme: 23 };
 
 export function randomSeed(len = 8) {
   const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
