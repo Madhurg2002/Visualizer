@@ -8,6 +8,7 @@ export default function Settings({
   highlightNumbers, setHighlightNumbers,
   highlightGuides, setHighlightGuides,
   autoRemoveNotes, setAutoRemoveNotes,
+  onAutoFillNotes,
 }) {
   if (!visible) return null;
   return (
@@ -119,6 +120,27 @@ export default function Settings({
           <span>Auto-Remove Notes</span>
           <span>{autoRemoveNotes ? "ON" : "OFF"}</span>
         </button>
+
+        <div style={{ marginBottom: 24 }}>
+          <button
+            onClick={onAutoFillNotes}
+            style={{
+              width: "100%", textAlign: "left",
+              padding: "12px 16px", borderRadius: 12,
+              backgroundColor: theme === "dark" ? "#1e293b" : "#f1f5f9",
+              color: theme === "dark" ? "#e2e8f0" : "#334155",
+              border: theme === "dark" ? "1px solid #334155" : "1px solid #cbd5e1",
+              fontWeight: 600, cursor: "pointer", fontSize: 16,
+              display: "flex", justifyContent: "space-between", alignItems: "center",
+              transition: "opacity 0.2s"
+            }}
+            onMouseEnter={e => e.currentTarget.style.opacity = 0.8}
+            onMouseLeave={e => e.currentTarget.style.opacity = 1}
+          >
+            <span>Auto-Fill All Notes</span>
+            <span style={{ fontSize: 18 }}>✏️</span>
+          </button>
+        </div>
 
         <div style={{ marginBottom: 24 }}>
         <button

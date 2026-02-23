@@ -123,6 +123,7 @@ export default function Sudoku() {
     setManualCheckResult(null);
     setHintCell(null);
     setWin(false);
+    setNotes({}); // Clear notes when seed or difficulty changes
     userEditedAfterHint.current = false;
     setHistory([{ board: puzzle, notes: {} }]);
     setTimeElapsed(0); // reset timer on new puzzle
@@ -360,6 +361,27 @@ export default function Sudoku() {
     }, 3000);
   };
 
+  const autoFillNotes = () => {
+    const newNotes = { ...notes };
+    for (let r = 0; r < 9; r++) {
+      for (let c = 0; c < 9; c++) {
+        if (board[r][c] === 0) {
+          const validNums = new Set();
+          for (let n = 1; n <= 9; n++) {
+            if (isValid(board, r, c, n)) {
+              validNums.add(n);
+            }
+          }
+          if (validNums.size > 0) {
+            newNotes[`${r}-${c}`] = validNums;
+          }
+        }
+      }
+    }
+    setNotes(newNotes);
+    setHistory((prev) => [...prev, { board, notes: newNotes }]);
+  };
+
   const visualizeSolver = async () => {
     if (solvingRef.current || win) return;
     setSolving(true);
@@ -506,6 +528,10 @@ export default function Sudoku() {
         setHighlightGuides={setHighlightGuides}
         autoRemoveNotes={autoRemoveNotes}
         setAutoRemoveNotes={setAutoRemoveNotes}
+        onAutoFillNotes={() => {
+            autoFillNotes();
+            setSettingsVisible(false);
+        }}
       />
 
       {/* Header */}
