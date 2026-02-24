@@ -44,23 +44,29 @@ export function isValid(board, r, c, n) {
 }
 export function countSolutions(board, limit = 2) {
   let count = 0;
-  function dfs() {
-    if (count >= limit) return;
-    for (let r = 0; r < N; r++)
-      for (let c = 0; c < N; c++)
-        if (board[r][c] === 0) {
-          for (let n = 1; n <= N; n++) {
-            if (isValid(board, r, c, n)) {
-              board[r][c] = n;
-              dfs();
-              board[r][c] = 0;
-            }
-          }
-          return;
-        }
-    count++;
+  const holes = [];
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      if (board[r][c] === 0) holes.push([r, c]);
+    }
   }
-  dfs();
+
+  function dfs(idx) {
+    if (count >= limit) return;
+    if (idx === holes.length) {
+      count++;
+      return;
+    }
+    const [r, c] = holes[idx];
+    for (let n = 1; n <= N; n++) {
+      if (isValid(board, r, c, n)) {
+        board[r][c] = n;
+        dfs(idx + 1);
+        board[r][c] = 0;
+      }
+    }
+  }
+  dfs(0);
   return count;
 }
 export function generateFull(seed) {
@@ -95,9 +101,10 @@ export function puzzleFromFull(full, nClues, seed) {
     if (cluesLeft <= nClues) break;
     let backup = puzzle[r][c];
     puzzle[r][c] = 0;
-    let copy = puzzle.map(row => row.slice());
-    if (countSolutions(copy, 2) > 1) {
-      puzzle[r][c] = backup;
+    
+    // Pass the same puzzle reference. The DFS backtracks and cleans up after itself.
+    if (countSolutions(puzzle, 2) > 1) {
+      puzzle[r][c] = backup; // Restore if it made solution non-unique
     } else {
       cluesLeft--;
     }

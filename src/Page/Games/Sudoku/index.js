@@ -29,6 +29,66 @@ import Confetti from "../../../Components/Confetti";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const Timer = ({ isRunning, theme, themeColors, onTimeUpdate }) => {
+  const [time, setTime] = useState(0);
+
+  useEffect(() => {
+    if (!isRunning) return;
+    const t = setInterval(() => {
+      setTime(prev => {
+        const next = prev + 1;
+        if (onTimeUpdate) onTimeUpdate.current = next;
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(t);
+  }, [isRunning, onTimeUpdate]);
+
+  // Reset internal time when starting a new game (isRunning transitions to true)
+  useEffect(() => {
+    if (isRunning) {
+        setTime(0);
+        if (onTimeUpdate) onTimeUpdate.current = 0;
+    }
+  }, [isRunning, onTimeUpdate]);
+
+  return (
+    <div
+      style={{
+        backgroundColor:
+          theme === "light"
+            ? "rgba(255, 255, 255, 0.7)"
+            : "rgba(0, 0, 0, 0.6)",
+        backdropFilter: "blur(6px)",
+        padding: "8px 20px",
+        borderRadius: 12,
+        boxShadow:
+          theme === "light"
+            ? "0 4px 12px rgba(0, 0, 0, 0.1)"
+            : "0 4px 12px rgba(0, 0, 0, 0.7)",
+        fontFamily: "'Courier New', Courier, monospace",
+        fontWeight: "700",
+        fontSize: "1.3rem",
+        color: themeColors.boardBorder,
+        userSelect: "none",
+        minWidth: 90,
+        textAlign: "center",
+        marginBottom: 12,
+        border:
+          theme === "light"
+            ? "1px solid rgba(0, 0, 0, 0.1)"
+            : "1px solid rgba(255, 255, 255, 0.15)",
+      }}
+      role="timer"
+      aria-live="polite"
+      aria-label="Elapsed time"
+      title="Elapsed time"
+    >
+      {new Date(time * 1000).toISOString().substr(14, 5)}
+    </div>
+  );
+};
+
 export default function Sudoku() {
   const navigate = useNavigate();
   const query = new URLSearchParams(window.location.search);
@@ -87,10 +147,11 @@ export default function Sudoku() {
   const [history, setHistory] = useState([]);
   const [win, setWin] = useState(false);
   const [solving, setSolving] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(true);
   const solvingRef = useRef(false);
   const [poppedButton, setPoppedButton] = useState(null); // Timer state
 
-  const [timeElapsed, setTimeElapsed] = useState(0); // This drives cell highlighting!
+  const timeElapsedRef = useRef(0); // This drives cell highlighting! // Moved to ref for rendering optimization
 
   const [highlightValue, setHighlightValue] = useState(null); // Theme background
 
@@ -119,28 +180,38 @@ export default function Sudoku() {
 
   useEffect(() => {
     if (urlSeed !== seed) navigate(`?seed=${seed}`, { replace: true });
-    const full = generateFull(seed);
-    const puzzle = puzzleFromFull(full, clues, seed + difficulty);
-    setBoard(puzzle);
-    setSolution(full);
-    setSelectedCell(null);
-    setSelectedNumber(null);
-    setHighlightValue(null);
-    setManualCheckResult(null);
-    setHintCell(null);
-    setWin(false);
-    setNotes({}); // Clear notes when seed or difficulty changes
-    userEditedAfterHint.current = false;
-    setHistory([{ board: puzzle, notes: {} }]);
-    setTimeElapsed(0); // reset timer on new puzzle
-    hasUsedSolver.current = false; // Reset solver flag
-    const locks = new Set();
-    puzzle.forEach((row, r) =>
-      row.forEach((val, c) => {
-        if (val !== 0) locks.add(`${r}-${c}`);
-      })
-    );
-    setLockedCells(locks);
+    
+    setIsGenerating(true);
+    
+    // Small timeout yields the thread to React so the loading spinner can paint
+    const t = setTimeout(() => {
+        const full = generateFull(seed);
+        const puzzle = puzzleFromFull(full, clues, seed + difficulty);
+        setBoard(puzzle);
+        setSolution(full);
+        setSelectedCell(null);
+        setSelectedNumber(null);
+        setHighlightValue(null);
+        setManualCheckResult(null);
+        setHintCell(null);
+        setWin(false);
+        setNotes({}); // Clear notes when seed or difficulty changes
+        userEditedAfterHint.current = false;
+        setHistory([{ board: puzzle, notes: {} }]);
+        // setTimeElapsed(0); // Handled by Timer component automatically on isRunning transition
+        hasUsedSolver.current = false; // Reset solver flag
+        const locks = new Set();
+        puzzle.forEach((row, r) =>
+          row.forEach((val, c) => {
+            if (val !== 0) locks.add(`${r}-${c}`);
+          })
+        );
+        setLockedCells(locks);
+        
+        setIsGenerating(false);
+    }, 10);
+    
+    return () => clearTimeout(t);
   }, [seed, clues, navigate, urlSeed, difficulty]);
 
 
@@ -156,7 +227,8 @@ export default function Sudoku() {
         setStatistics(prev => {
           const diffStats = prev[difficulty];
           const newWon = diffStats.won + 1;
-          const newBest = diffStats.bestTime === null ? timeElapsed : Math.min(diffStats.bestTime, timeElapsed);
+          const finalTime = timeElapsedRef.current;
+          const newBest = diffStats.bestTime === null ? finalTime : Math.min(diffStats.bestTime, finalTime);
 
           const newStats = {
             ...prev,
@@ -167,15 +239,7 @@ export default function Sudoku() {
         });
       }
     }
-  }, [win, difficulty, timeElapsed]);
-
-  useEffect(() => {
-    if (win) return;
-    const timer = setInterval(() => {
-      setTimeElapsed((t) => t + 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [win]);
+  }, [win, difficulty]); // Removed timeElapsed dependency to avoid running this repeatedly during gameplay
 
   const boardRef = useRef(null);
   useEffect(() => {
@@ -284,7 +348,7 @@ export default function Sudoku() {
     }
   };
 
-  const handleCellClick = (r, c) => {
+  const handleCellClick = useCallback((r, c) => {
     setSelectedCell([r, c]);
     
     const cellValue = board[r][c];
@@ -301,7 +365,7 @@ export default function Sudoku() {
             }
         }
     }
-  };
+  }, [board, selectedNumber, isNoteMode, toggleNote, fillCell]);
 
   const handleNumberSelect = (num) => {
     if (selectedNumber === num) setSelectedNumber(null);
@@ -501,7 +565,7 @@ export default function Sudoku() {
               setSeedInput(newSeed);
               setWin(false);
           }}
-          timeElapsed={timeElapsed}
+          timeElapsed={timeElapsedRef.current}
           stats={statistics[difficulty]}
           hasUsedSolver={hasUsedSolver.current}
           theme={theme}
@@ -596,41 +660,14 @@ export default function Sudoku() {
         themeColors={themeColors}
       />
       {/* Timer above the Sudoku */}
-      <div
-        style={{
-          backgroundColor:
-            theme === "light"
-              ? "rgba(255, 255, 255, 0.7)" // translucent light for light theme
-              : "rgba(0, 0, 0, 0.6)", // translucent dark for dark theme
-          backdropFilter: "blur(6px)",
-          padding: "8px 20px",
-          borderRadius: 12,
-          boxShadow:
-            theme === "light"
-              ? "0 4px 12px rgba(0, 0, 0, 0.1)"
-              : "0 4px 12px rgba(0, 0, 0, 0.7)",
-          fontFamily: "'Courier New', Courier, monospace",
-          fontWeight: "700",
-          fontSize: "1.3rem",
-          color: themeColors.boardBorder, // text color from theme (ensure contrast)
-          userSelect: "none",
-          minWidth: 90,
-          textAlign: "center",
-          marginBottom: 12,
-          border:
-            theme === "light"
-              ? "1px solid rgba(0, 0, 0, 0.1)"
-              : "1px solid rgba(255, 255, 255, 0.15)",
-        }}
-        role="timer"
-        aria-live="polite"
-        aria-label="Elapsed time"
-        title="Elapsed time"
-      >
-        {new Date(timeElapsed * 1000).toISOString().substr(14, 5)}
-      </div>
+      <Timer 
+        isRunning={!win && !isGenerating} 
+        theme={theme} 
+        themeColors={themeColors} 
+        onTimeUpdate={timeElapsedRef}
+      />
       {/* Sudoku board */}
-      <div ref={boardRef}>
+      <div ref={boardRef} className="relative">
         <SudokuBoard
           board={board}
           lockedCells={lockedCells}
@@ -648,6 +685,12 @@ export default function Sudoku() {
           notes={notes}
           highlightGuides={highlightGuides}
         />
+        {isGenerating && (
+          <div className="absolute inset-0 flex flex-col justify-center items-center z-50 backdrop-blur-sm rounded-xl" style={{ backgroundColor: theme === 'dark' ? 'rgba(15, 23, 42, 0.5)' : 'rgba(255, 255, 255, 0.5)' }}>
+              <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(59,130,246,0.5)]"></div>
+              <div className="mt-4 font-bold tracking-widest text-blue-500 uppercase text-sm animate-pulse text-shadow-sm">Generating...</div>
+          </div>
+        )}
       </div>
       {/* Numbers below the Sudoku */}
       <NumberSelector
