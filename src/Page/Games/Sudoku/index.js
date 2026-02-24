@@ -96,12 +96,17 @@ export default function Sudoku() {
 
   const [statistics, setStatistics] = useState(() => {
     const saved = localStorage.getItem("sudokuStats");
-    return saved ? JSON.parse(saved) : {
+    const defaultStats = {
       easy: { won: 0, bestTime: null },
       medium: { won: 0, bestTime: null },
       hard: { won: 0, bestTime: null },
       extreme: { won: 0, bestTime: null }
     };
+    if (saved) {
+        const parsed = JSON.parse(saved);
+        return { ...defaultStats, ...parsed }; // Merge to ensure 'extreme' exists
+    }
+    return defaultStats;
   });
   const hasUsedSolver = useRef(false);
 
