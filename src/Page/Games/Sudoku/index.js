@@ -242,9 +242,13 @@ export default function Sudoku() {
   }, [win, difficulty]); // Removed timeElapsed dependency to avoid running this repeatedly during gameplay
 
   const boardRef = useRef(null);
+  const numberSelectorRef = useRef(null);
   useEffect(() => {
     function handleClickOutside(event) {
-      if (boardRef.current && !boardRef.current.contains(event.target)) {
+      if (
+          boardRef.current && !boardRef.current.contains(event.target) &&
+          numberSelectorRef.current && !numberSelectorRef.current.contains(event.target)
+      ) {
         setSelectedCell(null);
         if (selectedNumber === null) setHighlightValue(null);
       }
@@ -342,15 +346,22 @@ export default function Sudoku() {
     if (isComplete(newBoard, solution)) setWin(true);
   }, [board, lockedCells, hintCell, solution, notes, autoRemoveNotes]); 
 
-  const handleErase = () => {
+  const handleErase = useCallback(() => {
     if (selectedCell && !lockedCells.has(`${selectedCell[0]}-${selectedCell[1]}`)) {
       fillCell(selectedCell[0], selectedCell[1], 0);
     }
-  };
+  }, [selectedCell, lockedCells, fillCell]);
 
   const handleCellClick = useCallback((r, c) => {
     setSelectedCell([r, c]);
     
+    if (selectedNumber === 'erase') {
+       if (!lockedCells.has(`${r}-${c}`)) {
+          fillCell(r, c, 0);
+       }
+       return;
+    }
+
     const cellValue = board[r][c];
     if (cellValue !== 0) {
         // Smart Interaction: Select the number
@@ -365,7 +376,7 @@ export default function Sudoku() {
             }
         }
     }
-  }, [board, selectedNumber, isNoteMode, toggleNote, fillCell]);
+  }, [board, selectedNumber, isNoteMode, toggleNote, fillCell, lockedCells]);
 
   const handleNumberSelect = (num) => {
     if (selectedNumber === num) setSelectedNumber(null);
@@ -376,14 +387,12 @@ export default function Sudoku() {
         !lockedCells.has(`${selectedCell[0]}-${selectedCell[1]}`)
       ) {
         const [r, c] = selectedCell;
-        // If cell is empty or we are overwriting
-        // Check mode
-        if (board[r][c] === 0) {
+        if (num === 'erase') {
+            fillCell(r, c, 0);
+        } else if (board[r][c] === 0) {
              if (isNoteMode) toggleNote(r, c, num);
              else fillCell(r, c, num);
         } else {
-            // Cell occupied, overwrite if not locked (handled by fillCell check)
-            // If Note Mode, usually we don't put notes on filled cells.
              if (!isNoteMode) fillCell(r, c, num);
         }
       }
@@ -693,14 +702,16 @@ export default function Sudoku() {
         )}
       </div>
       {/* Numbers below the Sudoku */}
-      <NumberSelector
-        selected={selectedNumber}
-        setSelected={handleNumberSelect}
-        onErase={handleErase}
-        themeColors={themeColors}
-        board={board}
-        solution={solution}
-      />
+      <div ref={numberSelectorRef} className="w-full flex justify-center">
+        <NumberSelector
+          selected={selectedNumber}
+          setSelected={handleNumberSelect}
+          onErase={handleErase}
+          themeColors={themeColors}
+          board={board}
+          solution={solution}
+        />
+      </div>
       <style>{`
         @keyframes hintBlink {
           0%, 100% { opacity: 1; }

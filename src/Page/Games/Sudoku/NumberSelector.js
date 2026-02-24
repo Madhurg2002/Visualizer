@@ -87,23 +87,33 @@ export default function NumberSelector({ selected, setSelected, onErase, themeCo
         );
       })}
       <button
-        onClick={onErase}
+        onClick={() => setSelected(selected === 'erase' ? null : 'erase')}
         style={{
           flex: "1",
           maxWidth: 44,
           aspectRatio: "1 / 1",
           borderRadius: "15%",
           padding: 0,
-          border: "2px solid #b0bec5",
-          backgroundColor: themeColors.bg === '#0f172a' ? '#334155' : '#e2e8f0',
-          color: themeColors.bg === '#0f172a' ? '#f87171' : '#ef4444',
+          border: selected === 'erase'
+            ? `3px solid ${themeColors.numberBtnSelBg}`
+            : "2px solid #b0bec5",
+          backgroundColor: selected === 'erase'
+            ? themeColors.numberBtnSelBg
+            : themeColors.bg === '#0f172a' ? '#334155' : '#e2e8f0',
+          color: selected === 'erase'
+             ? themeColors.numberBtnSelColor
+             : themeColors.bg === '#0f172a' ? '#f87171' : '#ef4444',
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           cursor: "pointer",
+          boxShadow: selected === 'erase'
+            ? `0 0 12px ${themeColors.numberBtnSelBg}`
+            : "none",
           transition: "all 0.2s ease",
         }}
-        aria-label="Erase Cell"
+        aria-label="Select Eraser"
+        aria-pressed={selected === 'erase'}
         onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.95)")}
         onMouseUp={(e) => (e.currentTarget.style.transform = "")}
         onMouseLeave={(e) => (e.currentTarget.style.transform = "")}
