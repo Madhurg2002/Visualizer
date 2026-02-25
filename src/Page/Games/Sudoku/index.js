@@ -353,39 +353,38 @@ export default function Sudoku() {
   }, [selectedCell, lockedCells, fillCell]);
 
   const handleCellClick = useCallback((r, c) => {
-    setSelectedCell([r, c]);
-    
-    if (selectedNumber === 'erase') {
-       if (!lockedCells.has(`${r}-${c}`)) {
-          fillCell(r, c, 0);
-       }
-       return;
+    // Number-first or Eraser mode is actively toggled ON at the bottom
+    if (selectedNumber !== null) {
+        if (selectedNumber === 'erase') {
+           if (!lockedCells.has(`${r}-${c}`)) {
+              fillCell(r, c, 0);
+           }
+        } else {
+           if (board[r][c] === 0) {
+                if (isNoteMode) toggleNote(r, c, selectedNumber);
+                else fillCell(r, c, selectedNumber);
+           } else if (!lockedCells.has(`${r}-${c}`)) {
+                if (!isNoteMode) fillCell(r, c, selectedNumber);
+           }
+        }
+        
+        // Ensure the cell we just mass-stamped down doesn't get a heavy blue selection border
+        setSelectedCell(null);
+        return;
     }
 
-    const cellValue = board[r][c];
-    if (cellValue !== 0) {
-        // Smart Interaction: Select the number
-        setSelectedNumber(cellValue);
-    } else {
-        // Empty cell
-        if (selectedNumber !== null) {
-            if (isNoteMode) {
-                toggleNote(r, c, selectedNumber);
-            } else {
-                fillCell(r, c, selectedNumber);
-            }
-        }
-    }
+    // Cell-first navigation Mode
+    setSelectedCell([r, c]);
   }, [board, selectedNumber, isNoteMode, toggleNote, fillCell, lockedCells]);
 
   const handleNumberSelect = (num) => {
     if (selectedNumber === num) setSelectedNumber(null);
     else {
-      setSelectedNumber(num);
       if (
         selectedCell &&
         !lockedCells.has(`${selectedCell[0]}-${selectedCell[1]}`)
       ) {
+        // "Cell first" mode - user selected a cell on the board, then clicked a number here to fill it.
         const [r, c] = selectedCell;
         if (num === 'erase') {
             fillCell(r, c, 0);
@@ -395,6 +394,14 @@ export default function Sudoku() {
         } else {
              if (!isNoteMode) fillCell(r, c, num);
         }
+        
+        // Crucial behavior fix: User wants a one-off fill for this specific cell. They DO NOT want to enter 
+        // global "Number-first" mass stamping mode.
+        setSelectedNumber(null);
+      } else {
+        // "Number first" mode 
+        setSelectedNumber(num);
+        setSelectedCell(null); // safely detach any previously highlighted clue cell
       }
     }
   };
