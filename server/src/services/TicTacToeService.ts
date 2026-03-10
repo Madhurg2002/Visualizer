@@ -7,7 +7,7 @@ class TicTacToeService {
         this.rooms = {};
     }
 
-    createRoom(name: string, socketId: string): string {
+    createRoom(name: string, socketId: string, variant: 'classic' | 'disappearing' = 'classic'): string {
         let roomId: string;
         do {
             roomId = Math.random().toString(36).substring(2, 8).toUpperCase();
@@ -26,7 +26,9 @@ class TicTacToeService {
             winner: null,
             winningLine: null,
             gameState: 'waiting',
-            hostId: socketId
+            hostId: socketId,
+            moveHistory: [],
+            variant: variant
         };
 
         return roomId;
@@ -62,7 +64,13 @@ class TicTacToeService {
         if (!player || player.symbol !== room.currentTurn) return null;
         if (room.board[index]) return null;
 
+        if (room.variant === 'disappearing' && room.moveHistory.length === 6) {
+            const oldestMove = room.moveHistory.shift()!;
+            room.board[oldestMove] = null;
+        }
+
         room.board[index] = player.symbol!; // symbol is optional in interface but required here
+        room.moveHistory.push(index);
 
         const winData = this.checkWinner(room.board);
         if (winData) {
@@ -90,6 +98,7 @@ class TicTacToeService {
         room.winningLine = null;
         room.currentTurn = 'X';
         room.gameState = 'playing';
+        room.moveHistory = [];
         return room;
     }
 

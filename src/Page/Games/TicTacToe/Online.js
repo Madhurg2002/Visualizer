@@ -25,6 +25,9 @@ const OnlineTicTacToe = ({ onBack }) => {
     const [winner, setWinner] = useState(null);
     const [winningLine, setWinningLine] = useState(null);
     const [gameState, setGameState] = useState('waiting');
+    const [moveHistory, setMoveHistory] = useState([]);
+    const [roomVariant, setRoomVariant] = useState('classic');
+    const urlVariant = searchParams.get('variant') || 'classic';
 
     useEffect(() => {
         const newSocket = io(SERVER_URL);
@@ -47,6 +50,8 @@ const OnlineTicTacToe = ({ onBack }) => {
             setWinner(room.winner);
             setWinningLine(room.winningLine);
             setGameState(room.gameState);
+            setMoveHistory(room.moveHistory || []);
+            setRoomVariant(room.variant || 'classic');
 
             // Determine my symbol
             const me = room.players.find(p => p.id === newSocket.id);
@@ -66,7 +71,7 @@ const OnlineTicTacToe = ({ onBack }) => {
 
     const createRoom = () => {
         if (!playerName) return setError("Enter name first!");
-        socket.emit('ttt_create_room', { name: playerName });
+        socket.emit('ttt_create_room', { name: playerName, variant: urlVariant });
     };
 
     const joinRoom = () => {
@@ -109,6 +114,8 @@ const OnlineTicTacToe = ({ onBack }) => {
             document.body.removeChild(textArea);
         }
     };
+
+    const disappearingIndex = roomVariant === 'disappearing' && moveHistory.length === 6 ? moveHistory[0] : null;
 
     return (
         <div className="w-full px-4 flex flex-col items-center justify-start relative overflow-hidden">
@@ -210,7 +217,7 @@ const OnlineTicTacToe = ({ onBack }) => {
                             </div>
                         )}
 
-                        <Board squares={board} onClick={handleCellClick} winningLine={winningLine} />
+                        <Board squares={board} onClick={handleCellClick} winningLine={winningLine} disappearingIndex={disappearingIndex} />
 
                         {/* Game Over Overlay */}
                         <AnimatePresence>

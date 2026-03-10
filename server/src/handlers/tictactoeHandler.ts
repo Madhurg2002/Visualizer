@@ -9,10 +9,10 @@ const emitRoomUpdate = (io: Server, roomId: string) => {
 };
 
 export default (io: Server, socket: Socket) => {
-    socket.on('ttt_create_room', ({ name }: { name: string }) => {
-        const roomId = tictactoeService.createRoom(name, socket.id);
+    socket.on('ttt_create_room', ({ name, variant = 'classic' }: { name: string, variant: 'classic' | 'disappearing' }) => {
+        const roomId = tictactoeService.createRoom(name, socket.id, variant);
         socket.join(roomId);
-        console.log(`[TTT] Room Created: ${roomId} by ${name}`);
+        console.log(`[TTT] Room Created: ${roomId} by ${name} with variant: ${variant}`);
         socket.emit('ttt_room_created', roomId);
         emitRoomUpdate(io, roomId);
     });

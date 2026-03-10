@@ -131,10 +131,19 @@ export default function Sudoku() {
     const saved = localStorage.getItem("sudokuAutoRemoveNotes");
     return saved !== null ? JSON.parse(saved) : true;
   });
+  
+  const [showNotes, setShowNotes] = useState(() => {
+    const saved = localStorage.getItem("sudokuShowNotes");
+    return saved !== null ? JSON.parse(saved) : true;
+  });
 
   useEffect(() => {
     localStorage.setItem("sudokuAutoRemoveNotes", JSON.stringify(autoRemoveNotes));
   }, [autoRemoveNotes]);
+  
+  useEffect(() => {
+    localStorage.setItem("sudokuShowNotes", JSON.stringify(showNotes));
+  }, [showNotes]);
 
   const [board, setBoard] = useState([]);
   const [solution, setSolution] = useState([]);
@@ -145,6 +154,7 @@ export default function Sudoku() {
   const [hintCell, setHintCell] = useState(null);
   const userEditedAfterHint = useRef(false);
   const [history, setHistory] = useState([]);
+  const [isDirty, setIsDirty] = useState(false);  // True if the user has made any edits
   const [win, setWin] = useState(false);
   const [solving, setSolving] = useState(false);
   const [isGenerating, setIsGenerating] = useState(true);
@@ -198,6 +208,7 @@ export default function Sudoku() {
         setNotes({}); // Clear notes when seed or difficulty changes
         userEditedAfterHint.current = false;
         setHistory([{ board: puzzle, notes: {} }]);
+        setIsDirty(false);
         // setTimeElapsed(0); // Handled by Timer component automatically on isRunning transition
         hasUsedSolver.current = false; // Reset solver flag
         const locks = new Set();
@@ -336,6 +347,7 @@ export default function Sudoku() {
     const newBoard = board.map((row) => row.slice());
     newBoard[r][c] = num;
     setBoard(newBoard);
+    setIsDirty(true);
     
     setHistory((prev) => [...prev, { board: newBoard, notes: newNotes }]);
     setManualCheckResult(null);
@@ -614,6 +626,8 @@ export default function Sudoku() {
         setHighlightGuides={setHighlightGuides}
         autoRemoveNotes={autoRemoveNotes}
         setAutoRemoveNotes={setAutoRemoveNotes}
+        showNotes={showNotes}
+        setShowNotes={setShowNotes}
         onAutoFillNotes={() => {
             autoFillNotes();
             setSettingsVisible(false);
@@ -624,7 +638,8 @@ export default function Sudoku() {
       <div className="w-full max-w-4xl flex items-center justify-between p-4 md:p-6 mb-2 relative z-10">
            <button
               onClick={() => navigate('/')}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all w-fit"
+              className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all w-fit focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0C15]"
+              title="Return to games menu"
           >
               <ArrowLeft size={18} /> <span className="hidden md:inline">Back</span>
           </button>
@@ -642,8 +657,8 @@ export default function Sudoku() {
 
           <button
             onClick={() => setSettingsVisible(true)}
-            className="flex items-center justify-center p-3 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all shadow-lg"
-            title="Settings"
+            className="flex items-center justify-center p-3 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0C15]"
+            title="Open game settings"
           >
             <SettingsIcon size={20} />
           </button>
@@ -652,6 +667,18 @@ export default function Sudoku() {
       <Controls
         difficulty={difficulty}
         setDifficulty={setDifficulty}
+        onDifficultyChange={() => {
+            const levels = ["easy", "medium", "hard", "extreme"];
+            const nextIndex = (levels.indexOf(difficulty) + 1) % levels.length;
+            const nextDiff = levels[nextIndex];
+            if (isDirty) {
+              if (window.confirm("You have made progress on this puzzle. Are you sure you want to change the difficulty? Your progress will be lost.")) {
+                setDifficulty(nextDiff);
+              }
+            } else {
+              setDifficulty(nextDiff);
+            }
+        }}
         seedInput={seedInput}
         setSeedInput={setSeedInput}
         currentSeed={seed}
@@ -698,7 +725,7 @@ export default function Sudoku() {
           themeColors={themeColors}
           highlightValue={highlightValue}
           theme={theme}
-          notes={notes}
+          notes={showNotes ? notes : {}}
           highlightGuides={highlightGuides}
         />
         {isGenerating && (

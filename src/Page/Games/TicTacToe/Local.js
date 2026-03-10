@@ -6,12 +6,17 @@ import Board from './Board';
 import { checkWinner, isDraw } from './utils';
 import { getComputersMove } from './Minimax';
 import Confetti from '../../../Components/Confetti';
+import { useSearchParams } from 'react-router-dom';
 
 const LocalTicTacToe = ({ mode, onBack }) => {
+    const [searchParams] = useSearchParams();
+    const variant = searchParams.get('variant') || 'classic';
+
     const [squares, setSquares] = useState(Array(9).fill(null));
     const [xIsNext, setXIsNext] = useState(true);
     const [winner, setWinner] = useState(null);
     const [winningLine, setWinningLine] = useState(null);
+    const [moveHistory, setMoveHistory] = useState([]);
 
     const isAiMode = mode === 'ai';
     const isAiTurn = isAiMode && !xIsNext && !winner;
@@ -20,31 +25,63 @@ const LocalTicTacToe = ({ mode, onBack }) => {
         if (squares[i] || winner || isAiTurn) return;
 
         const nextSquares = squares.slice();
-        nextSquares[i] = xIsNext ? 'X' : 'O';
-        setSquares(nextSquares);
-        setXIsNext(!xIsNext);
-    };
+        const nextHistory = moveHistory.slice();
 
-    useEffect(() => {
-        const result = checkWinner(squares);
+        if (variant === 'disappearing' && nextHistory.length === 6) {
+            const oldestIndex = nextHistory.shift();
+            nextSquares[oldestIndex] = null;
+        }
+
+        nextSquares[i] = xIsNext ? 'X' : 'O';
+        nextHistory.push(i);
+
+        // Check for winner *before* updating state, while using nextSquares
+        const result = checkWinner(nextSquares);
         if (result) {
             setWinner(result.winner);
             setWinningLine(result.line);
-        } else if (isDraw(squares)) {
+        } else if (isDraw(nextSquares)) {
             setWinner('Draw');
         }
-    }, [squares]);
+
+        setSquares(nextSquares);
+        setMoveHistory(nextHistory);
+        setXIsNext(!xIsNext);
+    };
+
+    // Removed the buggy useEffect for winner checking since we do it inline now
+
+
 
     useEffect(() => {
         if (isAiTurn) {
             const timer = setTimeout(() => {
-                const bestMove = getComputersMove(squares, 'hard', 'O');
+                const bestMove = getComputersMove(squares, 'hard', 'O', moveHistory, variant);
                 
                 if (bestMove !== -1) {
-                    setSquares((prev) => {
-                        const next = prev.slice();
-                        next[bestMove] = 'O';
-                        return next;
+                    setSquares((prevSquares) => {
+                        const nextSquares = prevSquares.slice();
+                        setMoveHistory((prevHistory) => {
+                            const nextHistory = prevHistory.slice();
+                            if (variant === 'disappearing' && nextHistory.length === 6) {
+                                const oldestIndex = nextHistory.shift();
+                                nextSquares[oldestIndex] = null;
+                            }
+                            nextSquares[bestMove] = 'O';
+                            nextHistory.push(bestMove);
+                            
+                            // Let's check for the AI winning
+                            const result = checkWinner(nextSquares);
+                            if (result) {
+                                setWinner(result.winner);
+                                setWinningLine(result.line);
+                            } else if (isDraw(nextSquares)) {
+                                setWinner('Draw');
+                            }
+                            
+                            return nextHistory;
+                        });
+                        return nextSquares;
                     });
                     setXIsNext(true);
                 }
@@ -55,6 +92,7 @@ const LocalTicTacToe = ({ mode, onBack }) => {
 
     const resetGame = () => {
         setSquares(Array(9).fill(null));
+        setMoveHistory([]);
         setXIsNext(true);
         setWinner(null);
         setWinningLine(null);
@@ -113,6 +151,7 @@ const LocalTicTacToe = ({ mode, onBack }) => {
                     onClick={handleClick} 
                     winningLine={winningLine} 
                     disabled={!!winner || isAiTurn}
+                    disappearingIndex={variant === 'disappearing' && moveHistory.length === 6 ? moveHistory[0] : null}
                 />
 
                 {/* Game Over Overlay */}

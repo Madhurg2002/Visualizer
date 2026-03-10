@@ -2,7 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-const Cell = ({ value, onClick, isWinning, disabled }) => {
+const Cell = ({ value, onClick, isWinning, disabled, isDisappearing }) => {
     return (
         <motion.div
             whileHover={!value && !disabled ? { scale: 0.95, backgroundColor: "rgba(255,255,255,0.05)" } : {}}
@@ -12,7 +12,8 @@ const Cell = ({ value, onClick, isWinning, disabled }) => {
         rounded-xl cursor-pointer text-5xl md:text-6xl font-black relative overflow-hidden
         ${!value ? 'bg-slate-800/30 hover:bg-slate-800/50' : 'bg-slate-800/40'}
         ${isWinning ? 'shadow-[inset_0_0_20px_rgba(34,197,94,0.2)]' : ''}
-        border border-white/5 shadow-inner backdrop-blur-sm
+        ${isDisappearing ? 'opacity-40 animate-pulse border-red-500/50 shadow-[inset_0_0_15px_rgba(239,68,68,0.3)]' : 'border-white/5 shadow-inner'}
+        border backdrop-blur-sm
         transition-all duration-300
       `}
             onClick={!disabled ? onClick : undefined}
@@ -23,9 +24,9 @@ const Cell = ({ value, onClick, isWinning, disabled }) => {
                     animate={{ scale: 1, rotate: 0, opacity: 1 }}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 >
-                    <svg width="60" height="60" viewBox="0 0 100 100" className="drop-shadow-[0_0_8px_rgba(59,130,246,0.8)]">
-                        <line x1="20" y1="20" x2="80" y2="80" stroke="#60a5fa" strokeWidth="12" strokeLinecap="round" />
-                        <line x1="80" y1="20" x2="20" y2="80" stroke="#60a5fa" strokeWidth="12" strokeLinecap="round" />
+                    <svg width="60" height="60" viewBox="0 0 100 100" className={`drop-shadow-[0_0_8px_rgba(59,130,246,0.8)] ${isDisappearing && 'text-red-400 opacity-60'}`}>
+                        <line x1="20" y1="20" x2="80" y2="80" stroke={isDisappearing ? "#f87171" : "#60a5fa"} strokeWidth="12" strokeLinecap="round" />
+                        <line x1="80" y1="20" x2="20" y2="80" stroke={isDisappearing ? "#f87171" : "#60a5fa"} strokeWidth="12" strokeLinecap="round" />
                     </svg>
                 </motion.div>
             )}
@@ -35,8 +36,8 @@ const Cell = ({ value, onClick, isWinning, disabled }) => {
                     animate={{ scale: 1, opacity: 1 }}
                     transition={{ type: "spring", stiffness: 300, damping: 20 }}
                 >
-                    <svg width="60" height="60" viewBox="0 0 100 100" className="drop-shadow-[0_0_8px_rgba(192,132,252,0.8)]">
-                        <circle cx="50" cy="50" r="35" stroke="#c084fc" strokeWidth="12" fill="none" strokeLinecap="round" />
+                    <svg width="60" height="60" viewBox="0 0 100 100" className={`drop-shadow-[0_0_8px_rgba(192,132,252,0.8)] ${isDisappearing && 'text-red-400 opacity-60'}`}>
+                        <circle cx="50" cy="50" r="35" stroke={isDisappearing ? "#f87171" : "#c084fc"} strokeWidth="12" fill="none" strokeLinecap="round" />
                     </svg>
                 </motion.div>
             )}
@@ -44,7 +45,7 @@ const Cell = ({ value, onClick, isWinning, disabled }) => {
     );
 };
 
-const Board = ({ squares, onClick, winningLine, disabled }) => {
+const Board = ({ squares, onClick, winningLine, disabled, disappearingIndex }) => {
     // Calculate SVG Line coordinates if there is a winner
     const renderWinningLine = () => {
         if (!winningLine) return null;
@@ -90,6 +91,7 @@ const Board = ({ squares, onClick, winningLine, disabled }) => {
                         onClick={() => onClick(i)}
                         isWinning={winningLine && winningLine.includes(i)}
                         disabled={disabled || (winningLine && !winningLine.includes(i))}
+                        isDisappearing={i === disappearingIndex}
                     />
                 ))}
             </div>

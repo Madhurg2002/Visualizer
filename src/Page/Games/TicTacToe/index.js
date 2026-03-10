@@ -7,6 +7,7 @@ import OnlineTicTacToe from './Online.js';
 
 const TicTacToeMenu = () => {
     const navigate = useNavigate();
+    const [variant, setVariant] = useState('classic');
 
     const containerVariants = {
         hidden: { opacity: 0 },
@@ -47,9 +48,32 @@ const TicTacToeMenu = () => {
                     <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-sm mb-4">
                         Tic-Tac-Toe
                     </h1>
-                    <p className="text-slate-400 text-lg md:text-xl font-medium max-w-2xl mx-auto">
+                    <p className="text-slate-400 text-lg md:text-xl font-medium max-w-2xl mx-auto mb-8">
                         The classic game reimagined. Challenge AI, play locally with friends, or compete online in real-time.
                     </p>
+
+                    {/* Variant Selector */}
+                    <div className="flex justify-center mb-4">
+                        <div className="bg-slate-900/50 p-1 rounded-xl border border-white/10 flex">
+                            <button
+                                onClick={() => setVariant('classic')}
+                                className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${variant === 'classic' ? 'bg-blue-500 text-white shadow-lg shadow-blue-500/30' : 'text-slate-400 hover:text-white'}`}
+                            >
+                                Classic
+                            </button>
+                            <button
+                                onClick={() => setVariant('disappearing')}
+                                className={`px-6 py-2 rounded-lg font-bold text-sm transition-all ${variant === 'disappearing' ? 'bg-purple-500 text-white shadow-lg shadow-purple-500/30' : 'text-slate-400 hover:text-white'}`}
+                            >
+                                Disappearing Mode
+                            </button>
+                        </div>
+                    </div>
+                    {variant === 'disappearing' && (
+                        <motion.p initial={{opacity: 0}} animate={{opacity: 1}} className="text-purple-300 text-sm max-w-lg mx-auto bg-purple-500/10 p-2 rounded-lg border border-purple-500/20">
+                            In Disappearing Mode, pieces vanish after the 6th move, keeping the board dynamic!
+                        </motion.p>
+                    )}
                 </motion.div>
 
                 {/* Menu Grid */}
@@ -59,7 +83,7 @@ const TicTacToeMenu = () => {
                         variants={itemVariants}
                         whileHover={{ scale: 1.03, y: -5 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => navigate('ai')}
+                        onClick={() => navigate(`ai?variant=${variant}`)}
                         className="group relative h-64 bg-slate-900/40 backdrop-blur-md rounded-3xl border border-white/10 p-8 flex flex-col items-center justify-center text-center transition-all hover:bg-slate-800/60 hover:border-blue-500/30 overflow-hidden shadow-2xl"
                     >
                         <div className="mb-6 p-4 bg-blue-500/10 rounded-2xl group-hover:bg-blue-500/20 transition-colors">
@@ -77,7 +101,7 @@ const TicTacToeMenu = () => {
                         variants={itemVariants}
                         whileHover={{ scale: 1.03, y: -5 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => navigate('local')}
+                        onClick={() => navigate(`local?variant=${variant}`)}
                         className="group relative h-64 bg-slate-900/40 backdrop-blur-md rounded-3xl border border-white/10 p-8 flex flex-col items-center justify-center text-center transition-all hover:bg-slate-800/60 hover:border-purple-500/30 overflow-hidden shadow-2xl"
                     >
                         <div className="mb-6 p-4 bg-purple-500/10 rounded-2xl group-hover:bg-purple-500/20 transition-colors">
@@ -94,7 +118,7 @@ const TicTacToeMenu = () => {
                         variants={itemVariants}
                         whileHover={{ scale: 1.03, y: -5 }}
                         whileTap={{ scale: 0.98 }}
-                        onClick={() => navigate('online')}
+                        onClick={() => navigate(`online?variant=${variant}`)}
                         className="group relative h-64 bg-slate-900/40 backdrop-blur-md rounded-3xl border border-white/10 p-8 flex flex-col items-center justify-center text-center transition-all hover:bg-slate-800/60 hover:border-pink-500/30 overflow-hidden shadow-2xl"
                     >
                         <div className="mb-6 p-4 bg-pink-500/10 rounded-2xl group-hover:bg-pink-500/20 transition-colors">

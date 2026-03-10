@@ -8,6 +8,7 @@ export default function Settings({
   highlightNumbers, setHighlightNumbers,
   highlightGuides, setHighlightGuides,
   autoRemoveNotes, setAutoRemoveNotes,
+  showNotes, setShowNotes,
   onAutoFillNotes,
 }) {
   if (!visible) return null;
@@ -119,6 +120,28 @@ export default function Settings({
         >
           <span>Auto-Remove Notes</span>
           <span>{autoRemoveNotes ? "ON" : "OFF"}</span>
+        </button>
+
+        <button
+          onClick={() => setShowNotes(!showNotes)}
+          style={{
+            width: "100%", textAlign: "left", marginBottom: 16,
+            padding: "12px 16px", borderRadius: 12,
+            backgroundColor: showNotes 
+              ? (theme === "dark" ? "#1e3a8a" : "#dbeafe") 
+              : (theme === "dark" ? "#1e293b" : "#f1f5f9"),
+            color: showNotes 
+              ? (theme === "dark" ? "#93c5fd" : "#1e40af") 
+              : (theme === "dark" ? "#94a3b8" : "#475569"),
+            border: showNotes 
+              ? (theme === "dark" ? "1px solid #2563eb" : "2px solid #3b82f6") 
+              : (theme === "dark" ? "1px solid #334155" : "1px solid #cbd5e1"),
+            fontWeight: 600, cursor: "pointer", fontSize: 16,
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+          }}
+        >
+          <span>Show Notes on Board</span>
+          <span>{showNotes ? "ON" : "OFF"}</span>
         </button>
 
         <div style={{ marginBottom: 24 }}>

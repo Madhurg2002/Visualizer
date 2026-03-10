@@ -49,4 +49,6 @@ export interface TicTacToeRoom extends GameState {
     currentTurn: 'X' | 'O';
     winner: string | null;
     winningLine: number[] | null;
+    moveHistory: number[];
+    variant: 'classic' | 'disappearing';
 }
