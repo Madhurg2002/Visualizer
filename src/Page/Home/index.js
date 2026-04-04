@@ -56,7 +56,7 @@ const VisualizerSection = ({ title, items }) => (
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
         >
             {items.map((item) => (
-                <Link to={item.path} key={item.title} className="block group h-full">
+                <Link to={item.linkPath || item.path} key={item.title} className="block group h-full">
                     <motion.div
                         variants={itemVariants}
                         whileHover={{ y: -8, scale: 1.02 }}
