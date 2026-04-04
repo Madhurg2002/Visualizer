@@ -95,7 +95,7 @@ const OnlineTicTacToe = ({ onBack }) => {
     };
 
     const copyRoomId = async () => {
-        const url = `${window.location.host}/TicTacToe?room=${roomId}`;
+        const url = `${window.location.origin}/TicTacToe/online?room=${roomId}`;
         try {
             await navigator.clipboard.writeText(url);
             setCopied(true);

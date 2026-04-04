@@ -92,8 +92,7 @@ export default (io: Server, socket: Socket) => {
     // Disconnect
     socket.on('disconnect', () => {
         const affectedRooms = chessService.findPlayerInRooms(socket.id);
-        affectedRooms.forEach(roomId => {
-            io.to(roomId).emit('chess_player_left');
-        });
+        // We don't emit 'chess_player_left' immediately to allow for reloads/reconnections.
+        // In a more complex app, we could start a timeout here.
     });
 };

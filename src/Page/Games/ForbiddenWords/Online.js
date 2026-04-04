@@ -165,7 +165,7 @@ const OnlineTaboo = ({ onBack }) => {
     };
 
     const copyRoomId = () => {
-        const url = `${window.location.origin}/ForbiddenWords?room=${roomId}`;
+        const url = `${window.location.origin}/ForbiddenWords/online?room=${roomId}`;
         navigator.clipboard.writeText(url);
     };
 

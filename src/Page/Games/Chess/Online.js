@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
+import { useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Copy, Check, Users, Wifi, Send, MessageSquare, RefreshCw, AlertCircle } from 'lucide-react';
 import Board from './Board';
 import { getValidMoves, checkGameState, initialBoard } from './logic';
@@ -22,7 +23,8 @@ const ChessOnline = ({ onBack }) => {
     }, []);
 
     const [view, setView] = useState('menu'); // menu, lobby, game
-    const [roomId, setRoomId] = useState('');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [roomId, setRoomId] = useState(searchParams.get('room') || '');
     const [playerName, setPlayerName] = useState(localStorage.getItem('chess_player_name') || '');
     const [players, setPlayers] = useState([]);
     const [myColor, setMyColor] = useState(null); // 'w' or 'b'
@@ -76,6 +78,7 @@ const ChessOnline = ({ onBack }) => {
         // Socket Listeners
         socket.on('chess_room_created', ({ roomId: newRoomId, color, timeControl: tc }) => {
             setRoomId(newRoomId);
+            setSearchParams({ room: newRoomId });
             setMyColor(color);
             setView('lobby');
             setPlayers([{ name: playerName, color, id: socket.id }]);
@@ -88,6 +91,7 @@ const ChessOnline = ({ onBack }) => {
 
         socket.on('chess_player_joined', ({ players, gameState, turn, timeControl: tc, whiteTime: wt, blackTime: bt }) => {
             setPlayers(players);
+            if (roomId) setSearchParams({ room: roomId });
             const me = players.find(p => p.id === socket.id);
             if (me) setMyColor(me.color);
 
@@ -234,7 +238,7 @@ const ChessOnline = ({ onBack }) => {
     };
 
     const copyRoomId = () => {
-        const url = `${window.location.origin}/chess/online?room=${roomId}`;
+        const url = `${window.location.origin}/Chess/online?room=${roomId}`;
         navigator.clipboard.writeText(url);
         setCopied(true);
         setTimeout(() => setCopied(false), 2000);
