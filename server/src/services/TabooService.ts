@@ -67,6 +67,7 @@ class TabooService {
             existingPlayerByName.id = socketId;
             existingPlayerByName.team = existingPlayerByName.team || 'A';
             if (room.hostId === oldId) room.hostId = socketId;
+            if (room.giverId === oldId) room.giverId = socketId;
         } else {
             const existingPlayerById = room.players.find(p => p.id === socketId);
             if (!existingPlayerById) {

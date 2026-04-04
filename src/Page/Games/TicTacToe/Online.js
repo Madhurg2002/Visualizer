@@ -13,7 +13,7 @@ const OnlineTicTacToe = ({ onBack }) => {
     const [view, setView] = useState('lobby'); // lobby, playing
     const [searchParams, setSearchParams] = useSearchParams();
     const [roomId, setRoomId] = useState(searchParams.get('room') || '');
-    const [playerName, setPlayerName] = useState('');
+    const [playerName, setPlayerName] = useState(localStorage.getItem('ttt_player_name') || '');
     const [error, setError] = useState('');
     const [copied, setCopied] = useState(false);
 
@@ -35,6 +35,11 @@ const OnlineTicTacToe = ({ onBack }) => {
 
         newSocket.on('connect', () => {
             console.log('Connected to server');
+            // Auto-join if roomId and playerName are present
+            const savedName = localStorage.getItem('ttt_player_name');
+            if (roomId && savedName) {
+                newSocket.emit('ttt_join_room', { name: savedName, roomId: roomId.toUpperCase() });
+            }
         });
 
         newSocket.on('ttt_room_created', (id) => {
@@ -139,7 +144,10 @@ const OnlineTicTacToe = ({ onBack }) => {
                         type="text"
                         placeholder="Your Name"
                         value={playerName}
-                        onChange={(e) => setPlayerName(e.target.value)}
+                        onChange={(e) => {
+                            setPlayerName(e.target.value);
+                            localStorage.setItem('ttt_player_name', e.target.value);
+                        }}
                         className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white mb-4 focus:ring-2 focus:ring-pink-500 outline-none transition-all"
                     />
 

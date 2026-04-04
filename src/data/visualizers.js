@@ -148,7 +148,7 @@ export const GAMES = [
     {
         title: "Forbidden Words",
         description: "Describe the word without saying forbidden terms. A classic party game.",
-        path: "/ForbiddenWords/*", // Note the wildcard for routes
+        path: "/ForbiddenWords/*", // Match sub-routes
         linkPath: "/ForbiddenWords", // For Navigation
         component: ForbiddenWords,
         color: "from-pink-500 to-rose-500",

@@ -11,7 +11,7 @@ const OnlineTaboo = ({ onBack }) => {
     const [view, setView] = useState('lobby'); // lobby, waiting, playing, end
     const [connectionStatus, setConnectionStatus] = useState('connecting'); // 'connecting', 'connected', 'error'
     const [roomId, setRoomId] = useState('');
-    const [playerName, setPlayerName] = useState('');
+    const [playerName, setPlayerName] = useState(localStorage.getItem('taboo_player_name') || '');
     const [players, setPlayers] = useState([]);
     const [scores, setScores] = useState({ A: 0, B: 0 });
     const [currentTeam, setCurrentTeam] = useState('A');
@@ -32,6 +32,7 @@ const OnlineTaboo = ({ onBack }) => {
 
     useEffect(() => {
         const roomParam = searchParams.get('room');
+        const savedName = localStorage.getItem('taboo_player_name');
         if (roomParam) {
             setRoomId(roomParam);
         }
@@ -39,12 +40,15 @@ const OnlineTaboo = ({ onBack }) => {
         const newSocket = io(SERVER_URL);
         setSocket(newSocket);
 
-        // ... (rest of socket init)
-
         newSocket.on('connect', () => {
             console.log('Connected to server');
             setError('');
             setConnectionStatus('connected');
+
+            // Auto-join if roomId and playerName are present
+            if (roomParam && savedName) {
+                newSocket.emit('join_room', { name: savedName, roomId: roomParam });
+            }
         });
 
         newSocket.on('connect_error', () => {
@@ -239,7 +243,10 @@ const OnlineTaboo = ({ onBack }) => {
                             type="text"
                             placeholder="Your Name"
                             value={playerName}
-                            onChange={(e) => setPlayerName(e.target.value)}
+                        onChange={(e) => {
+                            setPlayerName(e.target.value);
+                            localStorage.setItem('taboo_player_name', e.target.value);
+                        }}
                             className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white mb-4 focus:ring-2 focus:ring-purple-500 outline-none transition-all"
                         />
 

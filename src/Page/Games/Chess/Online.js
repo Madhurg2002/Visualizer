@@ -23,7 +23,7 @@ const ChessOnline = ({ onBack }) => {
 
     const [view, setView] = useState('menu'); // menu, lobby, game
     const [roomId, setRoomId] = useState('');
-    const [playerName, setPlayerName] = useState('');
+    const [playerName, setPlayerName] = useState(localStorage.getItem('chess_player_name') || '');
     const [players, setPlayers] = useState([]);
     const [myColor, setMyColor] = useState(null); // 'w' or 'b'
 
@@ -58,6 +58,21 @@ const ChessOnline = ({ onBack }) => {
     };
 
     useEffect(() => {
+        const handleAutoJoin = () => {
+            const params = new URLSearchParams(window.location.search);
+            const roomParam = params.get('room');
+            const savedName = localStorage.getItem('chess_player_name');
+            if (roomParam && savedName) {
+                socket.emit('chess_join_room', { roomId: roomParam, playerName: savedName });
+            }
+        };
+
+        if (socket.connected) {
+            handleAutoJoin();
+        } else {
+            socket.on('connect', handleAutoJoin);
+        }
+
         // Socket Listeners
         socket.on('chess_room_created', ({ roomId: newRoomId, color, timeControl: tc }) => {
             setRoomId(newRoomId);
@@ -465,7 +480,10 @@ const ChessOnline = ({ onBack }) => {
                             type="text"
                             placeholder="Your Name"
                             value={playerName}
-                            onChange={(e) => setPlayerName(e.target.value)}
+                            onChange={(e) => {
+                                setPlayerName(e.target.value);
+                                localStorage.setItem('chess_player_name', e.target.value);
+                            }}
                             className="w-full bg-slate-800 border border-slate-700 rounded-xl px-4 py-3 text-white focus:ring-2 focus:ring-emerald-500 outline-none transition-all"
                         />
 

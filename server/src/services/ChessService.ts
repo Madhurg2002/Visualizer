@@ -31,6 +31,13 @@ class ChessService {
             throw new Error('Room not found');
         }
 
+        // Reconnection Logic
+        const existingPlayer = room.players.find(p => p.name === playerName);
+        if (existingPlayer) {
+            existingPlayer.id = socketId;
+            return room;
+        }
+
         if (room.players.length >= 2) {
             throw new Error('Room is full');
         }
@@ -88,14 +95,11 @@ class ChessService {
     findPlayerInRooms(socketId: string): string[] {
         const affectedRooms: string[] = [];
         this.rooms.forEach((room, roomId) => {
-            const index = room.players.findIndex(p => p.id === socketId);
-            if (index !== -1) {
-                room.players.splice(index, 1);
+            const player = room.players.find(p => p.id === socketId);
+            if (player) {
                 affectedRooms.push(roomId);
-                // Clean up empty rooms if needed, or handle in the handler
-                if (room.players.length === 0) {
-                    this.rooms.delete(roomId);
-                }
+                // We DON'T remove the player here anymore to allow reconnection. 
+                // In a production app, we'd mark them as "offline" and set a timeout to clean up.
             }
         });
         return affectedRooms;
