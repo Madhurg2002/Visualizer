@@ -108,31 +108,27 @@ export default function Sudoku() {
   const [settingsVisible, setSettingsVisible] = useState(false);
   const [theme, setTheme] = useState(urlTheme);
 
-
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (seed) params.set("seed", seed);
-    if (difficulty) params.set("difficulty", difficulty);
-    if (theme) params.set("theme", theme);
-    navigate(`?${params.toString()}`, { replace: true });
-  }, [seed, difficulty, theme, navigate]);
-  const clues = DIFFICULTY[difficulty];
-
-  const themeColors = THEMES[theme];
-  const [continuousCheck, setContinuousCheck] = useState(false);
-  const [highlightNumbers, setHighlightNumbers] = useState(true);
-  const [highlightGuides, setHighlightGuides] = useState(false);
-
-
-  const [notes, setNotes] = useState({});
-  const [isNoteMode, setIsNoteMode] = useState(false);
-  
+  const [continuousCheck, setContinuousCheck] = useState(() => {
+    const val = query.get("continuousCheck");
+    return val !== null ? val === "true" : false;
+  });
+  const [highlightNumbers, setHighlightNumbers] = useState(() => {
+    const val = query.get("highlightNumbers");
+    return val !== null ? val === "true" : true;
+  });
+  const [highlightGuides, setHighlightGuides] = useState(() => {
+    const val = query.get("highlightGuides");
+    return val !== null ? val === "true" : false;
+  });
   const [autoRemoveNotes, setAutoRemoveNotes] = useState(() => {
+    const val = query.get("autoRemoveNotes");
+    if (val !== null) return val === "true";
     const saved = localStorage.getItem("sudokuAutoRemoveNotes");
     return saved !== null ? JSON.parse(saved) : true;
   });
-  
   const [showNotes, setShowNotes] = useState(() => {
+    const val = query.get("showNotes");
+    if (val !== null) return val === "true";
     const saved = localStorage.getItem("sudokuShowNotes");
     return saved !== null ? JSON.parse(saved) : true;
   });
@@ -145,6 +141,26 @@ export default function Sudoku() {
     localStorage.setItem("sudokuShowNotes", JSON.stringify(showNotes));
   }, [showNotes]);
 
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (seed) params.set("seed", seed);
+    if (difficulty && difficulty !== "easy") params.set("difficulty", difficulty);
+    if (theme && theme !== "dark") params.set("theme", theme);
+    if (continuousCheck) params.set("continuousCheck", true);
+    if (!highlightNumbers) params.set("highlightNumbers", false);
+    if (highlightGuides) params.set("highlightGuides", true);
+    if (!autoRemoveNotes) params.set("autoRemoveNotes", false);
+    if (!showNotes) params.set("showNotes", false);
+    
+    const queryString = params.toString();
+    navigate(queryString ? `?${queryString}` : window.location.pathname, { replace: true });
+  }, [seed, difficulty, theme, continuousCheck, highlightNumbers, highlightGuides, autoRemoveNotes, showNotes, navigate]);
+
+  const clues = DIFFICULTY[difficulty];
+  const themeColors = THEMES[theme];
+
+  const [notes, setNotes] = useState({});
+  const [isNoteMode, setIsNoteMode] = useState(false);
   const [board, setBoard] = useState([]);
   const [solution, setSolution] = useState([]);
   const [lockedCells, setLockedCells] = useState(new Set());
@@ -152,6 +168,7 @@ export default function Sudoku() {
   const [selectedNumber, setSelectedNumber] = useState(null);
   const [manualCheckResult, setManualCheckResult] = useState(null);
   const [hintCell, setHintCell] = useState(null);
+  const [errorCell, setErrorCell] = useState(null);
   const userEditedAfterHint = useRef(false);
   const [history, setHistory] = useState([]);
   const [isDirty, setIsDirty] = useState(false);  // True if the user has made any edits
@@ -204,6 +221,7 @@ export default function Sudoku() {
         setHighlightValue(null);
         setManualCheckResult(null);
         setHintCell(null);
+        setErrorCell(null);
         setWin(false);
         setNotes({}); // Clear notes when seed or difficulty changes
         userEditedAfterHint.current = false;
@@ -292,6 +310,7 @@ export default function Sudoku() {
       setManualCheckResult(null);
       userEditedAfterHint.current = true;
       setHintCell(null);
+      setErrorCell(null);
       setSelectedCell(null);
       setHighlightValue(null);
       return newHist;
@@ -351,9 +370,10 @@ export default function Sudoku() {
     
     setHistory((prev) => [...prev, { board: newBoard, notes: newNotes }]);
     setManualCheckResult(null);
-    if (hintCell !== null) {
+    if (hintCell !== null || errorCell !== null) {
       userEditedAfterHint.current = true;
       setHintCell(null);
+      setErrorCell(null);
     }
     if (isComplete(newBoard, solution)) setWin(true);
   }, [board, lockedCells, hintCell, solution, notes, autoRemoveNotes]); 
@@ -430,8 +450,32 @@ export default function Sudoku() {
   };
 
   const hintTimeoutRef = useRef(null);
+  const errorTimeoutRef = useRef(null);
 
   const showHint = () => {
+    // 1. Check for mistakes first
+    const mistakes = [];
+    board.forEach((row, r) =>
+      row.forEach((val, c) => {
+        if (val !== 0 && val !== solution[r][c]) {
+          mistakes.push([r, c]);
+        }
+      })
+    );
+
+    if (mistakes.length > 0) {
+      const idx = Math.floor(Math.random() * mistakes.length);
+      const [r, c] = mistakes[idx];
+      setErrorCell(`${r}-${c}`);
+      
+      if (errorTimeoutRef.current) clearTimeout(errorTimeoutRef.current);
+      errorTimeoutRef.current = setTimeout(() => {
+        setErrorCell(null);
+      }, 3000);
+      return;
+    }
+
+    // 2. Normal hint logic
     const emptyCells = [];
     board.forEach((row, r) =>
       row.forEach((val, c) => {
@@ -683,6 +727,11 @@ export default function Sudoku() {
         setSeedInput={setSeedInput}
         currentSeed={seed}
         onRandomize={() => {
+          if (isDirty) {
+            if (!window.confirm("You have made progress. Are you sure you want to randomize? Your current board will be lost.")) {
+              return;
+            }
+          }
           const newSeed = randomSeed();
           setSeed(newSeed);
           setSeedInput(newSeed);
@@ -710,12 +759,13 @@ export default function Sudoku() {
         onTimeUpdate={timeElapsedRef}
       />
       {/* Sudoku board */}
-      <div ref={boardRef} className="relative">
+      <div ref={boardRef} className="relative w-full max-w-[500px] px-4 md:px-0">
         <SudokuBoard
           board={board}
           lockedCells={lockedCells}
           isWrong={isWrong}
           hintCell={hintCell}
+          errorCell={errorCell}
           userEditedAfterHint={userEditedAfterHint}
           selected={selectedCell}
           setSelected={setSelectedCell}

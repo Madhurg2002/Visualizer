@@ -2,7 +2,7 @@ import React from "react";
 
 const SudokuCell = React.memo(({
     r, c, val,
-    isLocked, isWrong, isHint, isSelected, isHighlight,
+    isLocked, isWrong, isHint, isError, isSelected, isHighlight,
     notes,
     themeColors, theme,
     onCellClick,
@@ -26,6 +26,7 @@ const SudokuCell = React.memo(({
 
     let bgColor = themeColors.bg;
     if (isHint) bgColor = themeColors.hintBg;
+    else if (isError) bgColor = themeColors.wrongCellBg;
     else if (isHighlight) bgColor = themeColors.numberHighlightBg;
     else if (isWrong) bgColor = themeColors.wrongCellBg;
     else if (isLocked) bgColor = themeColors.lockedCellBg;
@@ -79,10 +80,12 @@ const SudokuCell = React.memo(({
     };
 
     return (
-        <td
+        <div
             tabIndex={isLocked || win ? -1 : 0}
             onClick={() => !win && onCellClick(r, c)}
             style={{
+                width: "100%",
+                height: "100%",
                 aspectRatio: "1 / 1",
                 fontSize: "clamp(12px, 4vw, 24px)",
                 fontWeight: isLocked ? "700" : isHint ? "900" : "500",
@@ -92,8 +95,9 @@ const SudokuCell = React.memo(({
                 borderRight,
                 borderBottom,
                 color: cellColor,
-                textAlign: "center",
-                verticalAlign: "middle",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 cursor: win ? "default" : "pointer",
                 outline: isSelected ? `3px solid ${themeColors.selectedCellBorder}` : "none",
                 userSelect: "none",
@@ -103,15 +107,18 @@ const SudokuCell = React.memo(({
                         ? (theme === "dark" ? "0 0 0 3px #06b6d4" : "0 0 0 3px #facc15") // Cyan for dark, Yellow for light
                         : isHint
                             ? `0 0 0 3px ${themeColors.hintBorder}`
-                            : boxShadow,
-                animation: isHint ? "hintBlink 1s infinite" : undefined,
-                position: 'relative'
+                            : isError
+                                ? "0 0 0 3px #ef4444" // Red-500
+                                : boxShadow,
+                animation: isHint || isError ? "hintBlink 1s infinite" : undefined,
+                position: 'relative',
+                boxSizing: 'border-box'
             }}
             aria-selected={isSelected}
-            title={isHint ? "Hint" : undefined}
+            title={isHint ? "Hint" : isError ? "Error" : undefined}
         >
-            {val !== 0 ? (isHint ? val : val) : (renderNotes() || "\u200B")}
-        </td>
+            {val !== 0 ? val : (renderNotes() || "\u200B")}
+        </div>
     );
 });
 
