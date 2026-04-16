@@ -206,8 +206,6 @@ export default function Sudoku() {
   }, [themeColors.bg]);
 
   useEffect(() => {
-    if (urlSeed !== seed) navigate(`?seed=${seed}`, { replace: true });
-    
     setIsGenerating(true);
     
     // Small timeout yields the thread to React so the loading spinner can paint
@@ -241,7 +239,7 @@ export default function Sudoku() {
     }, 10);
     
     return () => clearTimeout(t);
-  }, [seed, clues, navigate, urlSeed, difficulty]);
+  }, [seed, clues, difficulty]);
 
 
   const handleApplySeed = () => {
