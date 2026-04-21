@@ -13,7 +13,7 @@ A comprehensive interactive platform that combines educational algorithm visuali
 
 ## 🚀 Features
 
-#### 🧠 Algorithm Visualizers
+#### 🧠 Algorithm & Math Visualizers
 Interactive visualizations to help understand complex algorithms step-by-step:
 *   **Pathfinding Algorithms**:
     *   **Dijkstra's Algorithm**: Guarantees the shortest path.
@@ -23,8 +23,16 @@ Interactive visualizations to help understand complex algorithms step-by-step:
 *   **Sorting Algorithms**:
     *   Visualize classic sorting methods like **Bubble Sort**, **Merge Sort**, **Quick Sort**, **Selection Sort**, and more.
     *   Adjustable speed and array size.
-*   **Cellular Automata**:
-    *   **Conway's Game of Life**: A zero-player game determining the state of cells based on specific rules.
+*   **Minimum Spanning Tree (MST)**:
+    *   Visualize finding the shortest connecting network using **Prim's** and **Kruskal's** algorithms.
+*   **Convex Hull**:
+    *   Interactive geometric algorithm visualization.
+*   **N-Queens Problem**:
+    *   Watch step-by-step backtracking as the board solves the classic N non-attacking queens puzzle.
+*   **Physics & Math Sandbox**:
+    *   **Pendulum Simulation**: Interactive N-Pendulum physics solver with different materials (string, spring modes).
+    *   **Prime Spirals**: Explore the distribution of primes in beautiful Ulam and Archimedean spirals.
+    *   **Cellular Automata (Conway's Game of Life)**: A zero-player game determining the state of cells based on specific rules.
 
 #### 🎮 Games
 A collection of logic puzzles and arcade-style games:
@@ -56,6 +64,10 @@ A collection of logic puzzles and arcade-style games:
     *   Score tracking and increasing difficulty.
 *   **Flappy Bird Clone**:
     *   Reflex-testing arcade game.
+*   **Wordle Helper**:
+    *   Interactive tool to filter possible words based on green/yellow/gray feedback and suggest optimal next guesses.
+*   **Kinetic Clock**:
+    *   A visually mesmerizing, highly animated clock face.
 
 ---
 
@@ -85,43 +97,55 @@ Follow these instructions to set up the project locally.
 
 #### 1. Clone the Repository
 ```bash
-git clone https://github.com/Madhurg2002/Visualizer.git
-cd Visualizer
+git clone https://github.com/Madhurg2002/Visualizer.git .
 ```
 
-#### 2. Install Frontend Dependencies
+#### 2. Install Dependencies (Windows Quick Start)
+If you are on Windows, you can simply run the provided batch script to install both frontend and backend dependencies automatically:
+```cmd
+install.bat
+```
+
+#### 3. Install Dependencies (Manual / macOS / Linux)
+If you prefer manual installation or are on a Unix system:
+
+**Frontend**:
 ```bash
 yarn install
-# or
-npm install
+# or npm install
 ```
 
-#### 3. Install Backend Dependencies
-Required for the Online Forbidden Words game.
+**Backend** (required for online multiplayer):
 ```bash
 cd server
 npm install
-cd ..
 ```
 
 ---
 
 ## 🏃 Usage
 
-### Start the Client (Frontend)
+### Quick Start (Windows)
+Double-click `start.bat` or run it from the command line:
+```cmd
+start.bat
+```
+This will automatically launch both the backend server and the frontend client in separate windows. Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+
+### Manual Start (macOS / Linux)
+
+**Start the Client (Frontend)**
 Runs the React application in development mode.
 ```bash
 yarn start
 ```
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
 
-### Start the Server (Backend)
-Required for online multiplayer features.
+**Start the Server (Backend)**
+Required for online multiplayer features. (Runs on port `3001` by default)
 ```bash
 cd server
 node index.js
 ```
-The server runs on port `3001` by default.
 
 ---
 
@@ -137,15 +161,9 @@ Visualizer/
 │   ├── Algorithms/         # Logic for sorting & pathfinding
 │   ├── Components/         # Shared UI components (Navbar, etc.)
 │   ├── Page/               # Application Pages
-│   │   ├── CellularAutomata/
-│   │   ├── FallingBlocks/
-│   │   ├── FlappyBird/
-│   │   ├── ForbiddenWords/ # Multiplayer game logic
-│   │   ├── Home/
-│   │   ├── Minesweeper/
-│   │   ├── Pathfinding/
-│   │   ├── Sorting/
-│   │   └── Sudoku/
+│   │   ├── Algorithm/      # Math & Algo viz (Pathfinding, Sorting, MST, Convex Hull, etc.)
+│   │   ├── Games/          # Games and utils (Chess, TicTacToe, Sudoku, FlappyBird, Wordle Helper, etc.)
+│   │   └── Home/           # Landing page
 │   ├── App.js              # Main App component & Routing
 │   └── index.js            # Entry point
 └── ...
