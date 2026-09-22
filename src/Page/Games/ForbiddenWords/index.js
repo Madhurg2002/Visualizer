@@ -1,9 +1,10 @@
 import React from 'react';
 import { Routes, Route, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Users, Wifi, ArrowLeft } from 'lucide-react';
+import { Users, Wifi } from 'lucide-react';
 import OnlineForbiddenWords from './Online';
 import LocalForbiddenWords from './Local';
+import PageHeader from '../../../Components/PageHeader';
 
 const ForbiddenWordsMenu = () => {
     const navigate = useNavigate();
@@ -14,13 +15,8 @@ const ForbiddenWordsMenu = () => {
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-purple-900/20 blur-[120px] rounded-full pointer-events-none" />
 
             {/* Back Button */}
-            <div className="absolute top-0 left-4 md:left-8 z-20">
-                <button
-                    onClick={() => navigate('/')}
-                    className="p-3 bg-slate-800/50 hover:bg-slate-700/80 backdrop-blur-md border border-white/10 rounded-full text-slate-300 hover:text-white transition-all shadow-lg"
-                >
-                    <ArrowLeft size={20} />
-                </button>
+            <div className="absolute top-4 left-4 right-4 md:left-8 md:right-8 z-20">
+                <PageHeader title="Forbidden Words" accent="from-pink-400 to-rose-500" />
             </div>
 
             <motion.div

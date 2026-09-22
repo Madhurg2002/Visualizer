@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Users, Globe, ArrowLeft, Gamepad2 } from 'lucide-react';
+import { User, Users, Globe, Gamepad2 } from 'lucide-react';
 import { useNavigate, Routes, Route } from 'react-router-dom';
 import LocalTicTacToe from './Local.js';
 import OnlineTicTacToe from './Online.js';
+import PageHeader from '../../../Components/PageHeader';
 
 const TicTacToeMenu = () => {
     const navigate = useNavigate();
@@ -25,29 +26,21 @@ const TicTacToeMenu = () => {
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-blue-900/20 blur-[120px] rounded-full pointer-events-none" />
 
             {/* Back Button */}
-            <div className="absolute top-0 left-4 md:left-8 z-20">
-                <button
-                    onClick={() => navigate('/')}
-                    className="p-3 bg-slate-800/50 hover:bg-slate-700/80 backdrop-blur-md border border-white/10 rounded-full text-slate-300 hover:text-white transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5"
-                >
-                    <ArrowLeft size={20} />
-                </button>
+            <div className="w-full max-w-4xl z-20 pt-4">
+                <PageHeader title="Tic-Tac-Toe" />
             </div>
 
             <motion.div
                 variants={containerVariants}
                 initial="hidden"
                 animate="visible"
-                className="w-full max-w-4xl z-10 flex flex-col items-center mt-12"
+                className="w-full max-w-4xl z-10 flex flex-col items-center mt-8"
             >
                 {/* Header */}
-                <motion.div variants={itemVariants} className="text-center mb-12">
+                <motion.div variants={itemVariants} className="text-center mb-10">
                     <div className="inline-block p-4 rounded-3xl bg-slate-800/50 border border-white/5 mb-6 shadow-2xl backdrop-blur-sm">
                         <Gamepad2 size={48} className="text-blue-400" />
                     </div>
-                    <h1 className="text-5xl md:text-7xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-sm mb-4">
-                        Tic-Tac-Toe
-                    </h1>
                     <p className="text-slate-400 text-lg md:text-xl font-medium max-w-2xl mx-auto mb-8">
                         The classic game reimagined. Challenge AI, play locally with friends, or compete online in real-time.
                     </p>

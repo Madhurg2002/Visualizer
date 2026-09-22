@@ -56,6 +56,9 @@ A collection of logic puzzles and arcade-style games:
     *   Classic 9x9 puzzle.
     *   **Visualization Mode**: Watch a backtracking algorithm solve the board in real-time.
     *   Seed-based generation for replayable boards.
+*   **Killer Sudoku**:
+    *   Standalone variant with **no givens** — dashed sum cages are the only clues.
+    *   Unique solution guaranteed by a cage-aware solver; same seed = same cages.
 *   **Minesweeper**:
     *   Classic strategy game with adjustable difficulty.
     *   Custom flag and reveal mechanics.

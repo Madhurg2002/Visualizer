@@ -1,16 +1,15 @@
-// src/Page/Sudoku/Controls.js
+// src/Page/Games/KillerSudoku/Controls.js
 import React from "react";
-import { Undo2, CheckCircle2, Lightbulb, RefreshCw, Settings2 } from "lucide-react";
-import { PencilIcon } from "./Icons";
+import { Undo2, CheckCircle2, Lightbulb, RefreshCw, Settings2, Skull, Cpu, Pencil } from "lucide-react";
 
 export default function Controls({
     difficulty,
-    setDifficulty,
-    onDifficultyChange,
     seedInput,
     setSeedInput,
     currentSeed,
+    onApplySeed,
     onRandomize,
+    onDifficultyChange,
     onUndo,
     undoDisabled,
     onCheck,
@@ -18,14 +17,15 @@ export default function Controls({
     onHint,
     onVisualizeSolver,
     solving,
-    poppedButton,
-    handleButtonClick,
-    onApplySeed,
     isNoteMode,
     onToggleNoteMode,
+    poppedButton,
+    handleButtonClick,
     theme,
     themeColors,
 }) {
+    const focusRing = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0C15]";
+
     const baseButtonStyle = {
         padding: "10px 16px",
         display: "flex",
@@ -45,7 +45,6 @@ export default function Controls({
 
     const labelColor = theme === "dark" ? "#cbd5e1" : "#475569";
     const inputColor = theme === "dark" ? "#f8fafc" : "#0f172a";
-    const focusRing = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0C15]";
 
     return (
         <div className="w-full max-w-2xl px-4 flex flex-col items-center gap-4 mb-4">
@@ -53,10 +52,10 @@ export default function Controls({
             <div className="w-full flex flex-col sm:flex-row items-center justify-center gap-4 bg-slate-800/20 p-3 rounded-2xl backdrop-blur-sm border border-white/5">
                 <label
                     style={{ fontWeight: 600, color: labelColor, display: "flex", alignItems: "center", gap: 8, fontSize: 14 }}
-                    title="Puzzle Seed (changes the generated board)"
+                    title="Puzzle seed — same seed always yields the same cages (share it!)"
                 >
                     Seed:
-                    <div className="flex bg-slate-900/50 rounded-lg p-1 border border-white/10 focus-within:border-blue-500/50 transition-colors">
+                    <div className="flex bg-slate-900/50 rounded-lg p-1 border border-white/10 focus-within:border-cyan-500/50 transition-colors">
                         <input
                             type="text"
                             value={seedInput}
@@ -78,7 +77,7 @@ export default function Controls({
                         {seedInput !== currentSeed && (
                             <button
                                 onClick={onApplySeed}
-                                className="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-xs font-bold transition-colors"
+                                className="bg-cyan-600 hover:bg-cyan-500 text-slate-950 px-3 py-1 rounded text-xs font-bold transition-colors"
                                 title="Load puzzle from this seed"
                             >
                                 GO
@@ -94,12 +93,12 @@ export default function Controls({
                         onClick={() => handleButtonClick("new", onRandomize)}
                         style={{
                             ...baseButtonStyle,
-                            backgroundColor: poppedButton === "new" ? "#1e40af" : (theme === "dark" ? "#334155" : "#e2e8f0"),
+                            backgroundColor: poppedButton === "new" ? "#0e7490" : (theme === "dark" ? "#334155" : "#e2e8f0"),
                             color: theme === "dark" ? "#f8fafc" : "#0f172a",
                             transform: poppedButton === "new" ? "scale(0.95)" : "scale(1)",
                             flex: 1,
                         }}
-                        title="Generate a random puzzle"
+                        title="Generate a random Killer puzzle (same seed = same cages)"
                         className={focusRing}
                     >
                         <RefreshCw size={16} className={poppedButton === "new" ? "animate-spin-fast" : ""} />
@@ -107,15 +106,7 @@ export default function Controls({
                     </button>
 
                     <button
-                        onClick={() => {
-                            if (typeof onDifficultyChange === "function") {
-                                onDifficultyChange();
-                            } else {
-                                const levels = ["easy", "medium", "hard", "extreme"];
-                                const nextIndex = (levels.indexOf(difficulty) + 1) % levels.length;
-                                setDifficulty(levels[nextIndex]);
-                            }
-                        }}
+                        onClick={onDifficultyChange}
                         style={{
                             ...baseButtonStyle,
                             backgroundColor: "transparent",
@@ -134,7 +125,7 @@ export default function Controls({
                             flex: 1,
                         }}
                         className={`hover:bg-white/5 ${focusRing}`}
-                        title="Cycle through difficulty levels"
+                        title="Cycle through difficulty levels (bigger cages = harder)"
                     >
                         <Settings2 size={16} />
                         {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
@@ -142,7 +133,7 @@ export default function Controls({
                 </div>
             </div>
 
-            {/* Action Row: Undo, Notes, Check, Hint */}
+            {/* Action Row: Undo, Notes, Check, Hint, Solver */}
             <div className="flex flex-wrap justify-center gap-2 sm:gap-3 w-full">
                 <button
                     onClick={() => handleButtonClick("undo", onUndo)}
@@ -163,9 +154,7 @@ export default function Controls({
                 </button>
 
                 <button
-                    onClick={() => {
-                        if (onToggleNoteMode) onToggleNoteMode();
-                    }}
+                    onClick={onToggleNoteMode}
                     style={{
                         ...baseButtonStyle,
                         backgroundColor: isNoteMode ? "#4f46e5" : (theme === "dark" ? "#1e293b" : "#f1f5f9"),
@@ -177,7 +166,7 @@ export default function Controls({
                     className={`${!isNoteMode ? "hover:bg-slate-700/50 hover:border-slate-500/50" : ""} ${focusRing}`}
                     title="Toggle Notes mode (Keyboard shortcut: N)"
                 >
-                    <PencilIcon size={18} />
+                    <Pencil size={18} />
                 </button>
 
                 <button
@@ -193,7 +182,7 @@ export default function Controls({
                         border: theme === "dark" ? "1px solid #166534" : "1px solid #86efac",
                     }}
                     className={`${!checkDisabled ? "hover:bg-green-900/80 hover:border-green-500/50" : ""} ${focusRing}`}
-                    title="Check the board for mistakes"
+                    title="Check the board for mistakes (sudoku + cage rules)"
                 >
                     <CheckCircle2 size={18} />
                 </button>
@@ -208,9 +197,28 @@ export default function Controls({
                         border: theme === "dark" ? "1px solid #92400e" : "1px solid #fcd34d",
                     }}
                     className={`hover:bg-amber-900/80 hover:border-amber-500/50 ${focusRing}`}
-                    title="Show a hint for a logical next step"
+                    title="Show a hint"
                 >
                     <Lightbulb size={18} />
+                </button>
+
+                <button
+                    onClick={() => handleButtonClick("solver", onVisualizeSolver)}
+                    disabled={solving}
+                    style={{
+                        ...baseButtonStyle,
+                        backgroundColor: theme === "dark" ? "#4c1d95" : "#ede9fe",
+                        color: theme === "dark" ? "#c4b5fd" : "#5b21b6",
+                        opacity: solving ? 0.6 : 1,
+                        cursor: solving ? "default" : "pointer",
+                        transform: poppedButton === "solver" ? "scale(0.95)" : "scale(1)",
+                        border: theme === "dark" ? "1px solid #6d28d9" : "1px solid #a78bfa",
+                    }}
+                    className={`hover:bg-violet-900/60 hover:border-violet-500/50 ${focusRing}`}
+                    title="Watch the killer solver backtrack (disables stats for this puzzle)"
+                >
+                    <Cpu size={18} />
+                    Solver
                 </button>
             </div>
         </div>

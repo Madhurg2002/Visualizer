@@ -1,12 +1,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import PageHeader from '../../../Components/PageHeader';
 import DigitGrid from './DigitGrid';
 
 const KineticClock = () => {
-    const navigate = useNavigate();
     const [time, setTime] = useState(new Date());
 
     useEffect(() => {
@@ -34,23 +32,14 @@ const KineticClock = () => {
     // Let's add gap between digits.
 
     return (
-        <div className="min-h-screen bg-[#0B0C15] flex flex-col items-center justify-center relative overflow-hidden text-slate-200 font-sans select-none">
+        <div className="min-h-screen bg-[#0B0C15] flex flex-col items-center justify-center relative overflow-hidden text-slate-200 font-sans select-none pt-2 pb-4">
 
             {/* Back Button */}
-            <div className="absolute top-8 left-8 z-10">
-                <button
-                    onClick={() => navigate('/')}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-slate-700/80 backdrop-blur-md rounded-full shadow-lg border border-white/10 text-slate-300 hover:text-white transition-all font-bold group"
-                >
-                    <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-                    <span>Back</span>
-                </button>
+            <div className="absolute top-4 left-4 right-4 md:left-8 md:right-8 z-10">
+                <PageHeader title="Kinetic Clock" accent="from-white to-slate-500" />
             </div>
 
-            <div className="text-center mb-16 relative z-10">
-                <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white to-slate-500 mb-6 drop-shadow-sm">
-                    KINETIC CLOCK
-                </h1>
+            <div className="text-center mb-10 relative z-10 mt-12">
                 <p className="text-slate-500 font-medium tracking-widest uppercase text-sm">
                     {time.toLocaleTimeString()}
                 </p>

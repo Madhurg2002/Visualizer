@@ -3,6 +3,7 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, RefreshCw, Trophy, Users, Globe } from 'lucide-react';
+import PageHeader from '../../../Components/PageHeader';
 
 const ChessMenu = () => {
     const navigate = useNavigate();
@@ -16,26 +17,18 @@ const ChessMenu = () => {
                 <div className="absolute top-[40%] left-[50%] transform -translate-x-1/2 w-[800px] h-[1px] bg-gradient-to-r from-transparent via-white/5 to-transparent"></div>
             </div>
 
-            <div className="absolute top-4 left-4 md:left-8 z-30">
-                <button
-                    onClick={() => navigate('/')}
-                    className="group flex items-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 backdrop-blur-md border border-white/10 rounded-full text-slate-400 hover:text-white transition-all duration-300"
-                >
-                    <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-                    <span className="text-sm font-bold">Main Menu</span>
-                </button>
+            <div className="absolute top-4 left-0 right-0 px-4 md:px-8 z-30">
+                <div className="max-w-7xl mx-auto">
+                    <PageHeader title="Chess" accent="from-emerald-400 via-teal-400 to-cyan-500" />
+                </div>
             </div>
 
-            <div className="relative z-10 flex flex-col items-center text-center mb-16 max-w-4xl mx-auto">
+            <div className="relative z-10 flex flex-col items-center text-center mt-12 mb-16 max-w-4xl mx-auto">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8 }}
                 >
-                    <h1 className="text-7xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-b from-white via-slate-200 to-slate-600 mb-6 drop-shadow-2xl tracking-tighter">
-                        CHESS
-                        <span className="text-emerald-500">.</span>
-                    </h1>
                     <p className="text-lg md:text-xl text-slate-400 max-w-lg mx-auto leading-relaxed">
                         Master the timeless game of strategy. <br />
                         <span className="text-slate-500">Play locally, challenge our AI, or compete online.</span>
