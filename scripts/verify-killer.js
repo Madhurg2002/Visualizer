@@ -1,5 +1,11 @@
-// Temporary verification script for the Killer Sudoku engine.
-// Run: node scripts/verify-killer.js
+// Regression suite for the Killer Sudoku engine.
+// Run: node scripts/verify-killer.js (or: yarn test:killer)
+//
+// Checks, for every seed x difficulty:
+//   - determinism: same seed always yields identical cages/solution/givens
+//   - cages cover the whole board exactly once, no 1-cell cages
+//   - no duplicate digits inside a cage; cage sums match the solution
+//   - the puzzle has exactly ONE solution (givens included in the count)
 const fs = require("fs");
 const path = require("path");
 
@@ -10,7 +16,7 @@ const src = fs.readFileSync(
 // Strip ESM `export ` keywords so the file parses as CommonJS, then append an
 // explicit export list (the source uses named `export function/const` only).
 const EXPORT_NAMES = [
-    "size", "N", "KILLER_AVG_CAGE", "randomSeed", "createSeededRNG", "shuffle",
+    "size", "N", "randomSeed", "createSeededRNG", "shuffle",
     "isValid", "generateFull", "isComplete", "buildCageIdOf", "growCages",
     "solveKillerCount", "generateKillerPuzzle", "cageViolated", "killerCandidates",
 ];

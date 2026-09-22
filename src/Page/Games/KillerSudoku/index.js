@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { HelpCircle } from "lucide-react";
 import {
     randomSeed,
-    generateKillerPuzzle,
+    generateKillerPuzzleAsync,
     buildCageIdOf,
     cageViolated,
     killerCandidates,
@@ -166,6 +167,7 @@ export default function KillerSudoku() {
     const [win, setWin] = useState(false);
     const [solving, setSolving] = useState(false);
     const [isGenerating, setIsGenerating] = useState(true);
+    const [generationStage, setGenerationStage] = useState("growing cages");
     const solvingRef = useRef(false);
     const [poppedButton, setPoppedButton] = useState(null);
 
@@ -192,35 +194,55 @@ export default function KillerSudoku() {
         };
     }, [themeColors.bg]);
 
-    // Generate puzzle: solution + cages from the seed; uniqueness guaranteed by the engine.
+    // Generate puzzle: solution + cages from the seed; uniqueness guaranteed by
+    // the engine. The async variant yields between solver rounds so the loading
+    // spinner keeps animating; a cancelled run (seed changed / unmounted) is
+    // detected via the cancelled flag and discarded.
     useEffect(() => {
         setIsGenerating(true);
+        setGenerationStage("growing cages");
+        let cancelled = false;
 
         const t = setTimeout(() => {
-            const { cages: newCages, solution: newSolution, givens } = generateKillerPuzzle(seed, difficulty);
-            const empty = Array.from({ length: 9 }, () => Array(9).fill(0));
+            generateKillerPuzzleAsync(seed, difficulty, {
+                onProgress: (p) => {
+                    if (p.stage === "merging") setGenerationStage("carving cages");
+                    else if (p.stage === "coarsening") setGenerationStage("tuning difficulty");
+                    else if (p.stage === "revealing") setGenerationStage("finalizing clues");
+                },
+            })
+                .then(({ cages: newCages, solution: newSolution, givens }) => {
+                    if (cancelled) return;
+                    const empty = Array.from({ length: 9 }, () => Array(9).fill(0));
 
-            setBoard(empty);
-            setSolution(newSolution);
-            setCages(newCages);
-            setCageIdOf(buildCageIdOf(newCages));
-            setGivenCells(givens);
-            setSelectedCell(null);
-            setSelectedNumber(null);
-            setHighlightValue(null);
-            setManualCheckResult(null);
-            setHintCell(null);
-            setErrorCell(null);
-            setWin(false);
-            setNotes({});
-            userEditedAfterHint.current = false;
-            setHistory([{ board: empty, notes: {} }]);
-            setIsDirty(false);
-            hasUsedSolver.current = false;
-            setIsGenerating(false);
+                    setBoard(empty);
+                    setSolution(newSolution);
+                    setCages(newCages);
+                    setCageIdOf(buildCageIdOf(newCages));
+                    setGivenCells(givens);
+                    setSelectedCell(null);
+                    setSelectedNumber(null);
+                    setHighlightValue(null);
+                    setManualCheckResult(null);
+                    setHintCell(null);
+                    setErrorCell(null);
+                    setWin(false);
+                    setNotes({});
+                    userEditedAfterHint.current = false;
+                    setHistory([{ board: empty, notes: {} }]);
+                    setIsDirty(false);
+                    hasUsedSolver.current = false;
+                    setIsGenerating(false);
+                })
+                .catch(() => {
+                    if (!cancelled) setIsGenerating(false);
+                });
         }, 10);
 
-        return () => clearTimeout(t);
+        return () => {
+            cancelled = true;
+            clearTimeout(t);
+        };
     }, [seed, difficulty]);
 
     const handleApplySeed = () => {
@@ -626,10 +648,11 @@ export default function KillerSudoku() {
                         <div className="flex items-center gap-2">
                             <button
                                 onClick={() => setRulesOpen(true)}
-                                className="flex items-center justify-center p-3 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all"
+                                className="flex items-center justify-center p-3 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0C15]"
                                 title="Show Killer Sudoku rules"
+                                aria-label="Show Killer Sudoku rules"
                             >
-                                ?
+                                <HelpCircle size={20} />
                             </button>
                             <button
                                 onClick={() => setSettingsVisible(true)}
@@ -726,7 +749,7 @@ export default function KillerSudoku() {
                     >
                         <div className="w-12 h-12 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(6,182,212,0.5)]" />
                         <div className="mt-4 font-bold tracking-widest text-cyan-500 uppercase text-sm animate-pulse">
-                            Growing cages…
+                            {generationStage}
                         </div>
                     </div>
                 )}

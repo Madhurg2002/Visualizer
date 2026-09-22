@@ -1,18 +1,14 @@
 // Killer Sudoku engine — self-contained (no imports from the classic Sudoku page).
 //
 // A proper Killer Sudoku has NO given digits: the dashed cages with their sums are
-// the only clues. This module:
-//   1. generates a full solution grid (seeded, deterministic),
-//   2. grows connected cages over it (no repeated digits inside a cage),
-//   3. verifies the puzzle is UNIQUE with a real cage-aware solver,
-//   4. if not unique, merges adjacent cages (removes freedom) and finally
-//      reveals a few solution cells as givens so a unique solution is guaranteed.
+// the only clues. This module generates a full solution grid (seeded, deterministic),
+// grows a fine cage cover over it, then reaches a UNIQUE cage-only puzzle by merging
+// cages along the differing cells of two competing solutions (see generateKillerPuzzle).
+// Difficulty coarsens cages with uniqueness-preserving merges; revealed givens are a
+// rare last-resort safety net. All randomness is threaded through the seed.
 
 export const size = 3;
 export const N = 9;
-
-/** Average cage size per difficulty — bigger cages = fewer sum clues = harder. */
-export const KILLER_AVG_CAGE = { easy: 2.2, medium: 2.7, hard: 3.3, extreme: 4.0 };
 
 export function randomSeed(len = 8) {
     const chars = "abcdefghijklmnopqrstuvwxyz0123456789";
@@ -481,6 +477,143 @@ function listMergePairs(cages, solution, maxSize = 6) {
  *   4. Safety net: reveal givens (solver-fed) if uniqueness is still unproven.
  */
 export function generateKillerPuzzle(seed, difficulty) {
+    // Synchronous fast path used by tests/scripts; the UI awaits the chunked
+    // async variant below so the spinner can paint between solver rounds.
+    return generateKillerPuzzleSync(seed, difficulty);
+}
+
+const yieldToBrowser = () =>
+    new Promise((resolve) => setTimeout(resolve, 0));
+
+/**
+ * Same algorithm as generateKillerPuzzleSync, but yields to the event loop
+ * between solver rounds (each individual round stays synchronous — bounded by
+ * the node budget — so one frame never blocks for more than a few hundred ms).
+ * Deterministic: yields never touch the seeded RNG or any game state.
+ */
+export async function generateKillerPuzzleAsync(seed, difficulty, { onProgress } = {}) {
+    const rand = createSeededRNG(seed + "-killer-gen");
+    const solution = generateFull(seed);
+
+    const probeCap = 40000;    // per-solve node budget (stays responsive)
+    const confirmCap = 60000;  // larger budget to confirm the final count
+
+    // 1) Fine cover.
+    let cages = growCages(seed, 1.8, solution);
+
+    // 2) Ambiguity-targeted merging until unique (or until the solver can no
+    //    longer find 2 concrete solutions within budget). Merge union size
+    //    escalates when merges stop shrinking the ambiguity.
+    let merges = 0;
+    let collectCap = probeCap;
+    let maxSize = 6;
+    let lastDiffering = Infinity;
+    while (merges < 80) {
+        const { solutions, aborted } = solveKillerCollect(cages, 2, collectCap);
+        if (!aborted && solutions.length === 1) break;      // provably unique
+        if (solutions.length >= 2) {
+            collectCap = probeCap;                          // confirmed ambiguity: reset
+            const a = solutions[0], b = solutions[1];
+            const differing = [];
+            for (let r = 0; r < N; r++)
+                for (let c = 0; c < N; c++)
+                    if (a[r][c] !== b[r][c]) differing.push([r, c]);
+
+            // Stall detection: if the ambiguity isn't shrinking, allow bigger
+            // cage unions so a single merge can cover more differing cells.
+            if (differing.length >= lastDiffering) maxSize = Math.min(9, maxSize + 2);
+            lastDiffering = differing.length;
+
+            const next = mergeAlongCells(cages, solution, rand, differing, maxSize);
+            if (!next) break;
+            cages = next;
+            merges++;
+            if (onProgress) onProgress({ stage: "merging", merges });
+            await yieldToBrowser();
+            continue;
+        }
+        // Aborted with <2 solutions: escalate budget; if the escalation still
+        // can't decide, do ONE full-budget targeted merge before giving up.
+        if (collectCap < probeCap * 4) {
+            collectCap *= 2;
+            await yieldToBrowser();
+            continue;
+        }
+        const bigPass = solveKillerCollect(cages, 2, confirmCap);
+        if (bigPass.solutions.length >= 2) {
+            const a = bigPass.solutions[0], b = bigPass.solutions[1];
+            const differing = [];
+            for (let r = 0; r < N; r++)
+                for (let c = 0; c < N; c++)
+                    if (a[r][c] !== b[r][c]) differing.push([r, c]);
+            const next = mergeAlongCells(cages, solution, rand, differing, 9);
+            if (!next) break;
+            cages = next;
+            merges++;
+        } else {
+            break; // couldn't find 2 solutions even at full budget — hand off
+        }
+        collectCap = probeCap;
+        await yieldToBrowser();
+    }
+
+    // 3) Coarsen while uniqueness is preserved (difficulty = how far we go).
+    const coarsenBudget = COARSEN_MERGES[difficulty] ?? COARSEN_MERGES.medium;
+    let coarsened = 0;
+    while (coarsened < coarsenBudget) {
+        const best = pickBestMerge(cages, solution, rand, probeCap, true);
+        if (!best) break;
+        cages = best.cages;
+        coarsened++;
+        if (onProgress) onProgress({ stage: "coarsening", coarsened });
+        await yieldToBrowser();
+    }
+
+    // 4) Confirmation with targeted reveals. If the collector finds two
+    //    solutions, revealing one cell where they differ provably eliminates
+    //    one of them — far more effective than blind reveals. If the solver
+    //    merely aborts (unknown), reveal any cell to shrink the search space.
+    const givens = new Set();
+    const givenDigits = {};
+    let collectCap2 = probeCap;
+    for (let round = 0; round < 24; round++) {
+        const { solutions, aborted } = solveKillerCollect(cages, 2, collectCap2, givenDigits);
+        if (!aborted && solutions.length === 1) break;      // provably unique
+
+        let revealCell = null;
+        if (solutions.length >= 2) {
+            collectCap2 = probeCap;
+            const a = solutions[0], b = solutions[1];
+            for (let r = 0; r < N && !revealCell; r++)
+                for (let c = 0; c < N; c++)
+                    if (a[r][c] !== b[r][c]) { revealCell = [r, c]; break; }
+        }
+        if (!revealCell) {
+            // Aborted/unknown: escalate budget a bit; if still unknown, blind-reveal.
+            if (collectCap2 < probeCap * 2) {
+                collectCap2 *= 2;
+                round--;                                    // escalation is free
+                await yieldToBrowser();
+                continue;
+            }
+            collectCap2 = probeCap;
+            const openCells = [];
+            for (let r = 0; r < N; r++)
+                for (let c = 0; c < N; c++)
+                    if (!givens.has(`${r}-${c}`)) openCells.push([r, c]);
+            if (openCells.length === 0) break;
+            revealCell = openCells[Math.floor(rand() * openCells.length)];
+        }
+        givens.add(`${revealCell[0]}-${revealCell[1]}`);
+        givenDigits[`${revealCell[0]}-${revealCell[1]}`] = solution[revealCell[0]][revealCell[1]];
+        if (onProgress) onProgress({ stage: "revealing", givens: givens.size });
+        await yieldToBrowser();
+    }
+
+    return { cages, solution, givens };
+}
+
+function generateKillerPuzzleSync(seed, difficulty) {
     const rand = createSeededRNG(seed + "-killer-gen");
     const solution = generateFull(seed);
 
