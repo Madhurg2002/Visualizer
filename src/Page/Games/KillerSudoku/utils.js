@@ -176,7 +176,7 @@ function finalizeCages(cellLists, solution) {
    remaining-sum bounds). Counts solutions up to `limit`; returns Infinity if
    the node budget is exhausted (treated as "not proven unique"). */
 
-export function solveKillerCount(cages, limit = 2, nodeCap = 90000) {
+export function solveKillerCount(cages, limit = 2, nodeCap = 90000, givenDigits = null) {
     const cageIdOf = buildCageIdOf(cages);
     const cageInfo = cages.map((cg) => ({
         used: 0,    // bitmask of digits placed in this cage
@@ -189,33 +189,66 @@ export function solveKillerCount(cages, limit = 2, nodeCap = 90000) {
     const rows = Array(N).fill(0);
     const cols = Array(N).fill(0);
     const boxes = Array(N).fill(0);
+    const bitsOf = (n) => 1 << n;
 
     let count = 0;
+
+    // Pre-place revealed givens ("r-c" -> digit) so they constrain the count.
+    // Without this, revealed cells would not reduce the number of solutions and
+    // the uniqueness loop in generateKillerPuzzle could never converge.
+    if (givenDigits) {
+        for (const key of Object.keys(givenDigits)) {
+            const [r, c] = key.split("-").map(Number);
+            if (Number.isFinite(r) && Number.isFinite(c) && givenDigits[key] >= 1 && givenDigits[key] <= 9) {
+                place(r, c, givenDigits[key]);
+            }
+        }
+    }
     let nodes = 0;
     let aborted = false;
 
-    const bitsOf = (n) => 1 << n;
-
-    /** Digits still placeable in `cell` under all constraints (bitmask). */
+    /** Digits still placeable in `cell` under all constraints (bitmask).
+     *  Allocation-free: min/max rest sums are computed with arithmetic on the
+     *  digit bitmasks instead of building + sorting arrays (this runs per node
+     *  per empty cell, so constant factors matter a lot). */
     function candidates(r, c) {
         const b = Math.floor(r / 3) * 3 + Math.floor(c / 3);
         const cid = cageIdOf[r][c];
         const cage = cageInfo[cid];
         let mask = 0;
         const blocked = rows[r] | cols[c] | boxes[b] | (cid >= 0 ? cage.used : 0);
+        if (cid < 0) {
+            return ~blocked & 0x3FE; // digits 1..9 not blocked
+        }
+        const k = cage.remaining - 1;               // cells left after this one
+        const target = cage.target - cage.placed;   // sum still needed
+        // Digit totals lookup for min/max rest computations.
         for (let d = 1; d <= 9; d++) {
             if (blocked & bitsOf(d)) continue;
-            if (cid >= 0) {
-                // Sum bounds: placed + d + (min|max sum of remaining-1 digits) vs target
-                const k = cage.remaining - 1;
-                const avail = [];
-                for (let v = 1; v <= 9; v++) if (!(cage.used & bitsOf(v)) && v !== d) avail.push(v);
-                if (avail.length < k) continue;
-                avail.sort((a, b2) => a - b2);
-                const minRest = avail.slice(0, k).reduce((a, v) => a + v, 0);
-                const maxRest = avail.slice(-k).reduce((a, v) => a + v, 0);
-                const s = cage.placed + d;
-                if (s + minRest > cage.target || s + maxRest < cage.target) continue;
+            if (k < 0) continue;                    // cage already overfull
+            if (k === 0) {
+                if (target !== d) continue;         // last cell must hit the sum
+            } else {
+                // Remaining cells (excluding d): the k smallest/largest digits still
+                // unused anywhere in the cage. NOTE: only cage.used restricts the pool —
+                // row/col/box of THIS cell says nothing about other cage cells.
+                let restMask = 0;
+                for (let v = 1; v <= 9; v++) {
+                    if (v !== d && !(cage.used & bitsOf(v))) restMask |= bitsOf(v);
+                }
+                if (popcount(restMask) < k) continue;
+                // min sum: take smallest k set bits; max sum: take largest k set bits.
+                let minRest = 0, maxRest = 0, takenMin = 0, takenMax = 0;
+                for (let v = 1; v <= 9 && (takenMin < k || takenMax < k); v++) {
+                    if (restMask & bitsOf(v)) {
+                        if (takenMin < k) { minRest += v; takenMin++; }
+                    }
+                    const vHi = 10 - v;
+                    if (restMask & bitsOf(vHi)) {
+                        if (takenMax < k) { maxRest += vHi; takenMax++; }
+                    }
+                }
+                if (d + minRest > target || d + maxRest < target) continue;
             }
             mask |= bitsOf(d);
         }
@@ -278,20 +311,136 @@ export function solveKillerCount(cages, limit = 2, nodeCap = 90000) {
     return aborted ? Infinity : count;
 }
 
+/**
+ * Find up to `limit` actual solutions (grids) of the cage puzzle.
+ * Returns { solutions: number[][][], aborted } — aborted=true means the node
+ * budget ran out before the search space was exhausted (results are partial).
+ */
+export function solveKillerCollect(cages, limit = 2, nodeCap = 60000, givenDigits = null) {
+    const cageIdOf = buildCageIdOf(cages);
+    const cageInfo = cages.map((cg) => ({
+        used: 0, placed: 0, remaining: cg.cells.length, target: cg.sum,
+    }));
+    const grid = Array.from({ length: N }, () => Array(N).fill(0));
+    const rows = Array(N).fill(0);
+    const cols = Array(N).fill(0);
+    const boxes = Array(N).fill(0);
+    const bitsOf = (n) => 1 << n;
+
+    const solutions = [];
+    let nodes = 0;
+    let aborted = false;
+
+    if (givenDigits) {
+        for (const key of Object.keys(givenDigits)) {
+            const [r, c] = key.split("-").map(Number);
+            if (Number.isFinite(r) && Number.isFinite(c)) place(r, c, givenDigits[key]);
+        }
+    }
+
+    function candidates(r, c) {
+        const b = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+        const cid = cageIdOf[r][c];
+        const cage = cageInfo[cid];
+        const blocked = rows[r] | cols[c] | boxes[b] | (cid >= 0 ? cage.used : 0);
+        if (cid < 0) return ~blocked & 0x3FE;
+        const k = cage.remaining - 1;
+        const target = cage.target - cage.placed;
+        let mask = 0;
+        for (let d = 1; d <= 9; d++) {
+            if (blocked & bitsOf(d)) continue;
+            if (k === 0) {
+                if (target !== d) continue;
+            } else {
+                let restMask = 0;
+                for (let v = 1; v <= 9; v++) {
+                    if (v !== d && !(cage.used & bitsOf(v))) restMask |= bitsOf(v);
+                }
+                if (popcount(restMask) < k) continue;
+                let minRest = 0, maxRest = 0, takenMin = 0, takenMax = 0;
+                for (let v = 1; v <= 9 && (takenMin < k || takenMax < k); v++) {
+                    if (restMask & bitsOf(v)) {
+            			if (takenMin < k) { minRest += v; takenMin++; }
+                    }
+                    const vHi = 10 - v;
+                    if (restMask & bitsOf(vHi)) {
+                        if (takenMax < k) { maxRest += vHi; takenMax++; }
+                    }
+                }
+                if (d + minRest > target || d + maxRest < target) continue;
+            }
+            mask |= bitsOf(d);
+        }
+        return mask;
+    }
+
+    function place(r, c, d) {
+        const b = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+        const cid = cageIdOf[r][c];
+        grid[r][c] = d;
+        rows[r] |= bitsOf(d); cols[c] |= bitsOf(d); boxes[b] |= bitsOf(d);
+        if (cid >= 0) {
+            cageInfo[cid].used |= bitsOf(d);
+            cageInfo[cid].placed += d;
+            cageInfo[cid].remaining -= 1;
+        }
+    }
+    function unplace(r, c, d) {
+        const b = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+        const cid = cageIdOf[r][c];
+        grid[r][c] = 0;
+        rows[r] &= ~bitsOf(d); cols[c] &= ~bitsOf(d); boxes[b] &= ~bitsOf(d);
+        if (cid >= 0) {
+            cageInfo[cid].used &= ~bitsOf(d);
+            cageInfo[cid].placed -= d;
+            cageInfo[cid].remaining += 1;
+        }
+    }
+
+    function dfs() {
+        if (aborted) return;
+        if (nodes++ > nodeCap) { aborted = true; return; }
+        let bestR = -1, bestC = -1, bestMask = 0, bestCount = 10;
+        for (let r = 0; r < N && bestCount > 1; r++) {
+            for (let c = 0; c < N && bestCount > 1; c++) {
+                if (grid[r][c] !== 0) continue;
+                const mask = candidates(r, c);
+                const cnt = popcount(mask);
+                if (cnt === 0) return;
+                if (cnt < bestCount) { bestCount = cnt; bestR = r; bestC = c; bestMask = mask; }
+            }
+        }
+        if (bestR === -1) {
+            solutions.push(grid.map((row) => row.slice()));
+            return;
+        }
+        for (let d = 1; d <= 9; d++) {
+            if (!(bestMask & bitsOf(d))) continue;
+            place(bestR, bestC, d);
+            dfs();
+            unplace(bestR, bestC, d);
+            if (solutions.length >= limit || aborted) return;
+        }
+    }
+
+    dfs();
+    return { solutions, aborted };
+}
+
 function popcount(x) {
     let n = 0;
     while (x) { x &= x - 1; n++; }
     return n;
 }
 
-/** Merge one seeded-random adjacent cage pair whose union stays duplicate-free. */
-function tryMergeCages(cages, solution, rand) {
+/** Adjacent cage pairs (ia<ib) whose union stays duplicate-free and ≤ maxSize cells. */
+function listMergePairs(cages, solution, maxSize = 6) {
     const cageIdOf = buildCageIdOf(cages);
     const pairs = [];
     for (let idA = 0; idA < cages.length; idA++) {
         for (let idB = idA + 1; idB < cages.length; idB++) {
             const a = cages[idA], b = cages[idB];
-            if (a.cells.length + b.cells.length > 7) continue;
+            if (a.cells.length + b.cells.length > maxSize) continue;
             let adjacent = false;
             for (const [r, c] of a.cells) {
                 for (const [dr, dc] of [[-1, 0], [1, 0], [0, -1], [0, 1]]) {
@@ -312,55 +461,213 @@ function tryMergeCages(cages, solution, rand) {
             if (ok) pairs.push([idA, idB]);
         }
     }
-    if (pairs.length === 0) return null;
-    const [ia, ib] = pairs[Math.floor(rand() * pairs.length)];
-    const merged = cages
-        .filter((_, i) => i !== ia && i !== ib)
-        .concat([{ cells: [...cages[ia].cells, ...cages[ib].cells] }]);
-    return finalizeCages(merged.map((c) => c.cells), solution);
+    return pairs;
 }
 
 /* --------------------------- Puzzle orchestration -------------------------- */
 
 /**
  * Generate a unique killer puzzle deterministically from a seed.
- * Returns { cages, solution, givens } — givens is a Set of "r-c" keys (usually empty;
- * a handful of reveals is used only when cage merging cannot ensure uniqueness).
+ * Returns { cages, solution, givens } — givens is a Set of "r-c" keys. Good
+ * generation merges cages until the cage-only puzzle is provably unique, so
+ * givens is usually empty; a few reveals appear only when merging exhausts.
+ *
+ * Strategy:
+ *   1. Grow a FINE cage cover (mostly 2-cell cages).
+ *   2. Solve for two competing solutions; merge cages that contain differing
+ *      cells of the two — this directly targets the ambiguity instead of
+ *      merging blindly. Repeat until only one solution remains.
+ *   3. Coarsen for difficulty with uniqueness-preserving merges.
+ *   4. Safety net: reveal givens (solver-fed) if uniqueness is still unproven.
  */
 export function generateKillerPuzzle(seed, difficulty) {
     const rand = createSeededRNG(seed + "-killer-gen");
     const solution = generateFull(seed);
-    const avg = KILLER_AVG_CAGE[difficulty] || KILLER_AVG_CAGE.medium;
 
-    let cages = growCages(seed, avg, solution);
-    let count = solveKillerCount(cages, 2);
+    const probeCap = 40000;    // per-solve node budget (stays responsive)
+    const confirmCap = 60000; // larger budget to confirm the final count
 
-    // 1) Reduce freedom by merging adjacent cages while the solution is not unique.
+    // 1) Fine cover.
+    let cages = growCages(seed, 1.8, solution);
+
+    // 2) Ambiguity-targeted merging until unique (or until the solver can no
+    //    longer find 2 concrete solutions within budget). Merge union size
+    //    escalates when merges stop shrinking the ambiguity. A final fallback
+    //    pass with maxSize=9 usually finishes the last stubborn ambiguities.
     let merges = 0;
-    while (count !== 1 && count !== Infinity && merges < 24) {
-        const next = tryMergeCages(cages, solution, rand);
-        if (!next) break;
-        cages = next;
-        count = solveKillerCount(cages, 2);
-        merges++;
+    let collectCap = probeCap;
+    let maxSize = 6;
+    let lastDiffering = Infinity;
+    while (merges < 80) {
+        const { solutions, aborted } = solveKillerCollect(cages, 2, collectCap);
+        if (!aborted && solutions.length === 1) break;      // provably unique
+        if (solutions.length >= 2) {
+            collectCap = probeCap;                          // confirmed ambiguity: reset
+            const a = solutions[0], b = solutions[1];
+            const differing = [];
+            for (let r = 0; r < N; r++)
+                for (let c = 0; c < N; c++)
+                    if (a[r][c] !== b[r][c]) differing.push([r, c]);
+
+            // Stall detection: if the ambiguity isn't shrinking, allow bigger
+            // cage unions so a single merge can cover more differing cells.
+            if (differing.length >= lastDiffering) maxSize = Math.min(9, maxSize + 2);
+            lastDiffering = differing.length;
+
+            const next = mergeAlongCells(cages, solution, rand, differing, maxSize);
+            if (!next) break;
+            cages = next;
+            merges++;
+            continue;
+        }
+        // Aborted with <2 solutions: escalate budget; if the escalation still
+        // can't decide, do ONE full-board merge that unions the two cages of
+        // the largest ambiguous region (maxSize=9 pass) before giving up.
+        if (collectCap < probeCap * 4) {
+            collectCap *= 2;
+            continue;
+        }
+        const bigPass = solveKillerCollect(cages, 2, confirmCap);
+        if (bigPass.solutions.length >= 2) {
+            const a = bigPass.solutions[0], b = bigPass.solutions[1];
+            const differing = [];
+            for (let r = 0; r < N; r++)
+                for (let c = 0; c < N; c++)
+                    if (a[r][c] !== b[r][c]) differing.push([r, c]);
+            const next = mergeAlongCells(cages, solution, rand, differing, 9);
+            if (!next) break;
+            cages = next;
+            merges++;
+        } else {
+            break; // couldn't find 2 solutions even at full budget — hand off
+        }
+        collectCap = probeCap;
     }
 
-    // 2) Last resort: reveal solution cells until the puzzle is provably unique.
+    // 3) Coarsen while uniqueness is preserved (difficulty = how far we go).
+    const coarsenBudget = COARSEN_MERGES[difficulty] ?? COARSEN_MERGES.medium;
+    let coarsened = 0;
+    while (coarsened < coarsenBudget) {
+        const best = pickBestMerge(cages, solution, rand, probeCap, true);
+        if (!best) break;
+        cages = best.cages;
+        coarsened++;
+    }
+
+    // 4) Confirmation with targeted reveals. If the collector finds two
+    //    solutions, revealing one cell where they differ provably eliminates
+    //    one of them — far more effective than blind reveals. If the solver
+    //    merely aborts (unknown), reveal any cell to shrink the search space.
     const givens = new Set();
-    let guard = 0;
-    while (count !== 1 && guard < 16) {
-        const candidates = [];
-        for (let r = 0; r < N; r++)
-            for (let c = 0; c < N; c++)
-                if (!givens.has(`${r}-${c}`)) candidates.push([r, c]);
-        if (candidates.length === 0) break;
-        const [r, c] = candidates[Math.floor(rand() * candidates.length)];
-        givens.add(`${r}-${c}`);
-        guard++;
-        count = solveKillerCount(cages, 2);
+    const givenDigits = {};
+    let collectCap2 = probeCap;
+    for (let round = 0; round < 24; round++) {
+        const { solutions, aborted } = solveKillerCollect(cages, 2, collectCap2, givenDigits);
+        if (!aborted && solutions.length === 1) break;      // provably unique
+
+        let revealCell = null;
+        if (solutions.length >= 2) {
+            collectCap2 = probeCap;
+            const a = solutions[0], b = solutions[1];
+            for (let r = 0; r < N && !revealCell; r++)
+                for (let c = 0; c < N; c++)
+                    if (a[r][c] !== b[r][c]) { revealCell = [r, c]; break; }
+        }
+        if (!revealCell) {
+            // Aborted/unknown: escalate budget a bit; if still unknown, blind-reveal.
+            if (collectCap2 < probeCap * 2) {
+                collectCap2 *= 2;
+                round--;                                    // escalation is free
+                continue;
+            }
+            collectCap2 = probeCap;
+            const openCells = [];
+            for (let r = 0; r < N; r++)
+                for (let c = 0; c < N; c++)
+                    if (!givens.has(`${r}-${c}`)) openCells.push([r, c]);
+            if (openCells.length === 0) break;
+            revealCell = openCells[Math.floor(rand() * openCells.length)];
+        }
+        givens.add(`${revealCell[0]}-${revealCell[1]}`);
+        givenDigits[`${revealCell[0]}-${revealCell[1]}`] = solution[revealCell[0]][revealCell[1]];
     }
 
     return { cages, solution, givens };
+}
+
+/**
+ * Merge an adjacent, duplicate-free pair where at least one cell of the pair
+ * union appears in `cells` (the differing cells of two competing solutions).
+ * Deterministic-random pick among candidates; falls back to any valid pair.
+ */
+function mergeAlongCells(cages, solution, rand, cells, maxSize = 6) {
+    const cellSet = new Set(cells.map(([r, c]) => `${r}-${c}`));
+    const pairs = listMergePairs(cages, solution, maxSize);
+    if (pairs.length === 0) return null;
+    const touching = pairs.filter(([ia, ib]) => {
+        const union = [...cages[ia].cells, ...cages[ib].cells];
+        return union.some(([r, c]) => cellSet.has(`${r}-${c}`));
+    });
+    const pool = touching.length > 0 ? touching : pairs;
+    // Prefer the pair whose union covers the most differing cells (greedy).
+    let bestIdx = 0, bestCover = -1;
+    for (let i = 0; i < pool.length; i++) {
+        const [ia, ib] = pool[i];
+        const union = [...cages[ia].cells, ...cages[ib].cells];
+        let cover = 0;
+        for (const [r, c] of union) if (cellSet.has(`${r}-${c}`)) cover++;
+        if (cover > bestCover) { bestCover = cover; bestIdx = i; }
+        else if (cover === bestCover && rand() < 0.5) bestIdx = i;
+    }
+    const [ia, ib] = pool[bestIdx];
+    const mergedCells = [...cages[ia].cells, ...cages[ib].cells];
+    return finalizeCages(
+        cages.filter((_, i) => i !== ia && i !== ib).map((c) => c.cells).concat([mergedCells]),
+        solution
+    );
+}
+
+/** How many uniqueness-preserving merges each difficulty gets after reaching
+ *  count=1 (bigger cages = fewer clues = harder). */
+export const COARSEN_MERGES = { easy: 0, medium: 5, hard: 10, extreme: 20 };
+
+/**
+ * Sample up to 10 adjacent, duplicate-free merge pairs and return the best:
+ * - requireUnique=true: only merges whose result is provably count=1 qualify.
+ * - requireUnique=false: the merge with the lowest resulting count wins.
+ * Ties are broken by seeded randomness so results stay deterministic.
+ */
+function pickBestMerge(cages, solution, rand, nodeCap, requireUnique) {
+    const pairs = listMergePairs(cages, solution);
+    if (pairs.length === 0) return null;
+
+    const sampled = [];
+    const pool = pairs.slice();
+    while (sampled.length < 10 && pool.length > 0) {
+        const idx = Math.floor(rand() * pool.length);
+        sampled.push(pool.splice(idx, 1)[0]);
+    }
+
+    let best = null;
+    for (const [ia, ib] of sampled) {
+        const mergedCells = [...cages[ia].cells, ...cages[ib].cells];
+        const merged = finalizeCages(
+            cages.filter((_, i) => i !== ia && i !== ib).map((c) => c.cells).concat([mergedCells]),
+            solution
+        );
+        const c = solveKillerCount(merged, 2, nodeCap);
+        if (requireUnique) {
+            if (c === 1) return { cages: merged, count: c, ia, ib };
+        } else {
+            const betterThanBest =
+                best === null ||
+                (c < best.count) ||
+                (c === best.count && rand() < 0.5);
+            if (betterThanBest) best = { cages: merged, count: c, ia, ib };
+            if (c === 1) break; // cannot do better than unique
+        }
+    }
+    return best;
 }
 
 /* ------------------------------ Play-time checks --------------------------- */
