@@ -58,7 +58,11 @@ A collection of logic puzzles and arcade-style games:
     *   Seed-based generation for replayable boards.
 *   **Killer Sudoku**:
     *   Standalone variant with **no givens** — dashed sum cages are the only clues.
-    *   Unique solution guaranteed by a cage-aware solver; same seed = same cages.
+    *   Uniqueness guaranteed by an ambiguity-targeting cage-merge engine (a handful of
+        revealed cells appears only in the rare cases merging can't prove uniqueness);
+        same seed = same cages.
+    *   Difficulty (Easy → Extreme) controls how much cages coarsen after uniqueness
+        is reached — bigger cages = fewer sum clues = harder.
 *   **Minesweeper**:
     *   Classic strategy game with adjustable difficulty.
     *   Custom flag and reveal mechanics.
@@ -71,6 +75,9 @@ A collection of logic puzzles and arcade-style games:
     *   Interactive tool to filter possible words based on green/yellow/gray feedback and suggest optimal next guesses.
 *   **Kinetic Clock**:
     *   A visually mesmerizing, highly animated clock face.
+*   **Snake**:
+    *   Classic snake with three brains: play yourself, a BFS bot, or an LLM that
+        scores every move via option logits against any OpenAI-compatible endpoint.
 
 ---
 
