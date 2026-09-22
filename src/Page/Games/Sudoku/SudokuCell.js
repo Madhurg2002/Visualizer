@@ -8,7 +8,7 @@ const SudokuCell = React.memo(({
     onCellClick,
     win,
     size = 3,
-    highlightValue 
+    highlightValue,
 }) => {
     // Styles
     const thickBorderColor = themeColors.boardBorder;

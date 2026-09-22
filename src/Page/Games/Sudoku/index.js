@@ -6,7 +6,6 @@ import React, {
   useCallback,
 } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft } from 'lucide-react'; // Added import
 import {
   randomSeed,
   generateFull,
@@ -26,6 +25,7 @@ import { THEMES } from "./themes";
 
 import { SettingsIcon } from "./Icons";
 import Confetti from "../../../Components/Confetti";
+import PageHeader, { Pill } from "../../../Components/PageHeader";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -95,6 +95,16 @@ export default function Sudoku() {
 
   const urlSeed = query.get("seed") || "";
   const urlDiff = query.get("difficulty") || "easy";
+  const urlMode = query.get("mode") || "classic"; // "classic" | "killer"
+
+  // Killer Sudoku is now its own page — send legacy ?mode=killer links there.
+  useEffect(() => {
+    if (urlMode !== "killer") return;
+    const params = new URLSearchParams(window.location.search);
+    params.delete("mode");
+    const qs = params.toString();
+    navigate(`/KillerSudoku${qs ? `?${qs}` : ""}`, { replace: true });
+  }, []);
 
   const urlTheme = query.get("theme") || "dark";
 
@@ -158,6 +168,7 @@ export default function Sudoku() {
 
   const clues = DIFFICULTY[difficulty];
   const themeColors = THEMES[theme];
+  const statKey = difficulty;
 
   const [notes, setNotes] = useState({});
   const [isNoteMode, setIsNoteMode] = useState(false);
@@ -188,11 +199,11 @@ export default function Sudoku() {
       easy: { won: 0, bestTime: null },
       medium: { won: 0, bestTime: null },
       hard: { won: 0, bestTime: null },
-      extreme: { won: 0, bestTime: null }
+      extreme: { won: 0, bestTime: null },
     };
     if (saved) {
         const parsed = JSON.parse(saved);
-        return { ...defaultStats, ...parsed }; // Merge to ensure 'extreme' exists
+        return { ...defaultStats, ...parsed }; // Merge to ensure all modes exist
     }
     return defaultStats;
   });
@@ -236,9 +247,7 @@ export default function Sudoku() {
         setLockedCells(locks);
         
         setIsGenerating(false);
-    }, 10);
-    
-    return () => clearTimeout(t);
+    }, 10);        return () => clearTimeout(t);
   }, [seed, clues, difficulty]);
 
 
@@ -252,21 +261,21 @@ export default function Sudoku() {
     if (win) {
       if (!hasUsedSolver.current) {
         setStatistics(prev => {
-          const diffStats = prev[difficulty];
+          const diffStats = prev[statKey] || { won: 0, bestTime: null };
           const newWon = diffStats.won + 1;
           const finalTime = timeElapsedRef.current;
           const newBest = diffStats.bestTime === null ? finalTime : Math.min(diffStats.bestTime, finalTime);
 
           const newStats = {
             ...prev,
-            [difficulty]: { won: newWon, bestTime: newBest }
+            [statKey]: { won: newWon, bestTime: newBest }
           };
           localStorage.setItem("sudokuStats", JSON.stringify(newStats));
           return newStats;
         });
       }
     }
-  }, [win, difficulty]); // Removed timeElapsed dependency to avoid running this repeatedly during gameplay
+  }, [win, statKey]); // Removed timeElapsed dependency to avoid running this repeatedly during gameplay
 
   const boardRef = useRef(null);
   const numberSelectorRef = useRef(null);
@@ -636,7 +645,7 @@ export default function Sudoku() {
               setWin(false);
           }}
           timeElapsed={timeElapsedRef.current}
-          stats={statistics[difficulty]}
+          stats={statistics[statKey]}
           hasUsedSolver={hasUsedSolver.current}
           theme={theme}
           themeColors={themeColors}
@@ -677,33 +686,23 @@ export default function Sudoku() {
       />
 
       {/* Header */}
-      <div className="w-full max-w-4xl flex items-center justify-between p-4 md:p-6 mb-2 relative z-10">
-           <button
-              onClick={() => navigate('/')}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all w-fit focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0C15]"
-              title="Return to games menu"
-          >
-              <ArrowLeft size={18} /> <span className="hidden md:inline">Back</span>
-          </button>
-
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none">
-              <h1 className="text-3xl md:text-5xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-sm">
-                  Sudoku
-              </h1>
-               <div className="flex justify-center items-center gap-2 mt-1">
-                    <span className="text-slate-400 font-bold uppercase tracking-wider text-xs bg-slate-900/50 px-3 py-1 rounded-full border border-white/5">
-                        {difficulty}
-                    </span>
-               </div>
-          </div>
-
-          <button
-            onClick={() => setSettingsVisible(true)}
-            className="flex items-center justify-center p-3 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0C15]"
-            title="Open game settings"
-          >
-            <SettingsIcon size={20} />
-          </button>
+      <div className="w-full max-w-4xl px-4 pt-4 pb-1 mb-2">
+        <PageHeader
+          title="Sudoku"
+          backTo="/"
+          subtitle={
+            <Pill>{difficulty}</Pill>
+          }
+          right={
+            <button
+              onClick={() => setSettingsVisible(true)}
+              className="flex items-center justify-center p-3 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0C15]"
+              title="Open game settings"
+            >
+              <SettingsIcon size={20} />
+            </button>
+          }
+        />
       </div>
       {/* Controls below numbers */}
       <Controls

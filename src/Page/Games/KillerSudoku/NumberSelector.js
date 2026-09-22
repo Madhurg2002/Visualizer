@@ -1,0 +1,111 @@
+// src/Page/Games/KillerSudoku/NumberSelector.js
+import React from "react";
+import { Eraser } from "lucide-react";
+
+/**
+ * Number pad for Killer Sudoku. Completion counts come from cage-consistent,
+ * correctly placed digits (board vs solution), matching the classic page.
+ */
+export default function NumberSelector({ selected, setSelected, onErase, themeColors, board, solution }) {
+    const numberCounts = Array(10).fill(0);
+    if (board && solution) {
+        for (let r = 0; r < 9; r++) {
+            if (!board[r] || !solution[r]) continue;
+            for (let c = 0; c < 9; c++) {
+                const val = board[r][c];
+                if (val !== 0 && val === solution[r][c]) {
+                    numberCounts[val]++;
+                }
+            }
+        }
+    }
+
+    return (
+        <div
+            style={{
+                width: "100%",
+                maxWidth: 480,
+                marginTop: 24,
+                padding: "0 8px",
+                userSelect: "none",
+                display: "flex",
+                justifyContent: "space-between",
+                flexWrap: "nowrap",
+                gap: "2%",
+            }}
+        >
+            {[...Array(9)].map((_, i) => {
+                const n = i + 1;
+                const isSelected = selected === n;
+                const isCompleted = numberCounts[n] >= 9;
+
+                return (
+                    <button
+                        key={n}
+                        onClick={() => {
+                            if (!isCompleted) setSelected(isSelected ? null : n);
+                        }}
+                        style={{
+                            flex: "1",
+                            maxWidth: 44,
+                            aspectRatio: "1 / 1",
+                            borderRadius: "15%",
+                            padding: 0,
+                            border: isSelected
+                                ? `3px solid ${themeColors.numberBtnSelBg}`
+                                : "2px solid #b0bec5",
+                            backgroundColor: isSelected
+                                ? themeColors.numberBtnSelBg
+                                : themeColors.numberBtnBg,
+                            color: isSelected
+                                ? themeColors.numberBtnSelColor
+                                : themeColors.numberBtnColor,
+                            fontWeight: 700,
+                            fontSize: "clamp(16px, 5vw, 24px)",
+                            cursor: isCompleted ? "default" : "pointer",
+                            boxShadow: isSelected ? `0 0 12px ${themeColors.numberBtnSelBg}` : "none",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            transition: "all 0.2s ease",
+                            opacity: isCompleted ? 0.3 : 1,
+                        }}
+                        disabled={isCompleted}
+                        aria-pressed={isSelected}
+                        aria-label={`Select number ${n}`}
+                    >
+                        {n}
+                    </button>
+                );
+            })}
+            <button
+                onClick={onErase}
+                style={{
+                    flex: "1",
+                    maxWidth: 44,
+                    aspectRatio: "1 / 1",
+                    borderRadius: "15%",
+                    padding: 0,
+                    border: selected === "erase"
+                        ? `3px solid ${themeColors.numberBtnSelBg}`
+                        : "2px solid #b0bec5",
+                    backgroundColor: selected === "erase"
+                        ? themeColors.numberBtnSelBg
+                        : themeColors.numberBtnBg,
+                    color: selected === "erase"
+                        ? themeColors.numberBtnSelColor
+                        : "#ef4444",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    boxShadow: selected === "erase" ? `0 0 12px ${themeColors.numberBtnSelBg}` : "none",
+                    transition: "all 0.2s ease",
+                }}
+                aria-label="Erase selected cell"
+            >
+                <Eraser size={20} />
+            </button>
+        </div>
+    );
+}

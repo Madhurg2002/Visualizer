@@ -1,15 +1,14 @@
 
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, RotateCcw, HelpCircle, Check, X } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { RotateCcw, HelpCircle, Check, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { WORDS } from './words';
 import { filterWords, getBestGuess, sortCandidates } from './solver';
 import Confetti from '../../../Components/Confetti';
+import PageHeader from '../../../Components/PageHeader';
 
 
 const WordleHelper = () => {
-    const navigate = useNavigate();
 
     // Mode: 'helper' | 'play'
     const [mode, setMode] = useState('helper');
@@ -222,29 +221,27 @@ const WordleHelper = () => {
             <div className="flex-1 flex flex-col relative z-10 p-4 lg:p-6 items-center justify-start lg:justify-center min-h-[50vh]">
                 
                  {/* Header Overlay */}
-                 <div className="absolute top-4 left-4 lg:top-6 lg:left-6 z-20 flex gap-2 lg:gap-4 flex-wrap">
-                    <button
-                        onClick={() => navigate('/')}
-                        className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all w-fit"
-                    >
-                        <ArrowLeft size={18} /> Back
-                    </button>
-                    
-                    {/* Mode Toggle */}
-                    <div className="bg-slate-800/80 p-1 rounded-full border border-white/10 flex">
-                        <button 
-                            onClick={() => setMode('helper')}
-                            className={`px-3 lg:px-4 py-1.5 rounded-full text-xs lg:text-sm font-bold transition-all ${mode === 'helper' ? 'bg-slate-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
-                        >
-                            Helper
-                        </button>
-                        <button 
-                            onClick={() => setMode('play')}
-                            className={`px-3 lg:px-4 py-1.5 rounded-full text-xs lg:text-sm font-bold transition-all ${mode === 'play' ? 'bg-green-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
-                        >
-                            Play Wordle
-                        </button>
-                    </div>
+                 <div className="absolute top-4 left-4 right-4 lg:top-6 lg:left-6 lg:right-6 z-20">
+                    <PageHeader
+                        title="Wordle"
+                        accent="from-green-400 to-yellow-400"
+                        right={
+                            <div className="bg-slate-800/80 p-1 rounded-full border border-white/10 flex">
+                                <button 
+                                    onClick={() => setMode('helper')}
+                                    className={`px-3 lg:px-4 py-1.5 rounded-full text-xs lg:text-sm font-bold transition-all ${mode === 'helper' ? 'bg-slate-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                                >
+                                    Helper
+                                </button>
+                                <button 
+                                    onClick={() => setMode('play')}
+                                    className={`px-3 lg:px-4 py-1.5 rounded-full text-xs lg:text-sm font-bold transition-all ${mode === 'play' ? 'bg-green-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}
+                                >
+                                    Play Wordle
+                                </button>
+                            </div>
+                        }
+                    />
                 </div>
 
                 <div className="max-w-md w-full">

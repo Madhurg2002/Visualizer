@@ -16,9 +16,10 @@ export default function SudokuBoard({
   themeColors,
   highlightValue,
   theme,
-  notes, 
+  notes,
   highlightGuides,
 }) {
+
   return (
     <div
       style={{
@@ -34,6 +35,7 @@ export default function SudokuBoard({
         boxShadow: `0px 8px 32px rgba(0, 0, 0, 0.12)`,
         border: `4px solid ${themeColors.boardBorder}`,
         aspectRatio: "1/1",
+        position: "relative",
       }}
     >
         {board.flat().map((val, i) => {
@@ -71,9 +73,12 @@ export default function SudokuBoard({
                 onCellClick={onCellClick}
                 win={win}
                 size={3}
+                isCageTopLeft={false}
+                cageSum={undefined}
+                cageWrong={false}
             />
           );
-        })}
+        }        )}
     </div>
   );
 }
