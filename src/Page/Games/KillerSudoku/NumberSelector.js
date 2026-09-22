@@ -73,6 +73,15 @@ export default function NumberSelector({ selected, setSelected, onErase, themeCo
                         disabled={isCompleted}
                         aria-pressed={isSelected}
                         aria-label={`Select number ${n}`}
+                        onMouseDown={(e) => {
+                            if (!isCompleted) e.currentTarget.style.transform = "scale(0.95)";
+                        }}
+                        onMouseUp={(e) => {
+                            if (!isCompleted) e.currentTarget.style.transform = "";
+                        }}
+                        onMouseLeave={(e) => {
+                            if (!isCompleted) e.currentTarget.style.transform = "";
+                        }}
                     >
                         {n}
                     </button>
@@ -103,6 +112,9 @@ export default function NumberSelector({ selected, setSelected, onErase, themeCo
                     transition: "all 0.2s ease",
                 }}
                 aria-label="Erase selected cell"
+                onMouseDown={(e) => (e.currentTarget.style.transform = "scale(0.95)")}
+                onMouseUp={(e) => (e.currentTarget.style.transform = "")}
+                onMouseLeave={(e) => (e.currentTarget.style.transform = "")}
             >
                 <Eraser size={20} />
             </button>
