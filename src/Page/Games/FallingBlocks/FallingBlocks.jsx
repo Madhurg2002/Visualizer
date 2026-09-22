@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import Board from "./components/Board";
 import NextPiece from "./components/NextPiece";
 import useInterval from "./hooks/useInterval";
@@ -11,14 +12,25 @@ import {
     mergePiece, 
     clearRows, 
     getGhostPosition,
-    displayBoardWithPiece
+    displayBoardWithPiece,
+    makeRng,
+    randomSeed
 } from "./utils/gameLogic";
 import { motion, AnimatePresence } from "framer-motion";
-import { RefreshCw, Pause, Play, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
+import { RefreshCw, Pause, Play, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Zap, Check, Dices } from 'lucide-react';
 import PageHeader from '../../../Components/PageHeader';
 
 export default function FallingBlocks() {
-  const [colorMap, setColorMap] = useState(() => assignRandomColorsToPieces());
+  const navigate = useNavigate();
+  const query = useMemo(() => new URLSearchParams(window.location.search), []);
+  const urlSeed = query.get("seed") || "";
+  const initialSeed = useMemo(() => urlSeed || randomSeed(), [urlSeed]);
+
+  const [seed, setSeed] = useState(initialSeed);
+  const [seedInput, setSeedInput] = useState(initialSeed);
+  // Single seeded RNG stream: piece order + colors are reproducible from the seed.
+  const rngRef = useRef(makeRng(initialSeed));
+  const [colorMap, setColorMap] = useState(() => assignRandomColorsToPieces(initialSeed));
   const [board, setBoard] = useState(createBoard());
   const [piece, setPiece] = useState(null);
   const [ghostPiece, setGhostPiece] = useState(null);
@@ -32,8 +44,10 @@ export default function FallingBlocks() {
   const countdownStarted = useRef(false);
   const [highScore, setHighScore] = useState(() => parseInt(localStorage.getItem('fallingBlocksHighScore') || '0', 10));
 
-  useEffect(() => {
-    setColorMap(assignRandomColorsToPieces());
+  // Full reset with a seed — used on mount and whenever the seed changes.
+  const newGameWithSeed = useCallback((s) => {
+    rngRef.current = makeRng(s);
+    setColorMap(assignRandomColorsToPieces(s));
     setBoard(createBoard());
     setScore(0);
     setLevel(1);
@@ -47,6 +61,28 @@ export default function FallingBlocks() {
     countdownStarted.current = false;
   }, []);
 
+  useEffect(() => {
+    newGameWithSeed(seed);
+  }, [seed, newGameWithSeed]);
+
+  // Shareable URL (same convention as Sudoku/Killer/Snake seed links)
+  useEffect(() => {
+    navigate(`?seed=${encodeURIComponent(seed)}`, { replace: true });
+  }, [seed, navigate]);
+
+  const applySeed = () => {
+    const s = seedInput.trim();
+    if (!s || s === seed) return;
+    setSeedInput(s);
+    setSeed(s);
+  };
+
+  const randomizeSeed = () => {
+    const s = randomSeed();
+    setSeedInput(s);
+    setSeed(s);
+  };
+
   // Update Ghost Piece whenever piece or board changes
   useEffect(() => {
       if (piece && !gameOver && !paused) {
@@ -58,7 +94,7 @@ export default function FallingBlocks() {
 
   const startGame = useCallback(() => {
     const initialQueue = [];
-    for (let i = 0; i < 3; i++) initialQueue.push(createRandomPiece(colorMap));
+    for (let i = 0; i < 3; i++) initialQueue.push(createRandomPiece(colorMap, rngRef.current));
     setPieceQueue(initialQueue);
     const firstPiece = initialQueue[0];
     setPiece(firstPiece);
@@ -97,7 +133,7 @@ export default function FallingBlocks() {
       }
       setBoard(clearedBoard);
       if (pieceQueue.length === 0)
-        setPieceQueue((q) => [...q, createRandomPiece(colorMap)]);
+        setPieceQueue((q) => [...q, createRandomPiece(colorMap, rngRef.current)]);
       const next = pieceQueue[0];
       const nextShape = PRECOMPUTED_TETROMINOS[next.key][next.rotationIndex];
       if (checkCollision(clearedBoard, nextShape, { x: 3, y: -2 })) {
@@ -105,7 +141,7 @@ export default function FallingBlocks() {
         setDropTime(null);
       } else {
         setPiece({ ...next, pos: { x: 3, y: -2 } });
-        setPieceQueue((q) => q.slice(1).concat(createRandomPiece(colorMap)));
+        setPieceQueue((q) => q.slice(1).concat(createRandomPiece(colorMap, rngRef.current)));
       }
     }
   }, [board, piece, gameOver, level, paused, pieceQueue, score, colorMap]);
@@ -169,18 +205,8 @@ export default function FallingBlocks() {
   };
 
   const restartGame = () => {
-    setColorMap(assignRandomColorsToPieces());
-    setBoard(createBoard());
-    setScore(0);
-    setLevel(1);
-    setGameOver(false);
-    setPaused(false);
-    setPieceQueue([]);
-    setPiece(null);
-    setGhostPiece(null);
-    setDropTime(null);
-    setCountdown(3);
-    countdownStarted.current = false;
+    // Replay the SAME seed — deterministic piece sequence per run.
+    newGameWithSeed(seed);
   };
 
   const handleKeyDown = (e) => {
@@ -346,6 +372,33 @@ export default function FallingBlocks() {
                             }))}
                         />
                     </div>
+                </div>
+
+                {/* Seed Row (shareable, like Sudoku/Snake) */}
+                <div className="flex items-center gap-2">
+                    <input
+                        value={seedInput}
+                        onChange={(e) => setSeedInput(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === "Enter") applySeed(); }}
+                        placeholder="seed"
+                        className="flex-1 min-w-0 bg-slate-900/60 border border-white/10 rounded-xl px-3 py-2 text-sm font-mono text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-400/60"
+                        aria-label="Game seed"
+                        title="Same seed always yields the same piece sequence — share it!"
+                    />
+                    <button
+                        onClick={applySeed}
+                        className="p-2 rounded-xl bg-blue-500/20 text-blue-400 border border-blue-500/20 hover:bg-blue-500/30 transition-all"
+                        title="Load this seed"
+                    >
+                        <Check size={16} />
+                    </button>
+                    <button
+                        onClick={randomizeSeed}
+                        className="p-2 rounded-xl bg-slate-800/80 text-slate-300 border border-white/10 hover:bg-slate-700/90 hover:text-white transition-all"
+                        title="Random seed + new game"
+                    >
+                        <Dices size={16} />
+                    </button>
                 </div>
 
                 {/* PC/Tablet Action Buttons */}

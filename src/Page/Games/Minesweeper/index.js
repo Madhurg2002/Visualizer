@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import Board from "./components/Board";
-import { createBoard, reveal, toggleFlag, checkWin, chord } from "./utils/gameLogic";
-import { Bomb, Flag, Timer, Trophy, RefreshCw, ChevronDown } from 'lucide-react';
+import { createBoard, reveal, toggleFlag, checkWin, chord, randomSeed } from "./utils/gameLogic";
+import { Bomb, Flag, Timer, Trophy, RefreshCw, ChevronDown, Check, Dices } from 'lucide-react';
 import { motion, AnimatePresence } from "framer-motion";
 import PageHeader from "../../../Components/PageHeader";
 
@@ -12,7 +13,15 @@ const DIFFICULTIES = {
 };
 
 export default function Minesweeper() {
-  const [level, setLevel] = useState("Beginner");
+  const navigate = useNavigate();
+  const query = useMemo(() => new URLSearchParams(window.location.search), []);
+  const urlSeed = query.get("seed") || "";
+  const urlLevel = query.get("level");
+
+  const [level, setLevel] = useState(urlLevel && DIFFICULTIES[urlLevel] ? urlLevel : "Beginner");
+  const initialSeed = useMemo(() => urlSeed || randomSeed(), [urlSeed]);
+  const [seedInput, setSeedInput] = useState(initialSeed);
+  const [seed, setSeed] = useState(initialSeed);
   const [board, setBoard] = useState([]);
   const [status, setStatus] = useState("Playing"); // Playing, Won, Lost
   const [minesLeft, setMinesLeft] = useState(10);
@@ -26,7 +35,7 @@ export default function Minesweeper() {
 
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
 
-  const resetGame = useCallback((newLevel = level) => {
+  const resetGame = useCallback((newLevel = level, newSeed = seed) => {
     let config = { ...DIFFICULTIES[newLevel] };
 
     // Transpose for mobile if needed (make it vertical)
@@ -36,11 +45,33 @@ export default function Minesweeper() {
       config.cols = temp;
     }
 
-    setBoard(createBoard(config.rows, config.cols, config.mines));
+    setBoard(createBoard(config.rows, config.cols, config.mines, newSeed));
     setMinesLeft(config.mines);
     setStatus("Playing");
     setTimer(0);
-  }, [level]);
+  }, [level, seed]);
+
+  // Shareable URL (same convention as Sudoku/Killer/Snake seed links)
+  useEffect(() => {
+    const params = new URLSearchParams();
+    params.set("seed", seed);
+    if (level !== "Beginner") params.set("level", level);
+    navigate(`?${params.toString()}`, { replace: true });
+  }, [seed, level, navigate]);
+
+  const applySeed = () => {
+    const s = seedInput.trim();
+    if (!s || s === seed) return;
+    setSeed(s);
+    resetGame(level, s);
+  };
+
+  const randomizeSeed = () => {
+    const s = randomSeed();
+    setSeedInput(s);
+    setSeed(s);
+    resetGame(level, s);
+  };
 
   // Handle Resize
   useEffect(() => {
@@ -234,6 +265,33 @@ export default function Minesweeper() {
                     <Trophy size={14} /> Best: {bestTimes[level]}s
                 </div>
              )}
+        </div>
+
+        {/* Seed Row (shareable, like Sudoku/Snake) */}
+        <div className="w-full flex items-center gap-2 px-4 pb-3">
+            <input
+                value={seedInput}
+                onChange={(e) => setSeedInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") applySeed(); }}
+                placeholder="seed"
+                className="flex-1 min-w-0 bg-slate-900/60 border border-white/10 rounded-xl px-3 py-2 text-sm font-mono text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/60"
+                aria-label="Board seed"
+                title="Same seed + difficulty always yields the same board — share it!"
+            />
+            <button
+                onClick={applySeed}
+                className="p-2 rounded-xl bg-amber-500/20 text-amber-400 border border-amber-500/20 hover:bg-amber-500/30 transition-all"
+                title="Load this seed"
+            >
+                <Check size={16} />
+            </button>
+            <button
+                onClick={randomizeSeed}
+                className="p-2 rounded-xl bg-slate-800/80 text-slate-300 border border-white/10 hover:bg-slate-700/90 hover:text-white transition-all"
+                title="Random seed + new board"
+            >
+                <Dices size={16} />
+            </button>
         </div>
 
         {/* Game Board Wrapper */}

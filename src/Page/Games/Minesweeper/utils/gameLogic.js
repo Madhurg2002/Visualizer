@@ -1,4 +1,28 @@
-export const createBoard = (rows, cols, mines) => {
+/**
+ * Small deterministic PRNG (mulberry32-style, seeded from a string) so boards
+ * are shareable — same seed + same difficulty always yields the same layout.
+ * Matches the approach used by Sudoku/Killer Sudoku/Snake.
+ */
+export function makeRng(seedStr) {
+  const s = String(seedStr);
+  let h = 1779033703 ^ s.length;
+  for (let i = 0; i < s.length; i++) {
+    h = Math.imul(h ^ s.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  return function () {
+    h = Math.imul(h ^ (h >>> 16), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    h ^= h >>> 16;
+    return (h >>> 0) / 4294967296;
+  };
+}
+
+export const randomSeed = () =>
+  Math.random().toString(36).slice(2, 10);
+
+export const createBoard = (rows, cols, mines, seedStr) => {
+  const rng = makeRng(seedStr);
   const board = [];
   for (let x = 0; x < rows; x++) {
     const row = [];
@@ -15,11 +39,11 @@ export const createBoard = (rows, cols, mines) => {
     board.push(row);
   }
 
-  // Plant mines
+  // Plant mines (seeded)
   let minesPlanted = 0;
   while (minesPlanted < mines) {
-    const x = Math.floor(Math.random() * rows);
-    const y = Math.floor(Math.random() * cols);
+    const x = Math.floor(rng() * rows);
+    const y = Math.floor(rng() * cols);
     if (!board[x][y].isMine) {
       board[x][y].isMine = true;
       minesPlanted++;
