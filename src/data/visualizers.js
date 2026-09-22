@@ -14,7 +14,9 @@ import {
     Share2,
     Hexagon,
     Grip,
-    Tornado
+    Tornado,
+    Worm,
+    Skull
 } from 'lucide-react';
 
 // Lazy Load Components
@@ -29,6 +31,7 @@ const MST = lazy(() => import('../Page/Algorithm/MST'));
 const Pendulum = lazy(() => import('../Page/Algorithm/Pendulum/Pendulum'));
 
 const Sudoku = lazy(() => import('../Page/Games/Sudoku'));
+const KillerSudoku = lazy(() => import('../Page/Games/KillerSudoku'));
 const FallingBlocks = lazy(() => import('../Page/Games/FallingBlocks'));
 const Minesweeper = lazy(() => import('../Page/Games/Minesweeper'));
 const FlappyBird = lazy(() => import('../Page/Games/FlappyBird'));
@@ -36,6 +39,7 @@ const ForbiddenWords = lazy(() => import('../Page/Games/ForbiddenWords'));
 const TicTacToe = lazy(() => import('../Page/Games/TicTacToe'));
 const Chess = lazy(() => import('../Page/Games/Chess'));
 const WordleHelper = lazy(() => import('../Page/Games/WordleHelper'));
+const Snake = lazy(() => import('../Page/Games/Snake'));
 
 export const ALGORITHMS = [
     {
@@ -114,12 +118,20 @@ export const ALGORITHMS = [
 
 export const GAMES = [
     {
-        title: "Sudoku Solver",
-        description: "Visualize the backtracking algorithm solving a Sudoku puzzle instantly.",
+        title: "Sudoku",
+        description: "Classic 9x9 Sudoku with seed sharing, hints, and a backtracking solver visualization.",
         path: "/Sudoku",
         component: Sudoku,
         color: "from-amber-500 to-orange-400",
         icon: <Grid3x3 className="w-8 h-8 text-white" />
+    },
+    {
+        title: "Killer Sudoku",
+        description: "No givens — dashed sum cages are the only clues. Same seed always yields the same cages.",
+        path: "/KillerSudoku",
+        component: KillerSudoku,
+        color: "from-cyan-500 to-blue-500",
+        icon: <Skull className="w-8 h-8 text-white" />
     },
     {
         title: "Falling Blocks",
@@ -171,6 +183,14 @@ export const GAMES = [
         component: Chess,
         color: "from-emerald-500 to-cyan-500",
         icon: <Gamepad2 className="w-8 h-8 text-white" />
+    },
+    {
+        title: "Snake",
+        description: "Classic snake with three brains: play yourself, a BFS bot, or an LLM scoring every move via option logits.",
+        path: "/Snake",
+        component: Snake,
+        color: "from-emerald-500 to-cyan-500",
+        icon: <Worm className="w-8 h-8 text-white" />
     },
     {
         title: "Wordle Helper",

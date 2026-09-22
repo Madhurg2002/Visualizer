@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Play, Pause, RotateCcw, Crown, ArrowLeft, Settings, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
+import { Play, Pause, RotateCcw, Crown, Settings, ChevronLeft, ChevronRight, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import PageHeader from '../../../Components/PageHeader';
 import './NQueens.css';
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -199,20 +200,11 @@ const NQueens = () => {
                 <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-pink-900/20 rounded-full blur-[120px]"></div>
             </div>
 
-            <div className="w-full max-w-5xl z-10 flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <button
-                    onClick={() => navigate('/')}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-slate-700/80 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all font-bold group"
-                >
-                    <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-                    <span>Back</span>
-                </button>
-
-                <h1 className="text-4xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 drop-shadow-lg text-center">
-                    N-Queens Visualizer
-                </h1>
-
-                <div className="w-24 hidden md:block"></div> 
+            <div className="w-full max-w-5xl z-10 mb-6">
+                <PageHeader
+                    title="N-Queens"
+                    accent="from-purple-400 to-pink-500"
+                />
             </div>
 
             <div className="flex flex-col lg:flex-row gap-8 items-start justify-center w-full max-w-6xl z-10">

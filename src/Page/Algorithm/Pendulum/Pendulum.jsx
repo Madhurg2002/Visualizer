@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowLeft, Settings as SettingsIcon } from 'lucide-react';
+import { Settings as SettingsIcon } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import PageHeader from '../../../Components/PageHeader';
 import { PendulumState, PendulumSegment } from './PendulumPhysics';
 import PendulumCanvas from './PendulumCanvas';
 import PendulumControls from './PendulumControls';
@@ -243,30 +244,21 @@ const Pendulum = () => {
             onMouseLeave={handlePanelMouseUp}
         >
              {/* Header */}
-            <div className="w-full flex-none flex flex-col md:flex-row justify-between items-center gap-4 p-6 z-20 bg-[#0B0C15]/80 backdrop-blur-md border-b border-white/5">
-                 <button
-                    onClick={() => navigate('/')}
-                    className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all w-fit pointer-events-auto"
-                >
-                    <ArrowLeft size={18} /> Back
-                </button>
-
-                <div className="text-center flex-1 pointer-events-none">
-                    <h1 className="text-3xl md:text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 drop-shadow-sm mb-1 font-heading">
-                        N-Pendulum
-                    </h1>
-                     <p className="text-slate-500 text-xs font-medium uppercase tracking-widest hidden md:block">
-                        Physics Simulation
-                    </p>
-                </div>
-
-                <button
-                    onClick={() => setShowControls(!showControls)}
-                    className={`flex items-center justify-center p-3 rounded-full border transition-all shadow-lg pointer-events-auto ${showControls ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/50' : 'bg-slate-800/80 text-slate-300 border-white/10 hover:text-white'}`}
-                    title="Toggle Configuration"
-                >
-                    <SettingsIcon size={20} />
-                </button>
+            <div className="w-full flex-none p-6 z-20 bg-[#0B0C15]/80 backdrop-blur-md border-b border-white/5">
+                <PageHeader
+                    title="N-Pendulum"
+                    accent="from-cyan-400 via-blue-500 to-purple-600"
+                    subtitle={<span className="text-slate-500 text-xs font-medium uppercase tracking-widest">Physics Simulation</span>}
+                    right={
+                        <button
+                            onClick={() => setShowControls(!showControls)}
+                            className={`flex items-center justify-center p-3 rounded-full border transition-all shadow-lg pointer-events-auto ${showControls ? 'bg-cyan-500/20 text-cyan-400 border-cyan-500/50' : 'bg-slate-800/80 text-slate-300 border-white/10 hover:text-white'}`}
+                            title="Toggle Configuration"
+                        >
+                            <SettingsIcon size={20} />
+                        </button>
+                    }
+                />
             </div>
 
             {/* Canvas Area (Flex 1) */}

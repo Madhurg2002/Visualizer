@@ -14,11 +14,10 @@ import {
     displayBoardWithPiece
 } from "./utils/gameLogic";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowLeft, RefreshCw, Pause, Play, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { RefreshCw, Pause, Play, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, Zap } from 'lucide-react';
+import PageHeader from '../../../Components/PageHeader';
 
 export default function FallingBlocks() {
-  const navigate = useNavigate();
   const [colorMap, setColorMap] = useState(() => assignRandomColorsToPieces());
   const [board, setBoard] = useState(createBoard());
   const [piece, setPiece] = useState(null);
@@ -246,14 +245,8 @@ export default function FallingBlocks() {
       <div className="w-full max-w-5xl z-10 flex flex-col items-center">
         
         {/* Header */}
-        <div className="w-full flex items-center justify-between mb-8 max-w-2xl">
-            <button onClick={() => navigate('/')} className="p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors text-slate-400 hover:text-white">
-                <ArrowLeft size={24} />
-            </button>
-            <h1 className="text-4xl md:text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 tracking-tight">
-                Falling Blocks
-            </h1>
-            <div className="w-12"></div> {/* Spacer */}
+        <div className="w-full mb-8 max-w-2xl">
+            <PageHeader title="Falling Blocks" />
         </div>
         
         <div className="flex flex-col lg:flex-row gap-8 lg:gap-16 items-start justify-center w-full">

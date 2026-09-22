@@ -1,9 +1,10 @@
 import React, { useEffect, useState, useRef } from "react";
 import "./Index.css"
 import { Algorithms } from "./algorithms";
-import { Play, Pause, RotateCcw, MonitorPlay, MousePointer2, Flag, ArrowRightLeft, Grid3x3 } from 'lucide-react';
+import { Play, Pause, RotateCcw, MonitorPlay, MousePointer2, Flag, Grid3x3 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Confetti from '../../../Components/Confetti';
+import PageHeader, { Pill } from '../../../Components/PageHeader';
 
 export default function PathFinding() {
     const navigate = useNavigate();
@@ -255,22 +256,12 @@ export default function PathFinding() {
             <div className="flex-1 flex flex-col p-6 relative h-full z-10 transition-all">
                 
                 {/* Header */}
-                 <div className="w-full flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
-                    <button
-                        onClick={() => window.history.back()} // Fallback or use navigate
-                        className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all w-fit"
-                    >
-                        <ArrowRightLeft className="rotate-180" size={18} /> Back
-                    </button>
-
-                    <div className="text-center flex-1 pr-20">
-                        <h1 className="text-3xl md:text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-purple-400 via-fuchsia-400 to-indigo-400 drop-shadow-sm mb-1">
-                            Pathfinding Visualizer
-                        </h1>
-                         <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">
-                            Explore Search Algorithms
-                        </p>
-                    </div>
+                 <div className="w-full mb-6">
+                    <PageHeader
+                        title="Pathfinding"
+                        accent="from-purple-400 via-fuchsia-400 to-indigo-400"
+                        subtitle={<Pill>Explore Search Algorithms</Pill>}
+                    />
                 </div>
 
                 {/* Legend */}

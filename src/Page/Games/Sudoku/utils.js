@@ -117,3 +117,6 @@ export function isComplete(user, sol) {
       if (user[r][c] !== sol[r][c]) return false;
   return true;
 }
+
+/* ------------------------------ Killer Sudoku ------------------------------ */
+/* Killer Sudoku moved to its own standalone page: src/Page/Games/KillerSudoku/ */

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { ArrowLeft, ZoomIn, ZoomOut, Maximize, RotateCcw } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize, RotateCcw } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import PageHeader from '../../../Components/PageHeader';
 import { generatePrimes, getUlamCoords, getSacksCoords } from './utils';
 
 const PrimeSpirals = () => {
@@ -121,13 +122,8 @@ const PrimeSpirals = () => {
             <div className="flex-1 flex flex-col relative h-full z-10">
                 
                 {/* Header Overlay (Optional, or just Back button) */}
-                <div className="absolute top-6 left-6 z-20">
-                    <button
-                        onClick={() => navigate('/')}
-                        className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all w-fit"
-                    >
-                        <ArrowLeft size={18} /> Back
-                    </button>
+                <div className="absolute top-6 left-6 right-6 z-20">
+                    <PageHeader title="Prime Spirals" accent="from-violet-400 to-purple-600" />
                 </div>
 
                 {/* Canvas Container */}

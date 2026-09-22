@@ -1,6 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
-import { Play, Pause, Trash2, Shuffle, RefreshCw, Settings, Info, ArrowLeft } from 'lucide-react';
+import { Play, Pause, Trash2, Shuffle, RefreshCw, Settings, Info } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import PageHeader from '../../../Components/PageHeader';
 import "./Index.css";
 
 const operations = [
@@ -152,30 +153,20 @@ export default function GameOfLife() {
       </div>
 
       {/* Header */}
-      <div className="w-full p-6 z-10 flex justify-between items-center max-w-7xl">
-        <button
-            onClick={() => navigate('/')}
-            className="flex items-center gap-2 px-4 py-2 bg-slate-800/50 hover:bg-slate-700/80 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all font-bold group"
-        >
-            <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
-            <span>Back</span>
-        </button>
-
-        <div className="text-center">
-            <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 drop-shadow-lg">
-                GAME OF LIFE
-            </h1>
-            <div className="font-mono text-cyan-400/80 text-sm mt-1 tracking-widest">
-                GEN: {generation}
-            </div>
-        </div>
-
-        <button
-            onClick={() => setShowInfo(!showInfo)}
-            className={`p-3 rounded-full border transition-all ${showInfo ? 'bg-cyan-500 text-white border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.5)]' : 'bg-slate-800/50 border-white/10 text-slate-400 hover:text-white'}`}
-        >
-            <Info size={20} />
-        </button>
+      <div className="w-full p-6 z-10 max-w-7xl">
+        <PageHeader
+            title="Game of Life"
+            accent="from-cyan-400 to-purple-500"
+            subtitle={<div className="font-mono text-cyan-400/80 text-sm tracking-widest">GEN: {generation}</div>}
+            right={
+                <button
+                    onClick={() => setShowInfo(!showInfo)}
+                    className={`p-3 rounded-full border transition-all ${showInfo ? 'bg-cyan-500 text-white border-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.5)]' : 'bg-slate-800/50 border-white/10 text-slate-400 hover:text-white'}`}
+                >
+                    <Info size={20} />
+                </button>
+            }
+        />
       </div>
 
       {/* Info Panel */}

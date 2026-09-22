@@ -3,6 +3,7 @@ import Board from "./components/Board";
 import { createBoard, reveal, toggleFlag, checkWin, chord } from "./utils/gameLogic";
 import { Bomb, Flag, Timer, Trophy, RefreshCw, ChevronDown } from 'lucide-react';
 import { motion, AnimatePresence } from "framer-motion";
+import PageHeader from "../../../Components/PageHeader";
 
 const DIFFICULTIES = {
   Beginner: { rows: 9, cols: 9, mines: 10 },
@@ -151,7 +152,7 @@ export default function Minesweeper() {
   };
 
   return (
-    <div className="w-full min-h-screen flex flex-col items-center pt-8 text-white font-sans p-4 bg-[#0B0C15] overflow-x-hidden relative">
+    <div className="w-full min-h-full flex flex-col items-center pt-4 text-white font-sans p-4 bg-[#0B0C15] overflow-x-hidden relative">
       
       {/* Background Ambience */}
       <div className="absolute inset-0 pointer-events-none">
@@ -159,9 +160,12 @@ export default function Minesweeper() {
           <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-yellow-900/20 rounded-full blur-[100px]" />
       </div>
 
-      <h1 className="text-5xl font-black mb-8 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 drop-shadow-sm z-10">
-        Minesweeper
-      </h1>
+      <div className="w-full max-w-4xl mb-6 z-10">
+        <PageHeader
+          title="Minesweeper"
+          accent="from-yellow-400 via-orange-500 to-red-500"
+        />
+      </div>
 
       <div className={`relative flex flex-col items-center bg-slate-900/60 backdrop-blur-xl p-1 rounded-3xl shadow-2xl mb-8 border border-white/10 z-10 transition-all duration-500 ease-in-out ${getContainerWidth()}`}>
         

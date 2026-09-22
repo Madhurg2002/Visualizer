@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Title, RefreshCw, Play, Trophy, Pause } from 'lucide-react';
 import GameCanvas from './GameCanvas';
+import PageHeader from '../../../Components/PageHeader';
 
 // Constants shared with Canvas for UI sizing if needed, or just hardcode
 const GAME_HEIGHT = 600;
@@ -97,13 +98,16 @@ export default function FlappyBird() {
     }, [jump, togglePause]);
 
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-[#0B0C15] font-sans p-4 select-none"
+        <div className="flex flex-col items-center justify-center min-h-full bg-[#0B0C15] font-sans p-4 select-none pt-4"
             onMouseDown={(e) => { e.preventDefault(); jump(); }}
             onTouchStart={(e) => { e.preventDefault(); jump(); }}
         >
-            <h1 className="text-4xl font-black text-white mb-6 text-transparent bg-clip-text bg-gradient-to-br from-cyan-400 to-purple-600 drop-shadow-[0_0_15px_rgba(168,85,247,0.5)]">
-                Flappy CyberBird
-            </h1>
+            <div className="w-full max-w-4xl mb-4">
+                <PageHeader
+                    title="Flappy CyberBird"
+                    accent="from-cyan-400 to-purple-600"
+                />
+            </div>
 
             <div className="relative shadow-2xl rounded-2xl cursor-pointer" style={{ width: GAME_WIDTH, height: GAME_HEIGHT }}>
                 
