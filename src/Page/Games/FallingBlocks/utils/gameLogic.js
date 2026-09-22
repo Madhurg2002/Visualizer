@@ -1,17 +1,39 @@
 import { PRECOMPUTED_TETROMINOS, TETROMINO_NAMES } from "../data/tetrominoes";
-import { assignRandomColorsToPieces } from "./colorUtils";
 
 export const ROWS = 20;
 export const COLS = 10;
+
+/**
+ * Small deterministic PRNG (mulberry32-style, seeded from a string) so piece
+ * sequences are shareable — same seed always yields the same piece order.
+ * Matches the approach used by Sudoku/Killer Sudoku/Snake.
+ */
+export function makeRng(seedStr) {
+  const s = String(seedStr);
+  let h = 1779033703 ^ s.length;
+  for (let i = 0; i < s.length; i++) {
+    h = Math.imul(h ^ s.charCodeAt(i), 3432918353);
+    h = (h << 13) | (h >>> 19);
+  }
+  return function () {
+    h = Math.imul(h ^ (h >>> 16), 2246822507);
+    h = Math.imul(h ^ (h >>> 13), 3266489909);
+    h ^= h >>> 16;
+    return (h >>> 0) / 4294967296;
+  };
+}
+
+export const randomSeed = () =>
+  Math.random().toString(36).slice(2, 10);
 
 export const createBoard = () =>
   Array(ROWS)
     .fill(null)
     .map(() => Array(COLS).fill("bg-gray-900"));
 
-export function weightedRandom(weights) {
+export function weightedRandom(weights, rng = Math.random) {
   let sum = 0;
-  const r = Math.random();
+  const r = rng();
   for (let i = 0; i < weights.length; i++) {
     sum += weights[i];
     if (r <= sum) return i;
@@ -19,10 +41,10 @@ export function weightedRandom(weights) {
   return weights.length - 1;
 }
 
-export const createRandomPiece = (colorMap) => {
-  const key = TETROMINO_NAMES[Math.floor(Math.random() * TETROMINO_NAMES.length)];
+export const createRandomPiece = (colorMap, rng = Math.random) => {
+  const key = TETROMINO_NAMES[Math.floor(rng() * TETROMINO_NAMES.length)];
   const weights = [0.25, 0.25, 0.25, 0.25];
-  const rotationIndex = weightedRandom(weights);
+  const rotationIndex = weightedRandom(weights, rng);
   const color = colorMap[key];
   return { key, rotationIndex, color, pos: { x: 3, y: -2 } };
 };
