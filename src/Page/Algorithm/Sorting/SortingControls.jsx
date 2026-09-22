@@ -10,19 +10,20 @@ const SortingControls = ({
     speed, setSpeed,
     sorting, paused,
     startSort, pauseSort, resumeSort, stepSort, reset,
-    array, setArray
+    array, setArray,
+    onCustomArray
 }) => {
     const [showDesc, setShowDesc] = useState(false);
     const [customInput, setCustomInput] = useState("");
 
     const handleCustomArray = () => {
         const nums = customInput.split(',')
-            .map(s => parseInt(s.trim()))
+            .map(s => parseFloat(s.trim()))
             .filter(n => !isNaN(n));
 
-        if (nums.length > 0) {
-            setArray(nums);
-            setSize(nums.length);
+        if (nums.length > 0 && onCustomArray) {
+            onCustomArray(nums);
+            setCustomInput("");
         }
     };
 
@@ -50,9 +51,9 @@ const SortingControls = ({
                         ))}
                     </select>
 
-                    {/* Description Popover - Positioned to left/bottom of sidebar */}
+                    {/* Description Popover - drops below on desktop, inline on mobile */}
                     {showDesc && (
-                        <div className="absolute right-full top-0 mr-4 w-72 z-50 bg-slate-800 border-l-4 border-blue-500 p-4 rounded shadow-2xl animate-fade-in pointer-events-none border border-white/10">
+                        <div className="absolute z-50 w-72 bg-slate-800 border-l-4 border-blue-500 p-4 rounded shadow-2xl animate-fade-in pointer-events-none border border-white/10 top-full mt-2 left-0 max-sm:static max-sm:w-full max-sm:mt-2 max-sm:mr-0">
                             <h3 className="text-lg font-bold text-white mb-2">{algorithm}</h3>
                             <p className="text-sm text-slate-300 leading-relaxed">
                                 {ALGORITHM_DESCRIPTIONS[algorithm]}

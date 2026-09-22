@@ -18,11 +18,13 @@ const Sort = () => {
         pauseSort,
         reset,
         stepSort,
-        isSorted
+        isSorted,
+        applyCustomArray
     } = useSort(50);
 
-
-    const maxVal = Math.max(...array, 1); 
+    // Normalize values to [0,1] so custom arrays (negatives, big numbers) render correctly.
+    const minVal = Math.min(...array, 0);
+    const maxVal = Math.max(...array, minVal + 1); 
 
     return (
 
@@ -63,11 +65,13 @@ const Sort = () => {
                                 <div
                                     key={idx}
                                     style={{
-                                        height: `${(val / maxVal) * 100}%`,
+                                        height: `${((val - minVal) / (maxVal - minVal)) * 100}%`,
                                         width: `${100 / size}%`
                                     }}
                                     className={`rounded-t-[2px] transition-all duration-200 ease-in-out ${isActive
                                         ? 'bg-purple-500 shadow-[0_0_15px_rgba(168,85,247,0.8)] z-10'
+                                        : isSorted
+                                        ? 'bg-gradient-to-t from-emerald-600 to-emerald-400 opacity-90 hover:opacity-100'
                                         : 'bg-gradient-to-t from-blue-700 to-blue-500 opacity-90 hover:opacity-100'
                                         }`}
                                 ></div>
@@ -98,6 +102,7 @@ const Sort = () => {
                     reset={reset}
                     array={array}
                     setArray={setArray}
+                    onCustomArray={applyCustomArray}
                 />
             </div>
 
