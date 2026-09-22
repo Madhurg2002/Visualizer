@@ -26,11 +26,11 @@ const Sort = () => {
     const minVal = Math.min(...array, 0);
     const maxVal = Math.max(...array, minVal + 1); 
 
+    // lg:h-screen gives the row a definite height so the h-full/flex-grow/
+    // inset-0 chain below resolves — with only min-h-screen, percentage
+    // heights collapse to 0 and the bars never render.
     return (
 
-        {/* lg:h-screen gives the row a definite height so the h-full/flex-grow/
-            inset-0 chain below resolves — with only min-h-screen, percentage
-            heights collapse to 0 and the bars never render. */}
         <div className="flex flex-col lg:flex-row min-h-screen lg:h-screen w-full bg-[#0B0C15] font-sans overflow-x-hidden">
             {isSorted && <Confetti />}
             
