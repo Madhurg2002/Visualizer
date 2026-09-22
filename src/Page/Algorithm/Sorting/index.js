@@ -28,7 +28,10 @@ const Sort = () => {
 
     return (
 
-        <div className="flex flex-col lg:flex-row min-h-screen w-full bg-[#0B0C15] font-sans overflow-x-hidden">
+        {/* lg:h-screen gives the row a definite height so the h-full/flex-grow/
+            inset-0 chain below resolves — with only min-h-screen, percentage
+            heights collapse to 0 and the bars never render. */}
+        <div className="flex flex-col lg:flex-row min-h-screen lg:h-screen w-full bg-[#0B0C15] font-sans overflow-x-hidden">
             {isSorted && <Confetti />}
             
             <div className="flex-1 flex flex-col p-6 relative h-full">
@@ -57,7 +60,7 @@ const Sort = () => {
                     </div>
                 </div>
 
-                <div className="flex-grow relative bg-slate-900/30 rounded-2xl shadow-xl overflow-hidden border border-white/5 flex flex-col backdrop-blur-sm">
+                <div className="flex-grow relative bg-slate-900/30 rounded-2xl shadow-xl overflow-hidden border border-white/5 flex flex-col backdrop-blur-sm min-h-[420px] lg:min-h-0">
                     <div className="absolute inset-0 flex items-end justify-center gap-[1px] sm:gap-[2px] p-6 pb-0">
                         {array.map((val, idx) => {
                             const isActive = activeIndices.includes(idx);
