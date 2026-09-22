@@ -1,10 +1,9 @@
 
 import React, { useState } from 'react';
-import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
 import { useSort } from './hooks/useSort';
 import SortingControls from './SortingControls';
 import Confetti from '../../../Components/Confetti' ;
+import PageHeader, { Pill } from '../../../Components/PageHeader';
 
 const Sort = () => {
     const {
@@ -23,32 +22,20 @@ const Sort = () => {
     } = useSort(50);
 
 
-    const navigate = useNavigate();
     const maxVal = Math.max(...array, 1); 
 
     return (
 
-        <div className="flex flex-col lg:flex-row h-screen w-full bg-[#0B0C15] font-sans overflow-x-hidden">
+        <div className="flex flex-col lg:flex-row min-h-screen w-full bg-[#0B0C15] font-sans overflow-x-hidden">
             {isSorted && <Confetti />}
             
             <div className="flex-1 flex flex-col p-6 relative h-full">
                 
-                <div className="w-full flex flex-col md:flex-row justify-between items-start gap-4 mb-6 z-10">
-                    <button
-                        onClick={() => navigate('/')}
-                        className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all w-fit"
-                    >
-                        <ArrowLeft size={18} /> Back
-                    </button>
-
-                    <div className="text-center flex-1 pr-20">
-                        <h1 className="text-3xl md:text-4xl font-black bg-clip-text text-transparent bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 drop-shadow-sm mb-1">
-                            Sorting Visualizer
-                        </h1>
-                        <p className="text-slate-500 text-xs font-medium uppercase tracking-wider">
-                            Real-time Algorithm Comparison
-                        </p>
-                    </div>
+                <div className="w-full mb-6 z-10">
+                    <PageHeader
+                        title="Sorting Visualizer"
+                        subtitle={<Pill>Real-time Algorithm Comparison</Pill>}
+                    />
                 </div>
 
                 <div className="flex justify-center mb-6">

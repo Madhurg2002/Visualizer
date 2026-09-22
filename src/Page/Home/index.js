@@ -117,8 +117,8 @@ const Home = () => {
                     </motion.p>
                 </div>
 
-                <VisualizerSection title="Classic Games" items={GAMES} />
                 <VisualizerSection title="Interactive Algorithms" items={ALGORITHMS} />
+                <VisualizerSection title="Classic Games" items={GAMES} />
 
             </div>
         </div>

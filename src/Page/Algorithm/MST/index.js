@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ArrowLeft, Play, Pause, RotateCcw, Shuffle } from 'lucide-react'; // Removing Settings as not used
+import { Play, Pause, RotateCcw, Shuffle } from 'lucide-react'; // Removing Settings as not used
 import { useNavigate } from 'react-router-dom';
+import PageHeader from '../../../Components/PageHeader';
 import { generateGraph, prims, kruskals } from './algorithms';
 
 const MST = () => {
@@ -193,14 +194,8 @@ const MST = () => {
             <div className="flex-1 flex flex-col relative h-full z-10">
                 
                 {/* Header Overlay */}
-                <div className="absolute top-6 left-6 z-20">
-                    <button
-                        onClick={() => navigate('/')}
-                        className="flex items-center gap-2 px-4 py-2 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all w-fit"
-                    >
-                        <ArrowLeft size={18} /> Back
-                    </button>
-                    
+                <div className="absolute top-6 left-6 right-6 z-20">
+                    <PageHeader title="MST Visualizer" accent="from-teal-400 to-emerald-500" />
                     <div className="mt-4 bg-slate-900/50 backdrop-blur-sm border border-white/5 rounded-xl p-3 inline-block">
                         <p className="text-xs text-slate-400 font-mono">
                             {displayState.message || "Ready"}
