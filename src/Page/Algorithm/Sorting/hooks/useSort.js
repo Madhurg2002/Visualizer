@@ -17,9 +17,14 @@ export const useSort = (initialSize = 50) => {
     const genRef = useRef(null);
     const initialArrayRef = useRef(array);
     const timeoutRef = useRef(null);
+    const skipRegenRef = useRef(false);
 
-    // Reset when size changes 
+    // Reset when size changes (skipped right after a custom array set that size)
     useEffect(() => {
+        if (skipRegenRef.current) {
+            skipRegenRef.current = false;
+            return;
+        }
         const newArr = generateRandomArray(size);
         setArray(newArr);
         initialArrayRef.current = newArr;
@@ -40,6 +45,18 @@ export const useSort = (initialSize = 50) => {
     };
 
     const pauseSort = () => setPaused(true);
+
+    // Load a user-supplied array without the size effect wiping it.
+    const applyCustomArray = useCallback((nums) => {
+        skipRegenRef.current = true;
+        setArray(nums);
+        setSize(nums.length);
+        setActiveIndices([]);
+        genRef.current = null;
+        setSorting(false);
+        setPaused(false);
+        setIsSorted(false);
+    }, []);
 
     const reset = () => {
         setSorting(false);
@@ -105,6 +122,7 @@ export const useSort = (initialSize = 50) => {
         pauseSort,
         reset,
         stepSort,
-        isSorted
+        isSorted,
+        applyCustomArray
     };
 };

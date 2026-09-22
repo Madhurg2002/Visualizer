@@ -225,48 +225,71 @@ export function* cocktailShakerSort(array) {
 
 export function* radixSort(array) {
   let arr = array.slice();
-  
-  const getMax = (arr) => {
+
+  const MULTIPLIER = 1000000;
+
+  const getMax = (vals) => {
     let max = 0;
-    for (let num of arr) {
-      max = Math.max(max, num);
-    }
+    for (let num of vals) max = Math.max(max, num);
     return max;
   };
 
-  const MULTIPLIER = 1000000;
-  
-  let maxVal = getMax(arr) * MULTIPLIER; 
-  
-  for (let exp = 1; Math.floor(maxVal / exp) > 0; exp *= 10) {
-    let output = new Array(arr.length).fill(0);
-    let count = new Array(10).fill(0);
-    
-    for (let i = 0; i < arr.length; i++) {
-      let val = Math.floor(arr[i] * MULTIPLIER);
-      let digit = Math.floor(val / exp) % 10;
-      count[digit]++;
-      yield { arr: arr.slice(), active: [i] };
-    }
-    
-    for (let i = 1; i < 10; i++) {
-        count[i] += count[i - 1];
-    }
-    
-    for (let i = arr.length - 1; i >= 0; i--) {
-      let val = Math.floor(arr[i] * MULTIPLIER);
-      let digit = Math.floor(val / exp) % 10;
-      output[count[digit] - 1] = arr[i];
-      count[digit]--;
-      yield { arr: arr.slice(), active: [i] };
-    }
-    
-    for (let i = 0; i < arr.length; i++) {
-        arr[i] = output[i];
-        yield { arr: arr.slice(), active: [i] };
+  // LSD radix sort digit-passes over scaled values, writing the intermediate
+  // ordering back into `arr` (which lives inside the closures below).
+  function* runLsd(values, slots) {
+    const work = values.map((v) => v * MULTIPLIER);
+    const maxVal = getMax(values) * MULTIPLIER;
+    for (let exp = 1; maxVal > 0 && Math.floor(maxVal / exp) > 0; exp *= 10) {
+      const output = new Array(work.length).fill(0);
+      const count = new Array(10).fill(0);
+      for (let i = 0; i < work.length; i++) count[Math.floor(work[i] / exp) % 10]++;
+      for (let i = 1; i < 10; i++) count[i] += count[i - 1];
+      for (let i = work.length - 1; i >= 0; i--) {
+        const digit = Math.floor(work[i] / exp) % 10;
+        output[count[digit] - 1] = work[i];
+        count[digit]--;
+      }
+      for (let i = 0; i < work.length; i++) work[i] = output[i];
+      for (let k = 0; k < slots.length; k++) {
+        arr[slots[k]] = work[k] / MULTIPLIER;
+      }
+      for (const slot of slots) yield { arr: arr.slice(), active: [slot] };
     }
   }
-  
+
+  // LSD radix only handles non-negative integers, so negatives are radix-sorted
+  // by magnitude in their own slots, then flipped to descending magnitude so
+  // the most-negative value lands first.
+  const negSlots = [];
+  const posSlots = [];
+  for (let i = 0; i < arr.length; i++) (arr[i] < 0 ? negSlots : posSlots).push(i);
+
+  if (negSlots.length > 0) {
+    const negMag = negSlots.map((i) => -arr[i]);
+    yield* runLsd(negMag, negSlots);
+    // runLsd left magnitudes (positive) in the negative slots. Re-assign them
+    // as descending magnitudes so the most-negative value lands first.
+    const mags = negSlots.map((i) => arr[i]).sort((a, b) => b - a);
+    negSlots.forEach((slot, k) => { arr[slot] = -mags[k]; });
+    for (const slot of negSlots) yield { arr: arr.slice(), active: [slot] };
+  }
+
+  if (posSlots.length > 0) {
+    yield* runLsd(posSlots.map((i) => arr[i]), posSlots);
+  }
+
+  // Final assembly: negatives (descending magnitude = ascending value) occupy
+  // the leading slots, positives fill the rest — a global rewrite pass so the
+  // result is fully sorted across the whole array.
+  const finalArr = [
+    ...negSlots.map((i) => arr[i]).sort((a, b) => a - b),
+    ...posSlots.map((i) => arr[i]).sort((a, b) => a - b),
+  ];
+  for (let i = 0; i < arr.length; i++) {
+    arr[i] = finalArr[i];
+    yield { arr: arr.slice(), active: [i] };
+  }
+
   yield { arr: arr.slice(), active: [] };
 }
 
