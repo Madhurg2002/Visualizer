@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Title, RefreshCw, Play, Trophy, Pause } from 'lucide-react';
+import { RefreshCw, Play, Trophy, Pause } from 'lucide-react';
 import GameCanvas from './GameCanvas';
 import PageHeader from '../../../Components/PageHeader';
 
