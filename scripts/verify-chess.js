@@ -163,6 +163,53 @@ function check(name, ok, extra) {
         check("logic.js facade", false, e.message);
     }
 
+    // ---------- DRAW RULES VIA FACADE (fifty-move + threefold) ----------
+    try {
+        const logic2 = (await loadModule("logic.js")).default;
+
+        // Fifty-move: synthetic 100-ply quiet history (kings + two rooks on
+        // teleport tours — checkGameState only reads boards, no legality needed).
+        // The white rook visits 50 unique squares, so no full position ever
+        // repeats and any 'draw' can only come from the fifty-move clock.
+        const mk = (wr, br) => {
+            const b = Array.from({ length: 8 }, () => Array(8).fill(null));
+            b[7][4] = { type: 'k', color: 'w', hasMoved: true };
+            b[0][4] = { type: 'k', color: 'b', hasMoved: true };
+            if (wr) b[wr[0]][wr[1]] = { type: 'r', color: 'w', hasMoved: true };
+            if (br) b[br[0]][br[1]] = { type: 'r', color: 'b', hasMoved: true };
+            return b;
+        };
+        const wSq = (i) => [1 + Math.floor(i / 8), i % 8];              // 50 unique squares
+        const bSq = (i) => [1 + Math.floor((i % 48) / 8), (i + 4) % 8]; // rows 1..6 only
+        const hist5 = [];
+        for (let i = 0; i <= 100; i++) {
+            hist5.push(mk(wSq(Math.min(i, 49)), bSq(i)));
+        }
+        const midState = logic2.checkGameState(hist5[99], 'b', null, hist5.slice(0, 100));
+        check("fifty-move: no premature draw at 99 quiet plies", midState === 'playing', `state=${midState}`);
+        const endState = logic2.checkGameState(hist5[100], 'w', null, hist5);
+        check("fifty-move rule draws at 100 quiet plies", endState === 'draw', `state=${endState}`);
+
+        // Threefold: knights oscillate b1-c3-b1 / b8-c6-b8; the start position
+        // (same side, castling intact) recurs a 3rd time after 12 plies.
+        let b3 = logic2.initialBoard, t3 = "w", h3 = [b3];
+        const osc = [[7, 1, 5, 2], [0, 1, 2, 2], [5, 2, 7, 1], [2, 2, 0, 1]];
+        outer:
+        for (let round = 0; round < 3; round++) {
+            for (const [fr, fc, tr, tc] of osc) {
+                const mv = logic2.getValidMoves(b3, fr, fc, null).find(m => m.row === tr && m.col === tc);
+                if (!mv) { check("threefold build", false, `round ${round} ${fr},${fc}->${tr},${tc}`); break outer; }
+                const res = logic2.executeMove(b3, t3, fr, fc, tr, tc, {}, h3);
+                b3 = res.board; t3 = res.turn;
+                h3 = [...h3, b3];
+            }
+        }
+        check("threefold repetition draws", h3.length === 13 && logic2.checkGameState(b3, t3, null, h3) === 'draw',
+            `plies=${h3.length - 1} state=${logic2.checkGameState(b3, t3, null, h3)}`);
+    } catch (e) {
+        check("draw rules via facade", false, e.message);
+    }
+
     // ---------- AI SPEED ----------
     try {
         const AI = (await loadModule("AI.js")).default;

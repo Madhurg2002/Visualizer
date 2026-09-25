@@ -37,6 +37,8 @@ const ChessOnline = ({ onBack }) => {
 
     // Game State
     const [board, setBoard] = useState(initialBoard);
+    // Local board history (incl. current position) for repetition/50-move draws.
+    const boardHistoryRef = useRef([initialBoard]);
     const [turn, setTurn] = useState('w');
     const [gameState, setGameState] = useState('waiting'); // waiting, playing, check, checkmate, stalemate, timeout
     const [gameOverData, setGameOverData] = useState(null); // { reason, winner }
@@ -131,6 +133,7 @@ const ChessOnline = ({ onBack }) => {
 
         socket.on('chess_restart_game', ({ whiteTime: wt, blackTime: bt }) => {
             setBoard(initialBoard);
+            boardHistoryRef.current = [initialBoard];
             setTurn('w');
             setGameState('playing');
             setLastMove(null);
@@ -291,7 +294,8 @@ const ChessOnline = ({ onBack }) => {
 
     const executeMove = (fromRow, fromCol, toRow, toCol, moveDetails) => {
         // Bitboard-backed facade applies the move and derives the new state.
-        const res = applyMove(board, turn, fromRow, fromCol, toRow, toCol, moveDetails);
+        const res = applyMove(board, turn, fromRow, fromCol, toRow, toCol, moveDetails, boardHistoryRef.current);
+        boardHistoryRef.current = [...boardHistoryRef.current, res.board];
 
         setBoard(res.board);
         setTurn(res.turn);

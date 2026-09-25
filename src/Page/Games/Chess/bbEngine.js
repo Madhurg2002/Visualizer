@@ -315,6 +315,7 @@ export const gameState = (pos) => {
     const inCheck = isInCheck(pos);
     if (moves.length === 0) return inCheck ? 'checkmate' : 'stalemate';
     if (insufficientMaterial(pos)) return 'draw';
+    if (pos.half >= 100) return 'draw'; // Fifty-move rule (100 half-moves without capture/pawn move).
     return inCheck ? 'check' : 'playing';
 };
 

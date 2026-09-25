@@ -3,8 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, RefreshCw, Trophy, Users, Globe } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Board from './Board';
-import { initialBoard, getValidMoves, executeMove, getAlgebraicNotation } from './logic'; 
-
+import { initialBoard, getValidMoves, executeMove, getAlgebraicNotation } from './logic';
 import { evaluateBoard } from './AI';
 import Stockfish from './StockfishEngine';
 import MoveHistory from './MoveHistory'; 
@@ -198,12 +197,13 @@ const ChessGame = () => {
     };
 
     // Core Logic: Apply move via the bitboard-backed facade (single source of truth).
-    const calculateMoveResult = (currentBoard, currentTurn, moveDetails) => {
+    const calculateMoveResult = (currentBoard, currentTurn, moveDetails, history) => {
         const { from, to, promotionType } = moveDetails;
         return executeMove(
             currentBoard, currentTurn,
             from.row, from.col, to.row, to.col,
-            { promotionType }
+            { promotionType },
+            history || null
         );
     };
 
@@ -217,7 +217,7 @@ const ChessGame = () => {
             ...moveDetails,
             from: { row: fromRow, col: fromCol },
             to: { row: toRow, col: toCol }
-        });
+        }, boardHistory);
 
         // Update State
         setBoard(newBoard);
@@ -271,7 +271,7 @@ const ChessGame = () => {
                     break; // Stop parsing on error
                 }
 
-                const result = calculateMoveResult(currentB, currentT, moveObj);
+                const result = calculateMoveResult(currentB, currentT, moveObj, historyB);
 
                 currentB = result.newBoard;
                 currentT = result.nextTurn;

@@ -11,7 +11,7 @@ import {
 } from './bitboard';
 import {
     MOVE_FLAGS, generatePseudoMoves, generateLegalMoves,
-    isInCheck, gameState as engineGameState,
+    isInCheck, gameState as engineGameState, initKey,
 } from './bbEngine';
 
 // ---------- Initial Board Setup ----------
@@ -160,16 +160,79 @@ export const isCheck = (board, color) => {
 
 // ---------- Game state (engine-driven) ----------
 // Returns 'playing' | 'check' | 'checkmate' | 'stalemate' | 'draw'.
-export const checkGameState = (board, turn, lastMove) =>
-    engineGameState(fromBoardArray(board, turn, lastMove));
+// Pass `boardHistory` (array of boards, entry 0 = initial position with white
+// to move) to enable the threefold-repetition and fifty-move draw rules. The
+// current position may be the last history entry (as in ChessGame) or omitted.
+// Without history these rules are not evaluated (engine still reports material draws).
+
+// Zobrist key of a board position (identity includes side; castling rights are
+// derived from hasMoved flags, ep from the recorded last move when available).
+const positionKey = (board, turn, lastMove) => {
+    const pos = initKey(fromBoardArray(board, turn, lastMove));
+    return [pos.keyLo, pos.keyHi];
+};
+
+// Halfmove clock: plies since the last capture or pawn move, derived from the
+// board history (a capture changes piece count; a pawn move changes pawn placement).
+const halfClockFromHistory = (boardHistory) => {
+    let half = 0;
+    for (let i = boardHistory.length - 1; i > 0; i--) {
+        const prev = boardHistory[i - 1], cur = boardHistory[i];
+        let countPrev = 0, countCur = 0, pawnDiff = false;
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                const a = prev[r][c], b = cur[r][c];
+                if (a) countPrev++;
+                if (b) countCur++;
+                if ((a && a.type === 'p') !== (b && b.type === 'p')) pawnDiff = true;
+            }
+        }
+        if (countPrev !== countCur || pawnDiff) half++;
+        else break;
+    }
+    return half;
+};
+
+const evaluateGameState = (board, turn, lastMove, boardHistory) => {
+    const state = engineGameState(fromBoardArray(board, turn, lastMove));
+    if (state !== 'playing' && state !== 'check') return state;
+    if (!boardHistory || boardHistory.length < 2) return state;
+
+    // Fifty-move rule: 100 half-moves without capture or pawn move.
+    if (halfClockFromHistory(boardHistory) >= 100) return 'draw';
+
+    // Threefold repetition: count history entries with the same Zobrist key as
+    // the current position, adding 1 for the current position itself unless it
+    // is already the last history entry.
+    const [curLo, curHi] = positionKey(board, turn, lastMove);
+    let count = 0;
+    for (let i = 0; i < boardHistory.length; i++) {
+        const histTurn = i % 2 === 0 ? 'w' : 'b';
+        const [lo, hi] = positionKey(boardHistory[i], histTurn, null);
+        if (lo === curLo && hi === curHi) count++;
+    }
+    const n = boardHistory.length;
+    const lastTurn = (n - 1) % 2 === 0 ? 'w' : 'b';
+    const [lastLo, lastHi] = positionKey(boardHistory[n - 1], lastTurn, null);
+    if (!(lastLo === curLo && lastHi === curHi)) count++;
+    if (count >= 3) return 'draw';
+
+    return state;
+};
+
+export const checkGameState = (board, turn, lastMove, boardHistory = null) =>
+    evaluateGameState(board, turn, lastMove, boardHistory);
 
 // ---------- Move application ----------
 // Apply a move to the array board (single source of truth for the UI) and
 // evaluate the resulting state with the bitboard engine.
 //
+// `boardHistory` (optional): all prior boards INCLUDING the pre-move position
+// (entry 0 = initial board, white to move). Enables repetition/50-move draws.
+//
 // Returns { board, turn, state, lastMove, notation, thisMove } plus legacy
 // aliases (newBoard/nextTurn/newState) so both call styles keep working.
-export const executeMove = (board, turn, fromRow, fromCol, toRow, toCol, moveDetails = {}) => {
+export const executeMove = (board, turn, fromRow, fromCol, toRow, toCol, moveDetails = {}, boardHistory = null) => {
     const moving = board[fromRow] && board[fromRow][fromCol];
     if (!moving) return null;
 
@@ -218,7 +281,10 @@ export const executeMove = (board, turn, fromRow, fromCol, toRow, toCol, moveDet
     };
 
     const nextTurn = turn === 'w' ? 'b' : 'w';
-    const state = engineGameState(fromBoardArray(newBoard, nextTurn, thisMove));
+    const state = evaluateGameState(
+        newBoard, nextTurn, thisMove,
+        boardHistory ? [...boardHistory, newBoard] : null
+    );
     const notation = getAlgebraicNotation(thisMove, board, state === 'check', state === 'checkmate');
 
     return {
