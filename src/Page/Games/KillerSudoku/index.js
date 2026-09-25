@@ -23,6 +23,8 @@ import Controls from "./Controls";
 import NumberSelector from "./NumberSelector";
 import RulesPanel from "./RulesPanel";
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const Timer = ({ isRunning, theme, themeColors, onTimeUpdate }) => {
     const [time, setTime] = useState(0);
 
@@ -503,7 +505,7 @@ export default function KillerSudoku() {
         setHistory((prev) => [...prev, { board, notes: newNotes }]);
     };
 
-    const visualizeSolver = () => {
+    const visualizeSolver = async () => {
         if (solvingRef.current || win || !cages.length) return;
         setSolving(true);
         solvingRef.current = true;
@@ -512,15 +514,29 @@ export default function KillerSudoku() {
         const currentBoard = board.map((row) => row.slice());
 
         // Engine-backed killer solver: MRV + cage sum-bound pruning, seeded
-        // with the user's digits. Synchronous + node-capped, so it cannot hang
-        // the UI the way the old per-cell async DFS did on ambiguous seeds.
+        // with the user's digits. Solves synchronously (bounded by nodeCap),
+        // then the placement sequence is replayed with animation so the solve
+        // is both instant to compute and watchable.
         const result = solveKillerBoard(cages, currentBoard, 2000000);
 
         if (result.solved) {
-            const solvedBoard = result.board.map((row) => row.slice());
-            setBoard(solvedBoard);
-            setHistory((prev) => [...prev, { board: solvedBoard, notes: {} }]);
-            if (solution.length && isComplete(result.board, solution)) setWin(true);
+            const finalBoard = result.board.map((row) => row.slice());
+            const replay = result.moves || [];
+            // Speed adapts: 60ms/step for small solves, down to 8ms for big ones.
+            const stepMs = replay.length > 70 ? 8 : replay.length > 40 ? 20 : 60;
+            for (const [r, c, n] of replay) {
+                if (!solvingRef.current) break; // user left/undid mid-replay
+                currentBoard[r][c] = n;
+                setBoard(currentBoard.map((row) => row.slice()));
+                setSelectedCell([r, c]);
+                // eslint-disable-next-line no-await-in-loop
+                await sleep(stepMs);
+            }
+            if (solvingRef.current) {
+                setBoard(finalBoard);
+                setHistory((prev) => [...prev, { board: finalBoard, notes: {} }]);
+                if (solution.length && isComplete(finalBoard, solution)) setWin(true);
+            }
         } else {
             alert(result.aborted
                 ? "Solver ran out of its search budget without finding a solution."

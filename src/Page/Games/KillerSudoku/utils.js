@@ -429,10 +429,11 @@ export function solveKillerCollect(cages, limit = 2, nodeCap = 60000, givenDigit
  * user's placed digits — so partial boards keep their digits and inconsistent
  * boards are detected rather than silently "solved around".
  *
- * Returns { solved, board, aborted, nodes }:
+ * Returns { solved, board, aborted, nodes, moves }:
  *   solved=true → board is a complete solution consistent with the user's digits.
  *   solved=false, aborted=false → the board is contradictory (no solution).
  *   solved=false, aborted=true  → node budget exhausted; answer unknown.
+ *   moves lists [r, c, digit] in placement order (for replay animation).
  */
 export function solveKillerBoard(cages, userBoard, nodeCap = 2000000) {
     const cageIdOf = buildCageIdOf(cages);
@@ -447,6 +448,7 @@ export function solveKillerBoard(cages, userBoard, nodeCap = 2000000) {
 
     let nodes = 0;
     let aborted = false;
+    const moves = [];
 
     // Seed the constraint masks with the user's digits. Any direct conflict
     // (same digit twice in a row/col/box/cage) means the board is invalid.
@@ -557,7 +559,9 @@ export function solveKillerBoard(cages, userBoard, nodeCap = 2000000) {
         for (let d = 1; d <= 9; d++) {
             if (!(bestMask & bitsOf(d))) continue;
             place(bestR, bestC, d);
+            moves.push([bestR, bestC, d]);
             if (dfs()) return true;
+            moves.pop();
             unplace(bestR, bestC, d);
             if (aborted) return false;
         }
@@ -565,7 +569,7 @@ export function solveKillerBoard(cages, userBoard, nodeCap = 2000000) {
     }
 
     const solved = dfs();
-    return { solved, board: grid, aborted, nodes };
+    return { solved, board: grid, aborted, nodes, moves };
 }
 
 function popcount(x) {
