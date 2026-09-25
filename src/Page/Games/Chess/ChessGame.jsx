@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, RefreshCw, Trophy, Users, Globe } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Board from './Board';
-import { initialBoard, getValidMoves, executeMove, checkGameState, getAlgebraicNotation } from './logic'; 
+import { initialBoard, getValidMoves, executeMove, getAlgebraicNotation } from './logic'; 
 
 import { evaluateBoard } from './AI';
 import Stockfish from './StockfishEngine';
@@ -226,7 +226,7 @@ const ChessGame = () => {
         setGameState(newState);
 
         // Timer Control
-        if (['checkmate', 'stalemate', 'timeout'].includes(newState)) {
+        if (['checkmate', 'stalemate', 'draw', 'timeout'].includes(newState)) {
             setTimerActive(false);
         } else {
             // Start timer if not already active (first move)
@@ -314,6 +314,7 @@ const ChessGame = () => {
         }
 
         if (gameState !== 'playing' && gameState !== 'check' && mode !== 'analysis') return;
+        if (['checkmate', 'stalemate', 'draw', 'timeout'].includes(gameState)) return;
 
         // Block interaction if it's AI's turn
         if (mode === 'ai' && turn === 'b') return;
@@ -389,6 +390,7 @@ const ChessGame = () => {
                             gameState === 'timeout' ? `Time Out! ${turn === 'w' ? 'Black' : 'White'} Wins!` :
                                 gameState === 'check' ? `${turn === 'w' ? 'White' : 'Black'} is in Check!` :
                                     gameState === 'stalemate' ? "Stalemate!" :
+                                    gameState === 'draw' ? "Draw — Insufficient Material" :
                                         `Turn: ${turn === 'w' ? 'White' : 'Black'}`}
                     </div>
 

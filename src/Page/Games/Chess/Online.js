@@ -120,7 +120,7 @@ const ChessOnline = ({ onBack }) => {
             if (bt !== undefined) setBlackTime(bt);
 
             // If game over, stop timer
-            if (['checkmate', 'stalemate', 'timeout'].includes(gameState)) {
+            if (['checkmate', 'stalemate', 'draw', 'timeout'].includes(gameState)) {
                 setTimerActive(false);
             }
         });
@@ -313,7 +313,7 @@ const ChessOnline = ({ onBack }) => {
         });
 
         // If game over locally
-        if (['checkmate', 'stalemate'].includes(res.state)) {
+        if (['checkmate', 'stalemate', 'draw'].includes(res.state)) {
             setTimerActive(false);
         }
     };
