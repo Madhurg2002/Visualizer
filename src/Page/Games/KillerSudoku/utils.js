@@ -423,6 +423,151 @@ export function solveKillerCollect(cages, limit = 2, nodeCap = 60000, givenDigit
     return { solutions, aborted };
 }
 
+/**
+ * Solve the current user board ( Killer Sudoku ) and return one solution grid.
+ * Uses the same MRV + cage-sum-bound engine as generation, seeded with the
+ * user's placed digits — so partial boards keep their digits and inconsistent
+ * boards are detected rather than silently "solved around".
+ *
+ * Returns { solved, board, aborted, nodes }:
+ *   solved=true → board is a complete solution consistent with the user's digits.
+ *   solved=false, aborted=false → the board is contradictory (no solution).
+ *   solved=false, aborted=true  → node budget exhausted; answer unknown.
+ */
+export function solveKillerBoard(cages, userBoard, nodeCap = 2000000) {
+    const cageIdOf = buildCageIdOf(cages);
+    const cageInfo = cages.map((cg) => ({
+        used: 0, placed: 0, remaining: cg.cells.length, target: cg.sum,
+    }));
+    const grid = userBoard.map((row) => row.slice());
+    const rows = Array(N).fill(0);
+    const cols = Array(N).fill(0);
+    const boxes = Array(N).fill(0);
+    const bitsOf = (n) => 1 << n;
+
+    let nodes = 0;
+    let aborted = false;
+
+    // Seed the constraint masks with the user's digits. Any direct conflict
+    // (same digit twice in a row/col/box/cage) means the board is invalid.
+    for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+            const v = grid[r][c];
+            if (!v) continue;
+            const b = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+            const cid = cageIdOf[r][c];
+            const bit = bitsOf(v);
+            if ((rows[r] & bit) || (cols[c] & bit) || (boxes[b] & bit)) {
+                return { solved: false, board: grid, aborted: false, nodes: 0 };
+            }
+            if (cid >= 0) {
+                if (cageInfo[cid].used & bit) {
+                    return { solved: false, board: grid, aborted: false, nodes: 0 };
+                }
+                cageInfo[cid].used |= bit;
+                cageInfo[cid].placed += v;
+                cageInfo[cid].remaining -= 1;
+            }
+            rows[r] |= bit; cols[c] |= bit; boxes[b] |= bit;
+        }
+    }
+    // A cage whose placed digits already overshoot its sum is also invalid.
+    for (const info of cageInfo) {
+        if (info.placed > info.target) {
+            return { solved: false, board: grid, aborted: false, nodes: 0 };
+        }
+    }
+
+    // Same allocation-light candidate computation as the generation solver,
+    // including the min/max rest-sum bound that kills undershoot early.
+    function candidates(r, c) {
+        const b = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+        const cid = cageIdOf[r][c];
+        const cage = cageInfo[cid];
+        const blocked = rows[r] | cols[c] | boxes[b] | (cid >= 0 ? cage.used : 0);
+        if (cid < 0) return ~blocked & 0x3FE;
+        const k = cage.remaining - 1;
+        const target = cage.target - cage.placed;
+        let mask = 0;
+        for (let d = 1; d <= 9; d++) {
+            if (blocked & bitsOf(d)) continue;
+            if (k < 0) continue;
+            if (k === 0) {
+                if (target !== d) continue;
+            } else {
+                let restMask = 0;
+                for (let v = 1; v <= 9; v++) {
+                    if (v !== d && !(cage.used & bitsOf(v))) restMask |= bitsOf(v);
+                }
+                if (popcount(restMask) < k) continue;
+                let minRest = 0, maxRest = 0, takenMin = 0, takenMax = 0;
+                for (let v = 1; v <= 9 && (takenMin < k || takenMax < k); v++) {
+                    if (restMask & bitsOf(v)) {
+                        if (takenMin < k) { minRest += v; takenMin++; }
+                    }
+                    const vHi = 10 - v;
+                    if (restMask & bitsOf(vHi)) {
+                        if (takenMax < k) { maxRest += vHi; takenMax++; }
+                    }
+                }
+                if (d + minRest > target || d + maxRest < target) continue;
+            }
+            mask |= bitsOf(d);
+        }
+        return mask;
+    }
+
+    function place(r, c, d) {
+        const b = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+        const cid = cageIdOf[r][c];
+        grid[r][c] = d;
+        rows[r] |= bitsOf(d); cols[c] |= bitsOf(d); boxes[b] |= bitsOf(d);
+        if (cid >= 0) {
+            cageInfo[cid].used |= bitsOf(d);
+            cageInfo[cid].placed += d;
+            cageInfo[cid].remaining -= 1;
+        }
+    }
+    function unplace(r, c, d) {
+        const b = Math.floor(r / 3) * 3 + Math.floor(c / 3);
+        const cid = cageIdOf[r][c];
+        grid[r][c] = 0;
+        rows[r] &= ~bitsOf(d); cols[c] &= ~bitsOf(d); boxes[b] &= ~bitsOf(d);
+        if (cid >= 0) {
+            cageInfo[cid].used &= ~bitsOf(d);
+            cageInfo[cid].placed -= d;
+            cageInfo[cid].remaining += 1;
+        }
+    }
+
+    function dfs() {
+        if (aborted) return false;
+        if (nodes++ > nodeCap) { aborted = true; return false; }
+        let bestR = -1, bestC = -1, bestMask = 0, bestCount = 10;
+        for (let r = 0; r < N && bestCount > 1; r++) {
+            for (let c = 0; c < N && bestCount > 1; c++) {
+                if (grid[r][c] !== 0) continue;
+                const mask = candidates(r, c);
+                const cnt = popcount(mask);
+                if (cnt === 0) return false;
+                if (cnt < bestCount) { bestCount = cnt; bestR = r; bestC = c; bestMask = mask; }
+            }
+        }
+        if (bestR === -1) return true; // full grid, all constraints hold
+        for (let d = 1; d <= 9; d++) {
+            if (!(bestMask & bitsOf(d))) continue;
+            place(bestR, bestC, d);
+            if (dfs()) return true;
+            unplace(bestR, bestC, d);
+            if (aborted) return false;
+        }
+        return false;
+    }
+
+    const solved = dfs();
+    return { solved, board: grid, aborted, nodes };
+}
+
 function popcount(x) {
     let n = 0;
     while (x) { x &= x - 1; n++; }
