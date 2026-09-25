@@ -16,6 +16,7 @@ import {
   isValid,
 } from "./utils";
 import SudokuBoard from "./SudokuBoard";
+import { solveSudoku } from "./sudokuSolver";
 import Controls from "./Controls";
 
 import WinningModal from "./WinningModal";
@@ -531,50 +532,27 @@ export default function Sudoku() {
     setHistory((prev) => [...prev, { board, notes: newNotes }]);
   };
 
-  const visualizeSolver = async () => {
+  const visualizeSolver = () => {
     if (solvingRef.current || win) return;
     setSolving(true);
     solvingRef.current = true;
     hasUsedSolver.current = true; // Mark that solver was used to disable stats
 
-    // Create a mutable copy of the board for logic
     const currentBoard = board.map(row => row.slice());
 
-    // Backtracking function
-    const solve = async () => {
-      if (!solvingRef.current) return false;
+    // Fast MRV solver (see ./sudokuSolver.js). Synchronous and bounded by a
+    // node cap, so pathological puzzles can't hang the page.
+    const result = solveSudoku(currentBoard, { nodeCap: 1000000 });
 
-      for (let r = 0; r < 9; r++) {
-        for (let c = 0; c < 9; c++) {
-          if (currentBoard[r][c] === 0) {
-            for (let n = 1; n <= 9; n++) {
-              if (!solvingRef.current) return false;
-
-              if (isValid(currentBoard, r, c, n)) {
-                currentBoard[r][c] = n;
-                setBoard(currentBoard.map(row => row.slice())); // Update UI
-                setSelectedCell([r, c]);
-
-                await sleep(20); // Delay for visualization
-
-                if (await solve()) return true;
-
-                currentBoard[r][c] = 0;
-                setBoard(currentBoard.map(row => row.slice())); // Backtrack on UI
-                await sleep(5); // Smaller delay on backtrack?
-              }
-            }
-            return false;
-          }
-        }
-      }
-      return true;
-    };
-
-    await solve();
-
-    if (isComplete(currentBoard, solution)) {
-      setWin(true);
+    if (result.solved) {
+      const solvedBoard = result.board.map(row => row.slice());
+      setBoard(solvedBoard);
+      setHistory((prev) => [...prev, { board: solvedBoard, notes: {} }]);
+      if (isComplete(result.board, solution)) setWin(true);
+    } else {
+      alert(result.aborted
+        ? "Solver ran out of its search budget without finding a solution."
+        : "No solution exists for the current board (some placed digits must be wrong).");
     }
 
     setSolving(false);
@@ -584,10 +562,35 @@ export default function Sudoku() {
 
   useEffect(() => {
     const handleKey = (e) => {
-      if (!selectedCell || win) return;
+      if (win) return;
+
+      // Arrow keys always work: they select the first cell when nothing is
+      // selected and wrap around at the edges. Home/End jump row start/end.
+      if (e.key.startsWith("Arrow")) {
+        e.preventDefault();
+        setSelectedCell((prev) => {
+          const r = prev ? prev[0] : 0;
+          const c = prev ? prev[1] : 0;
+          switch (e.key) {
+            case "ArrowUp": return [(r + 8) % 9, c];
+            case "ArrowDown": return [(r + 1) % 9, c];
+            case "ArrowLeft": return [r, (c + 8) % 9];
+            case "ArrowRight": return [r, (c + 1) % 9];
+            default: return prev;
+          }
+        });
+        return;
+      }
+      if ((e.key === "Home" || e.key === "End") && selectedCell) {
+        e.preventDefault();
+        setSelectedCell([selectedCell[0], e.key === "Home" ? 0 : 8]);
+        return;
+      }
+
+      if (!selectedCell) return;
       const [r, c] = selectedCell;
       if (lockedCells.has(`${r}-${c}`)) return;
-      
+
       // Toggle Note Mode with 'N'
       if (e.key === 'n' || e.key === 'N') {
           setIsNoteMode(prev => !prev);
@@ -603,10 +606,7 @@ export default function Sudoku() {
         }
       } else if (e.key === "Backspace" || e.key === "Delete") {
         fillCell(r, c, 0); // Clears cell and notes
-      } else if (e.key === "ArrowUp" && r > 0) setSelectedCell([r - 1, c]);
-      else if (e.key === "ArrowDown" && r < 8) setSelectedCell([r + 1, c]);
-      else if (e.key === "ArrowLeft" && c > 0) setSelectedCell([r, c - 1]);
-      else if (e.key === "ArrowRight" && c < 8) setSelectedCell([r, c + 1]);
+      }
     };
     window.addEventListener("keydown", handleKey);
     return () => window.removeEventListener("keydown", handleKey);

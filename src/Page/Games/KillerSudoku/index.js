@@ -9,7 +9,9 @@ import {
     killerCandidates,
     isValid,
     isComplete,
+    solveKillerBoard,
 } from "./utils";
+import { solveSudoku } from "../Sudoku/sudokuSolver";
 import { THEMES } from "../Sudoku/themes";
 import Settings from "../Sudoku/Settings";
 import WinningModal from "../Sudoku/WinningModal";
@@ -20,8 +22,6 @@ import KillerBoard from "./KillerBoard";
 import Controls from "./Controls";
 import NumberSelector from "./NumberSelector";
 import RulesPanel from "./RulesPanel";
-
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const Timer = ({ isRunning, theme, themeColors, onTimeUpdate }) => {
     const [time, setTime] = useState(0);
@@ -503,7 +503,7 @@ export default function KillerSudoku() {
         setHistory((prev) => [...prev, { board, notes: newNotes }]);
     };
 
-    const visualizeSolver = async () => {
+    const visualizeSolver = () => {
         if (solvingRef.current || win || !cages.length) return;
         setSolving(true);
         solvingRef.current = true;
@@ -511,64 +511,71 @@ export default function KillerSudoku() {
 
         const currentBoard = board.map((row) => row.slice());
 
-        const killerValid = (b, r, c, n) =>
-            isValid(b, r, c, n) && !cageViolated(b, cages, cageIdOf, r, c, n);
+        // Engine-backed killer solver: MRV + cage sum-bound pruning, seeded
+        // with the user's digits. Synchronous + node-capped, so it cannot hang
+        // the UI the way the old per-cell async DFS did on ambiguous seeds.
+        const result = solveKillerBoard(cages, currentBoard, 2000000);
 
-        const solve = async () => {
-            if (!solvingRef.current) return false;
-            for (let r = 0; r < 9; r++) {
-                for (let c = 0; c < 9; c++) {
-                    if (currentBoard[r][c] === 0) {
-                        for (let n = 1; n <= 9; n++) {
-                            if (!solvingRef.current) return false;
-                            if (killerValid(currentBoard, r, c, n)) {
-                                currentBoard[r][c] = n;
-                                setBoard(currentBoard.map((row) => row.slice()));
-                                setSelectedCell([r, c]);
-                                await sleep(20);
-                                if (await solve()) return true;
-                                currentBoard[r][c] = 0;
-                                setBoard(currentBoard.map((row) => row.slice()));
-                                await sleep(5);
-                            }
-                        }
-                        return false;
-                    }
-                }
-            }
-            return true;
-        };
+        if (result.solved) {
+            const solvedBoard = result.board.map((row) => row.slice());
+            setBoard(solvedBoard);
+            setHistory((prev) => [...prev, { board: solvedBoard, notes: {} }]);
+            if (solution.length && isComplete(result.board, solution)) setWin(true);
+        } else {
+            alert(result.aborted
+                ? "Solver ran out of its search budget without finding a solution."
+                : "No solution exists for the current board (some placed digits must be wrong). Check the highlighted cage/row conflicts.");
+        }
 
-        await solve();
-
-        if (solution.length && isComplete(currentBoard, solution)) setWin(true);
         setSolving(false);
         solvingRef.current = false;
         setSelectedCell(null);
     };
 
     useEffect(() => {
-        const handleKey = (e) => {
-            if (!selectedCell || win) return;
-            const [r, c] = selectedCell;
-            if (givenCells.has(`${r}-${c}`)) return;
+    const handleKey = (e) => {
+        if (win) return;
 
-            if (e.key === "n" || e.key === "N") {
-                setIsNoteMode((prev) => !prev);
-                return;
-            }
+        // Arrow keys always work: select the first cell when nothing is
+        // selected and wrap around at the edges. Home/End jump row start/end.
+        if (e.key.startsWith("Arrow")) {
+            e.preventDefault();
+            setSelectedCell((prev) => {
+                const r = prev ? prev[0] : 0;
+                const c = prev ? prev[1] : 0;
+                switch (e.key) {
+                    case "ArrowUp": return [(r + 8) % 9, c];
+                    case "ArrowDown": return [(r + 1) % 9, c];
+                    case "ArrowLeft": return [r, (c + 8) % 9];
+                    case "ArrowRight": return [r, (c + 1) % 9];
+                    default: return prev;
+                }
+            });
+            return;
+        }
+        if ((e.key === "Home" || e.key === "End") && selectedCell) {
+            e.preventDefault();
+            setSelectedCell([selectedCell[0], e.key === "Home" ? 0 : 8]);
+            return;
+        }
 
-            if (/^[1-9]$/.test(e.key)) {
-                const num = Number(e.key);
-                if (isNoteMode && board[r][c] === 0) toggleNote(r, c, num);
-                else fillCell(r, c, num);
-            } else if (e.key === "Backspace" || e.key === "Delete") {
-                fillCell(r, c, 0);
-            } else if (e.key === "ArrowUp" && r > 0) setSelectedCell([r - 1, c]);
-            else if (e.key === "ArrowDown" && r < 8) setSelectedCell([r + 1, c]);
-            else if (e.key === "ArrowLeft" && c > 0) setSelectedCell([r, c - 1]);
-            else if (e.key === "ArrowRight" && c < 8) setSelectedCell([r, c + 1]);
-        };
+        if (!selectedCell) return;
+        const [r, c] = selectedCell;
+        if (givenCells.has(`${r}-${c}`)) return;
+
+        if (e.key === "n" || e.key === "N") {
+            setIsNoteMode((prev) => !prev);
+            return;
+        }
+
+        if (/^[1-9]$/.test(e.key)) {
+            const num = Number(e.key);
+            if (isNoteMode && board[r][c] === 0) toggleNote(r, c, num);
+            else fillCell(r, c, num);
+        } else if (e.key === "Backspace" || e.key === "Delete") {
+            fillCell(r, c, 0);
+        }
+    };
         window.addEventListener("keydown", handleKey);
         return () => window.removeEventListener("keydown", handleKey);
     }, [selectedCell, win, board, givenCells, fillCell, isNoteMode, toggleNote]);
