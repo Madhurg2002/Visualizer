@@ -1,17 +1,23 @@
-import { getValidMoves, getPossibleMoves, checkGameState, getPieceType, getPieceColor } from './logic';
+// AI.js — Search & evaluation on the bitboard engine.
+//
+// Same public API as before (getBestMove / evaluateBoard working on the legacy
+// array board), but all search internals run on split 32-bit bitboards with
+// make/unmake (zero cloning), alpha-beta, MVV-LVA ordering, quiescence, and a
+// transposition table keyed by Zobrist hash.
+import {
+    WHITE, BLACK, PAWN, KNIGHT, BISHOP, ROOK, QUEEN, KING,
+    rcToSq, sqToRow, sqToCol, setBit, getBit, isEmpty, popCount, popLsb,
+    fromBoardArray,
+} from './bitboard';
+import {
+    generatePseudoMoves, generateLegalMoves, make, unmake,
+    isInCheck, gameState as engineGameState,
+} from './bbEngine';
 
-// Piece Values
-const PIECE_VALUES = {
-    p: 100,
-    n: 320,
-    b: 330,
-    r: 500,
-    q: 900,
-    k: 20000
-};
+// ---------- Piece values ----------
+const PIECE_VALUES = [100, 320, 330, 500, 900, 20000]; // p n b r q k
 
-// Positional Tables (Simplified for Black side, need mirroring for White if AI plays White)
-// Higher numbers = better position
+// ---------- Positional tables (from White's perspective, row 0 = rank 8) ----------
 const MST = {
     p: [
         [0, 0, 0, 0, 0, 0, 0, 0],
@@ -75,378 +81,214 @@ const MST = {
     ]
 };
 
-// Evaluate the board from the perspective of the side to move (or absolute score)
-// Checks: Material, Position
-// Evaluate the board
-// Add Mobility and Endgame heuristics
-export const evaluateBoard = (board) => {
+// Flattened square tables for fast lookup: PST[type][color][sq] (0..63,
+// row-major with row 0 = rank 8). Black tables are the vertical mirror.
+const TYPE_IDS = { p: PAWN, n: KNIGHT, b: BISHOP, r: ROOK, q: QUEEN, k: KING };
+const PST = (() => {
+    const tables = {};
+    for (const t of Object.keys(MST)) {
+        const table = [new Int16Array(64), new Int16Array(64)];
+        for (let r = 0; r < 8; r++) {
+            for (let c = 0; c < 8; c++) {
+                const sq = rcToSq(r, c);
+                table[WHITE][sq] = MST[t][r][c];
+                table[BLACK][sq] = MST[t][7 - r][c];
+            }
+        }
+        tables[TYPE_IDS[t]] = table;
+    }
+    return tables;
+})();
+
+// ---------- Evaluation (absolute, White-positive) ----------
+// Accepts a bitboard position, or a legacy 8x8 array board (auto-converted).
+export const evaluateBoard = (input) => {
+    const pos = Array.isArray(input) ? fromBoardArray(input, 'w', null) : input;
     let score = 0;
-    let whiteMaterial = 0;
-    let blackMaterial = 0;
-
-    // Material & Position
-    for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-            const piece = board[r][c];
-            if (piece) {
-                const { type, color } = piece;
-                const value = PIECE_VALUES[type] || 0;
-
-                // Track material for endgame detection
-                if (type !== 'k' && type !== 'p') {
-                    if (color === 'w') whiteMaterial += value;
-                    else blackMaterial += value;
-                }
-
-                // MST Position
-                let posValue = 0;
-                if (MST[type]) {
-                    // Use Endgame King Table if material is low
-                    // Simple logic: if < 1500 material (e.g. just Rook + Minor), King should activate
-                    if (type === 'k') {
-                        const isEndgame = (color === 'w' ? blackMaterial : whiteMaterial) < 1500;
-                        if (isEndgame) {
-                            // Simple activating heuristic: separate table or just invert center logic
-                            // For simplicity using existing table but maybe boost it?
-                            // Or use a specific Endgame Table (adding later if needed).
-                            // For now, let's just stick to MST but maybe add center-proximity bonus in endgame?
-                        }
-                    }
-
-                    if (color === 'w') {
-                        posValue = MST[type][r][c];
-                    } else {
-                        posValue = MST[type][7 - r][c];
-                    }
-                }
-
-                if (color === 'w') {
-                    score += (value + posValue);
-                } else {
-                    score -= (value + posValue);
-                }
+    for (let color = 0; color < 2; color++) {
+        for (let t = 0; t < 6; t++) {
+            const b = { lo: pos.pieces[color * 6 + t].lo, hi: pos.pieces[color * 6 + t].hi };
+            const sign = color === WHITE ? 1 : -1;
+            const table = PST[t];
+            let sq;
+            while ((sq = popLsb(b)) >= 0) {
+                score += sign * (PIECE_VALUES[t] + table[color][sq]);
             }
         }
     }
-
-    // Mobility (Pseudo-legal moves count) - Small bonus per available move
-    // This encourages developing pieces and controlling space.
-    // Performance note: getPossibleMoves is faster than getValidMoves (no check simulation).
-    // We sample mobility for both sides.
-    const whiteMobility = countMobility(board, 'w');
-    const blackMobility = countMobility(board, 'b');
-
-    score += (whiteMobility * 5); // 5 points per pseudo-legal move (0.05 pawn)
-    score -= (blackMobility * 5);
-
     return score;
 };
 
-const countMobility = (board, color) => {
-    let count = 0;
-    for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-            if (board[r][c] && board[r][c].color === color) {
-                const moves = getPossibleMoves(board, r, c, null); // lastMove null for approx
-                count += moves.length;
-            }
-        }
-    }
-    return count;
+// ---------- Transposition table ----------
+const TT = new Map();
+const TT_MAX = 1 << 20;
+const ttStore = (keyLo, keyHi, depth, score, type) => {
+    if (TT.size >= TT_MAX) TT.clear();
+    TT.set(keyLo + ':' + keyHi, { depth, score, type });
 };
 
-// Transposition Table
-const transpositionTable = new Map();
+const MATE = 90000;
 
-// Helper: Generate a unique signature for the board
-const getBoardSignature = (board, turn) => {
-    // fast character mapping
-    let sig = turn + ':';
-    for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-            const p = board[r][c];
-            if (p) sig += `${p.color}${p.type}${r}${c}`;
-        }
-    }
-    return sig;
-};
+// ---------- Search ----------
+const MATE_PLY = 1000; // Subtract plies to prefer faster mates.
 
-// Minimax with Alpha-Beta Pruning
-export const getBestMove = (board, depth, isMaximizingPlayer, lastMove) => {
-    // Clear TT for new turn to ensure freshness (or keep if implementing iterative deepening later)
-    // For now, simple clear to manage memory
-    transpositionTable.clear();
+const search = (pos, depth, alpha, beta, ply) => {
+    const whiteMax = pos.side === WHITE;
 
-    // Basic iterative deepening could go here, but fixed depth for now
-    // Depth 3 is usually okay for JS (plies)
+    if (depth === 0) return quiescence(pos, alpha, beta);
 
-    const possibleMoves = getAllMoves(board, isMaximizingPlayer ? 'w' : 'b', lastMove);
-
-    // Check Game Over or Depth 0
-    if (depth === 0 || possibleMoves.length === 0) {
-        // If no moves, check logic handles checkmate/stalemate... 
-        // We can just eval board. 
-        // But if checkmate, score should be infinite.
-        // Let's rely on basic eval first.
-        return { score: evaluateBoard(board) };
-        // Ideally: checkGameState(board) -> if checkmate return +/- Infinity
+    const key = pos.keyLo + ':' + pos.keyHi;
+    const cached = TT.get(key);
+    let alphaOrig = alpha, betaOrig = beta;
+    if (cached && cached.depth >= depth) {
+        if (cached.type === 'exact') return cached.score;
+        if (cached.type === 'lower' && cached.score > alpha) alpha = cached.score;
+        else if (cached.type === 'upper' && cached.score < beta) beta = cached.score;
+        if (alpha >= beta) return cached.score;
     }
 
-    // Ordering: captures first? (For alpha-beta efficiency)
-
-    let bestMove = null;
-    let bestScore = isMaximizingPlayer ? -Infinity : Infinity;
-
-    // Sort moves simply? (Capture moves helps)
-    possibleMoves.sort((a, b) => (b.capture ? 1 : 0) - (a.capture ? 1 : 0));
-
-    for (const move of possibleMoves) {
-        // Simulate Move
-        const nextBoard = board.map(r => r.map(c => c ? { ...c } : null));
-
-        // Simplified move exec (missing castling logic in simulation for speed? No, keep logic correct)
-        // ...Actually we should likely duplicate logic.js executeMove code or refactor it out.
-        // For AI v1: simple move.
-        const movingPiece = { ...nextBoard[move.from.row][move.from.col], hasMoved: true };
-        nextBoard[move.from.row][move.from.col] = null;
-        nextBoard[move.to.row][move.to.col] = movingPiece;
-
-        // Recursion
-        // If we are Max (White), next is Min (Black).
-        const result = minimax(nextBoard, depth - 1, -Infinity, Infinity, !isMaximizingPlayer, move);
-
-        if (isMaximizingPlayer) {
-            if (result > bestScore) {
-                bestScore = result;
-                bestMove = move;
-            }
-        } else {
-            if (result < bestScore) {
-                bestScore = result;
-                bestMove = move;
-            }
-        }
-    }
-
-    return { move: bestMove, score: bestScore };
-};
-
-// Helper: Minimax recursive body
-const minimax = (board, depth, alpha, beta, isMaximizingPlayer, lastMove) => {
-    const turn = isMaximizingPlayer ? 'w' : 'b';
-    const boardSig = getBoardSignature(board, turn);
-    const alphaOriginal = alpha;
-
-    // 1. Memoization / Transposition Table Lookup
-    if (transpositionTable.has(boardSig)) {
-        const entry = transpositionTable.get(boardSig);
-        if (entry.depth >= depth) {
-            if (entry.type === 'exact') return entry.score;
-            if (entry.type === 'lower' && entry.score > alpha) alpha = entry.score;
-            else if (entry.type === 'upper' && entry.score < beta) beta = entry.score;
-            if (alpha >= beta) return entry.score;
-        }
-    }
-
-    if (depth === 0) {
-        // Use Quiescence Search at leaf nodes to solve horizon effect
-        const val = quiescence(board, alpha, beta, isMaximizingPlayer, lastMove);
-        transpositionTable.set(boardSig, { score: val, depth, type: 'exact' });
-        return val;
-    }
-
-    const moves = getAllMoves(board, turn, lastMove);
-
+    const moves = generateLegalMoves(pos);
     if (moves.length === 0) {
-        // strictly check for checkmate vs stalemate
-        if (checkGameState(board, turn, lastMove) === 'checkmate') {
-            return isMaximizingPlayer ? -90000 : 90000;
-        }
-        return 0; // Stalemate
+        return isInCheck(pos) ? (whiteMax ? -MATE + ply : MATE - ply) : 0; // Mate or stalemate.
     }
 
-    // Move Ordering: Captures > Checks (if possible) > History
-    moves.sort((a, b) => (b.capture ? 10 : 0) - (a.capture ? 10 : 0));
-
-    if (isMaximizingPlayer) {
-        let maxEval = -Infinity;
-        for (const move of moves) {
-            const nextBoard = simulateMove(board, move);
-            const ev = minimax(nextBoard, depth - 1, alpha, beta, false, move);
-            maxEval = Math.max(maxEval, ev);
-            alpha = Math.max(alpha, ev);
-            if (beta <= alpha) break;
+    // MVV-LVA capture ordering (en passant scores as a pawn capture).
+    for (const m of moves) {
+        if (m.captured >= 0) {
+            m.order = 10 * PIECE_VALUES[m.captured % 6] - PIECE_VALUES[m.piece % 6];
+        } else if (m.promo >= 0) {
+            m.order = PIECE_VALUES[m.promo];
+        } else {
+            m.order = 0;
         }
+    }
+    moves.sort((a, b) => b.order - a.order);
 
-        // Store in TT
-        const type = maxEval <= alphaOriginal ? 'upper' : (maxEval >= beta ? 'lower' : 'exact');
-        transpositionTable.set(boardSig, { score: maxEval, depth, type });
-
-        return maxEval;
+    if (whiteMax) {
+        let best = -Infinity;
+        for (const m of moves) {
+            make(pos, m);
+            const ev = search(pos, depth - 1, alpha, beta, ply + 1);
+            unmake(pos);
+            if (ev > best) best = ev;
+            if (best > alpha) alpha = best;
+            if (alpha >= beta) break;
+        }
+        ttStore(pos.keyLo, pos.keyHi, depth, best,
+            best <= alphaOrig ? 'upper' : best >= betaOrig ? 'lower' : 'exact');
+        return best;
     } else {
-        let minEval = Infinity;
-        for (const move of moves) {
-            const nextBoard = simulateMove(board, move);
-            const ev = minimax(nextBoard, depth - 1, alpha, beta, true, move);
-            minEval = Math.min(minEval, ev);
-            beta = Math.min(beta, ev);
-            if (beta <= alpha) break;
+        let best = Infinity;
+        for (const m of moves) {
+            make(pos, m);
+            const ev = search(pos, depth - 1, alpha, beta, ply + 1);
+            unmake(pos);
+            if (ev < best) best = ev;
+            if (best < beta) beta = best;
+            if (alpha >= beta) break;
         }
-
-        // Store in TT
-        const type = minEval <= alphaOriginal ? 'upper' : (minEval >= beta ? 'lower' : 'exact');
-        transpositionTable.set(boardSig, { score: minEval, depth, type });
-
-        return minEval;
+        ttStore(pos.keyLo, pos.keyHi, depth, best,
+            best <= alphaOrig ? 'upper' : best >= betaOrig ? 'lower' : 'exact');
+        return best;
     }
 };
 
-// Quiescence Search: Keep searching captures to avoid horizon effect
-const quiescence = (board, alpha, beta, isMaximizingPlayer, lastMove) => {
-    const standPat = evaluateBoard(board);
-
-    if (isMaximizingPlayer) {
-        if (standPat >= beta) return beta;
-        if (alpha < standPat) alpha = standPat;
+const quiescence = (pos, alpha, beta) => {
+    const standPat = evaluateBoard(pos);
+    const whiteMax = pos.side === WHITE;
+    if (whiteMax) {
+        if (standPat >= beta) return standPat;
+        if (standPat > alpha) alpha = standPat;
     } else {
-        if (standPat <= alpha) return alpha;
-        if (beta > standPat) beta = standPat;
+        if (standPat <= alpha) return standPat;
+        if (standPat < beta) beta = standPat;
     }
 
-    // Generate only capture moves
-    const inputMoves = getAllMoves(board, isMaximizingPlayer ? 'w' : 'b', lastMove); // Optimization: pass flag to only generate captures?
-    const captureMoves = inputMoves.filter(m => m.capture);
+    const pseudo = generatePseudoMoves(pos);
+    const captures = [];
+    for (const m of pseudo) {
+        if (m.captured >= 0) captures.push(m);
+    }
+    captures.sort((a, b) =>
+        (10 * PIECE_VALUES[b.captured % 6] - PIECE_VALUES[b.piece % 6])
+        - (10 * PIECE_VALUES[a.captured % 6] - PIECE_VALUES[a.piece % 6]));
 
-    // Sort captures by value (MVV-LVA) - simplified: just capture flag (already true), maybe capture value?
-    // For now assuming getAllMoves uses default order, but we should sort High Capture first.
-    // move.piece is attacker, we need victim. Victim is on board[move.to].
-    // Note: getAllMoves simulated board logic, 'to' might be empty in checking? No, getAllMoves uses current board.
-
-    captureMoves.sort((a, b) => {
-        // Victim value
-        const vA = getPieceValue(board[a.to.row][a.to.col]); // This might need helper
-        const vB = getPieceValue(board[b.to.row][b.to.col]);
-        return vB - vA;
-    });
-
-    if (isMaximizingPlayer) {
-        for (const move of captureMoves) {
-            const nextBoard = simulateMove(board, move);
-            const score = quiescence(nextBoard, alpha, beta, false, move);
-
-            if (score >= beta) return beta;
-            if (score > alpha) alpha = score;
+    if (whiteMax) {
+        for (const m of captures) {
+            make(pos, m);
+            if (isInCheck(pos, pos.side ^ 1)) { // Illegal (king left in check) → skip.
+                unmake(pos);
+                continue;
+            }
+            const ev = quiescence(pos, alpha, beta);
+            unmake(pos);
+            if (ev > alpha) alpha = ev;
+            if (alpha >= beta) return alpha;
         }
         return alpha;
     } else {
-        for (const move of captureMoves) {
-            const nextBoard = simulateMove(board, move);
-            const score = quiescence(nextBoard, alpha, beta, true, move);
-
-            if (score <= alpha) return alpha;
-            if (score < beta) beta = score;
+        for (const m of captures) {
+            make(pos, m);
+            if (isInCheck(pos, pos.side ^ 1)) {
+                unmake(pos);
+                continue;
+            }
+            const ev = quiescence(pos, alpha, beta);
+            unmake(pos);
+            if (ev < beta) beta = ev;
+            if (alpha >= beta) return beta;
         }
         return beta;
     }
 };
 
-const getPieceValue = (piece) => {
-    if (!piece) return 0;
-    return PIECE_VALUES[piece.type] || 0;
-};
+// ---------- Public API ----------
+// Returns { move: { from: {row,col}, to: {row,col}, ... }, score }.
+// `isMaximizingPlayer` selects the color to search for (true → white).
+export const getBestMove = (board, depth, isMaximizingPlayer, lastMove) => {
+    const turn = isMaximizingPlayer ? 'w' : 'b';
+    const pos = fromBoardArray(board, turn, lastMove);
+    const rootColor = pos.side; // WHITE or BLACK
+    const maximizing = rootColor === WHITE;
 
-// Helper: Get all valid moves for a color
-const getAllMoves = (board, color, lastMove) => {
-    let allMoves = [];
-    for (let r = 0; r < 8; r++) {
-        for (let c = 0; c < 8; c++) {
-            const piece = board[r][c];
-            if (piece && piece.color === color) {
-                const moves = getValidMoves(board, r, c, lastMove);
-                // Attach 'from' to move, getValidMoves only gives 'to' (and capture flags)
-                // getValidMoves returns [{row, col, ...}]
-                moves.forEach(m => {
-                    allMoves.push({
-                        from: { row: r, col: c },
-                        to: { row: m.row, col: m.col },
-                        piece: piece,
-                        ...m
-                    });
-                });
-            }
+    const moves = generateLegalMoves(pos);
+    if (moves.length === 0) return { move: null, score: isInCheck(pos) ? (maximizing ? -MATE : MATE) : 0 };
+
+    // MVV-LVA root ordering.
+    for (const m of moves) {
+        m.order = m.captured >= 0 ? 10 * PIECE_VALUES[m.captured % 6] - PIECE_VALUES[m.piece % 6] : 0;
+    }
+    moves.sort((a, b) => b.order - a.order);
+
+    TT.clear();
+
+    let bestMove = moves[0];
+    let bestScore = maximizing ? -Infinity : Infinity;
+    let alpha = -Infinity, beta = Infinity;
+
+    for (const m of moves) {
+        make(pos, m);
+        const ev = search(pos, depth - 1, alpha, beta, 1);
+        unmake(pos);
+
+        if (maximizing) {
+            if (ev > bestScore) { bestScore = ev; bestMove = m; }
+            if (bestScore > alpha) alpha = bestScore;
+        } else {
+            if (ev < bestScore) { bestScore = ev; bestMove = m; }
+            if (bestScore < beta) beta = bestScore;
         }
     }
-    return allMoves;
+
+    const toUi = (m) => ({
+        from: { row: sqToRow(m.from), col: sqToCol(m.from) },
+        to: { row: sqToRow(m.to), col: sqToCol(m.to) },
+        capture: m.captured >= 0,
+        isPromotion: m.promo >= 0,
+        promotionType: m.promo >= 0 ? 'pnbrqk'[m.promo] : undefined,
+    });
+
+    return { move: bestMove ? toUi(bestMove) : null, score: bestScore };
 };
 
-// Helper: Simulate Move directly
-const simulateMove = (board, move) => {
-    const newBoard = board.map(r => r.map(c => c ? { ...c } : null));
-    const piece = newBoard[move.from.row][move.from.col];
-
-    piece.hasMoved = true;
-    newBoard[move.from.row][move.from.col] = null;
-    newBoard[move.to.row][move.to.col] = piece;
-
-    // Basic logic for castling/en passant simulation in AI?
-    // For depth 3, maybe strict accuracy isn't 100% required if we just want "a move", 
-    // but better to be correct.
-    // Logic from index.js:
-    if (move.isCastling) {
-        const row = move.from.row;
-        if (move.side === 'king') {
-            const rook = newBoard[row][move.from.col + 3]; // +3 from king? Logic check...
-            // logic.js: col+3 is rook. King moves to col+2.
-            // move.to.col is col+2.
-            // Move rook
-            newBoard[row][move.from.col + 1] = null; // Wait, board[row][col+3] is rook.
-            // Actually index.js does:
-            // const rook = newBoard[row][col + 1]; (Wait, that was bug? No logic.js checks col+3 for rook)
-            // index.js: 
-            // if (move.side === 'king') { const rook = newBoard[row][col + 1]; ... } 
-            // This looks like index.js assumes rook is at col+1 ? No, standard chess rook is at col 7 (h). King at 4 (e).
-            // King to 6 (g). Rook to 5 (f).
-            // Logic.js generation: row, col+3 (h-file). Target King: col+2 (g).
-
-            // In index.js: 
-            // const rook = newBoard[row][col + 1]; // THIS MIGHT BE WRONG in index.js if it assumes rook IS ALREADY there? 
-            // NO, index.js: newBoard[row][col + 1] = null; newBoard[row][col - 1] = ...
-            // Wait, index.js logic for castling might be buggy if I didn't verify closely. 
-            // Let's implement correct logic here.
-
-            // King Side Castling: King e1->g1 (col 4->6). Rook h1->f1 (col 7->5).
-            if (move.to.col > move.from.col) { // Kingside
-                const oldRookPos = { r: row, c: 7 };
-                const newRookPos = { r: row, c: 5 };
-                if (newBoard[oldRookPos.r][oldRookPos.c]) {
-                    const r = newBoard[oldRookPos.r][oldRookPos.c];
-                    newBoard[oldRookPos.r][oldRookPos.c] = null;
-                    newBoard[newRookPos.r][newRookPos.c] = r;
-                }
-            } else { // Queenside e1->c1 (4->2). Rook a1->d1 (0->3).
-                const oldRookPos = { r: row, c: 0 };
-                const newRookPos = { r: row, c: 3 };
-                if (newBoard[oldRookPos.r][oldRookPos.c]) {
-                    const r = newBoard[oldRookPos.r][oldRookPos.c];
-                    newBoard[oldRookPos.r][oldRookPos.c] = null;
-                    newBoard[newRookPos.r][newRookPos.c] = r;
-                }
-            }
-        }
-    }
-    // En Passant
-    if (move.isEnPassant) {
-        // Remove captured pawn
-        // If White (moving up -1), captured pawn is "behind" the new pos? No, it's at [row][to.col]
-        // Actually pawn moves to [r-1][c], captures [r][c].
-        const captureRow = move.from.row; // The row the pawn WAS on? En Passant captures pawn on SAME RANK as start.
-        newBoard[captureRow][move.to.col] = null;
-    }
-
-    // Promotion (AI assumes Queen for now)
-    if (move.isPromotion) {
-        newBoard[move.to.row][move.to.col].type = 'q';
-    }
-
-    return newBoard;
-};
+export const PIECE_VALUE_TABLE = PIECE_VALUES;
