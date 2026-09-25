@@ -39,7 +39,9 @@ function check(name, ok, extra) {
 const killerUtils = loadModule("src/Page/Games/KillerSudoku/utils.js");
 const solverMod = loadModule("src/Page/Games/Sudoku/sudokuSolver.js");
 const sudokuUtils = loadModule("src/Page/Games/Sudoku/utils.js");
+const techniquesMod = loadModule("src/Page/Games/Sudoku/solveTechniques.js");
 const { solveSudoku, solveSudokuCount } = solverMod;
+const { solveWithLogic } = techniquesMod;
 
 // Wrap the ESM solver body into a CommonJS-compatible function object by
 // evaluating the stripped source in this module context.
@@ -153,6 +155,43 @@ const solver = (() => {
     const gen = solveSudoku(puzzle, { nodeCap: 5000000 });
     check("generated classic puzzle solves to solution",
         gen.solved && JSON.stringify(gen.board) === JSON.stringify(full));
+
+    // ---------- 4. Logic techniques (human-style) ----------
+    const classicCands = (b, r, c) => {
+        const used = new Set();
+        for (let i = 0; i < 9; i++) {
+            used.add(b[r][i]); used.add(b[i][c]);
+            used.add(b[Math.floor(r / 3) * 3 + Math.floor(i / 3)][Math.floor(c / 3) * 3 + (i % 3)]);
+        }
+        const out = [];
+        for (let n = 1; n <= 9; n++) if (!used.has(n)) out.push(n);
+        return out;
+    };
+    const logicEasy = solveWithLogic(puzzle, classicCands);
+    check("logic solver: easy puzzle solved by techniques alone",
+        logicEasy.solved && JSON.stringify(logicEasy.board) === JSON.stringify(full),
+        `${logicEasy.moves.length} moves, techniques=${[...new Set(logicEasy.moves.map(m => m.technique))].join("+")}`);
+    check("logic moves carry explanations", logicEasy.solved &&
+        logicEasy.moves.every((m) => m.technique && m.detail && m.n >= 1 && m.n <= 9));
+
+    // Killer logic: singles with cage-aware candidates.
+    try {
+        const { cages, solution } = await killerUtils.generateKillerPuzzleAsync("rjyjs0y1", "easy", {});
+        const cageIdOf = killerUtils.buildCageIdOf(cages);
+        const killerCands = (b, r, c) => {
+            const out = [];
+            for (let n = 1; n <= 9; n++) {
+                if (killerUtils.isValid(b, r, c, n) && !killerUtils.cageViolated(b, cages, cageIdOf, r, c, n)) out.push(n);
+            }
+            return out;
+        };
+        const logicKiller = solveWithLogic(Array.from({ length: 9 }, () => Array(9).fill(0)), killerCands);
+        check("logic solver: killer puzzle attempts singles pass",
+            logicKiller.moves.length >= 0 && logicKiller.moves.every((m) => m.n >= 1 && m.n <= 9),
+            `logicPlaced=${logicKiller.moves.length} solvedByLogic=${logicKiller.solved}`);
+    } catch (e) {
+        check("logic solver on killer", false, e.message);
+    }
 
     // Partial killer board: user digits are preserved, not overwritten.
     try {
