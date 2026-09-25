@@ -2,21 +2,25 @@ import React from "react";
 
 /**
  * Single Killer Sudoku cell. Renders digit, cage sum label (top-left of cage),
- * notes, and cage-violation/selection styling. Memoized — the board re-renders
- * on every keystroke, so keep this component cheap.
+ * notes, cage-violation/selection styling, cage-peer tint, and cage progress
+ * ("4/5") next to the sum. Memoized — the board re-renders on every keystroke,
+ * so keep this component cheap.
  */
 const KillerCell = React.memo(({
     r, c, val,
     isGiven, isWrong, isHint, isError, isSelected, isHighlight, isGuide,
+    isCagePeer, isCageDone,
     notes, themeColors, theme,
     onCellClick,
     win,
-    isCageTopLeft, cageSum,
+    isCageTopLeft, cageSum, cageProgress,
     cageWrong,
 }) => {
     const thickBorderColor = themeColors.boardBorder;
     const thinBorderColor = theme === "dark" ? "#475569" : "#e2e8f0";
     const cageAccent = theme === "dark" ? "#38bdf8" : "#2563eb";
+    const cagePeerBg = theme === "dark" ? "rgba(56, 189, 248, 0.07)" : "rgba(37, 99, 235, 0.06)";
+    const cageDoneBg = theme === "dark" ? "rgba(74, 222, 128, 0.06)" : "rgba(34, 197, 94, 0.07)";
 
     const borderTop = r % 3 === 0 ? `3px solid ${thickBorderColor}` : `1px solid ${thinBorderColor}`;
     const borderLeft = c % 3 === 0 ? `3px solid ${thickBorderColor}` : `1px solid ${thinBorderColor}`;
@@ -29,6 +33,8 @@ const KillerCell = React.memo(({
     else if (isHighlight) bgColor = themeColors.numberHighlightBg;
     else if (isWrong) bgColor = themeColors.wrongCellBg;
     else if (isGuide) bgColor = themeColors.guideHighlightBg;
+    else if (isCagePeer) bgColor = cagePeerBg;
+    else if (isCageDone && val === 0) bgColor = cageDoneBg;
     else if (isGiven) bgColor = themeColors.lockedCellBg;
 
     let cellColor = isGiven
@@ -77,6 +83,9 @@ const KillerCell = React.memo(({
         );
     };
 
+    const showCageProgress = isCageTopLeft && cageSum !== undefined && cageProgress &&
+        cageProgress.filled > 0 && cageProgress.filled < cageProgress.size && !cageProgress.ok;
+
     return (
         <div
             tabIndex={isGiven || win ? -1 : 0}
@@ -98,6 +107,7 @@ const KillerCell = React.memo(({
                 justifyContent: "center",
                 cursor: win ? "default" : "pointer",
                 outline: isSelected ? `3px solid ${themeColors.selectedCellBorder}` : "none",
+                outlineOffset: isSelected ? "-3px" : undefined,
                 userSelect: "none",
                 transition: "background-color 0s, box-shadow 0.25s",
                 boxShadow: isHighlight
@@ -123,11 +133,23 @@ const KillerCell = React.memo(({
                         fontSize: "clamp(9px, 2.2vw, 13px)",
                         fontWeight: 700,
                         lineHeight: 1,
-                        color: cageAccent,
+                        color: cageWrong ? "#ef4444" : cageAccent,
                         pointerEvents: "none",
                     }}
                 >
                     {cageSum}
+                    {showCageProgress && (
+                        <span
+                            style={{
+                                fontSize: "0.75em",
+                                fontWeight: 500,
+                                opacity: 0.75,
+                                marginLeft: 2,
+                            }}
+                        >
+                            ({cageProgress.filled}/{cageProgress.size})
+                        </span>
+                    )}
                 </span>
             )}
             {val !== 0 ? val : (renderNotes() || "\u200B")}
