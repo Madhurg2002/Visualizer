@@ -67,8 +67,9 @@ export function computeCandidates(board, opts = {}) {
 }
 
 /**
- * Core solver. Returns { solved, board, nodes, aborted, steps }.
- * Non-mutating: input board is copied.
+ * Core solver. Returns { solved, board, nodes, aborted, moves }.
+ * Non-mutating: input board is copied. `moves` lists [r, c, digit] in the
+ * order the engine placed them on the successful path (for replay animation).
  */
 export function solveSudoku(board, opts = {}) {
     const { canPlace = null, nodeCap = 500000 } = opts;
@@ -76,10 +77,10 @@ export function solveSudoku(board, opts = {}) {
     const rows = new Array(N).fill(0);
     const cols = new Array(N).fill(0);
     const boxes = new Array(N).fill(0);
-    const cageUsed = new Map(); // for killer: cageId -> bitmask (managed by canPlace wrapper)
 
     let nodes = 0;
     let aborted = false;
+    const moves = [];
 
     const boxId = (r, c) => Math.floor(r / 3) * 3 + Math.floor(c / 3);
 
@@ -127,18 +128,18 @@ export function solveSudoku(board, opts = {}) {
             const b = boxId(bestR, bestC), bit = bitsOf(d);
             grid[bestR][bestC] = d;
             rows[bestR] |= bit; cols[bestC] |= bit; boxes[b] |= bit;
-            if (opts.onPlace) opts.onPlace(bestR, bestC, d);
+            moves.push([bestR, bestC, d]);
             if (dfs()) return true;
+            moves.pop();
             grid[bestR][bestC] = 0;
             rows[bestR] &= ~bit; cols[bestC] &= ~bit; boxes[b] &= ~bit;
-            if (opts.onBacktrack) opts.onBacktrack(bestR, bestC);
             if (aborted) return false;
         }
         return false;
     }
 
     const solved = dfs();
-    return { solved, board: grid, nodes, aborted, steps: [] };
+    return { solved, board: grid, nodes, aborted, moves };
 }
 
 /** Count solutions up to `limit` (default 2 — "is it unique?"). */
