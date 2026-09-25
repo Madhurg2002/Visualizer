@@ -4,22 +4,27 @@ import React from "react";
  * Renders Killer Sudoku cage outlines (dashed cyan borders) as an absolutely
  * positioned overlay matching the 9x9 grid exactly. Borders are drawn only on
  * cage-facing edges; shared edges between cells of the same cage stay open.
+ * The cage containing the selected cell is drawn solid & brighter so the
+ * active cage visually "pops" from the dashed rest.
  *
  * Props:
  * - cages: [{ id, sum, cells, topLeft }]
  * - theme: "dark" | "light"
+ * - activeCageId: cage id of the selected cell (-1 = none)
  */
-export default function KillerCages({ cages, theme }) {
+export default function KillerCages({ cages, theme, activeCageId = -1 }) {
     if (!cages || cages.length === 0) return null;
 
     const cellPct = 100 / 9;
-    const borderColor = theme === "dark" ? "rgba(56, 189, 248, 0.55)" : "rgba(37, 99, 235, 0.5)";
-    const borderStyle = `2px dashed ${borderColor}`;
+    const dashed = theme === "dark" ? "rgba(56, 189, 248, 0.55)" : "rgba(37, 99, 235, 0.5)";
+    const active = theme === "dark" ? "rgba(56, 189, 248, 0.95)" : "rgba(37, 99, 235, 0.9)";
 
     return (
         <div className="absolute inset-0 pointer-events-none" aria-hidden="true">
             {cages.map((cage) => {
                 const cellSet = new Set(cage.cells.map(([r, c]) => `${r}-${c}`));
+                const isActive = cage.id === activeCageId;
+                const borderStyle = isActive ? `2.5px solid ${active}` : `2px dashed ${dashed}`;
 
                 return cage.cells.map(([r, c]) => {
                     const left = c * cellPct;

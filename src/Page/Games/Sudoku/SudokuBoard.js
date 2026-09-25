@@ -49,7 +49,8 @@ export default function SudokuBoard({
           const isSelected = selected && r === selected[0] && c === selected[1];
 
           const isHighlight = highlightValue && val === highlightValue && val !== 0;
-          const isGuide = highlightGuides && selected && (r === selected[0] || c === selected[1]);
+          const isGuide = highlightGuides && selected && (r === selected[0] || c === selected[1] ||
+            (Math.floor(r / 3) === Math.floor(selected[0] / 3) && Math.floor(c / 3) === Math.floor(selected[1] / 3)));
 
           const cellNotes = notes ? notes[key] : null;
 
