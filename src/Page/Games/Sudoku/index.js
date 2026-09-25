@@ -17,6 +17,7 @@ import {
 } from "./utils";
 import SudokuBoard from "./SudokuBoard";
 import { solveSudoku } from "./sudokuSolver";
+import { solveWithLogic } from "./solveTechniques";
 import Controls from "./Controls";
 
 import WinningModal from "./WinningModal";
@@ -186,6 +187,8 @@ export default function Sudoku() {
   const [isDirty, setIsDirty] = useState(false);  // True if the user has made any edits
   const [win, setWin] = useState(false);
   const [solving, setSolving] = useState(false);
+  const [solverMethod, setSolverMethod] = useState("logic");
+  const [techniqueBanner, setTechniqueBanner] = useState(null);
   const [isGenerating, setIsGenerating] = useState(true);
   const solvingRef = useRef(false);
   const [poppedButton, setPoppedButton] = useState(null); // Timer state
@@ -532,6 +535,18 @@ export default function Sudoku() {
     setHistory((prev) => [...prev, { board, notes: newNotes }]);
   };
 
+  // Candidate digits for classic sudoku rules (for the Logic solver).
+  const classicCands = useCallback((b, r, c) => {
+    const used = new Set();
+    for (let i = 0; i < 9; i++) {
+      used.add(b[r][i]); used.add(b[i][c]);
+      used.add(b[Math.floor(r / 3) * 3 + Math.floor(i / 3)][Math.floor(c / 3) * 3 + (i % 3)]);
+    }
+    const out = [];
+    for (let n = 1; n <= 9; n++) if (!used.has(n)) out.push(n);
+    return out;
+  }, []);
+
   const visualizeSolver = async () => {
     if (solvingRef.current || win) return;
     setSolving(true);
@@ -540,14 +555,50 @@ export default function Sudoku() {
 
     const currentBoard = board.map(row => row.slice());
 
-    // Fast MRV solver (see ./sudokuSolver.js): computes the solution instantly
-    // (bounded by a node cap, so pathological puzzles can't hang the page),
-    // then the placement sequence is replayed with animation.
-    const result = solveSudoku(currentBoard, { nodeCap: 1000000 });
+    // Solve with the chosen method (all are node-capped, no hangs), then
+    // replay the placement sequence with animation.
+    let replay = [];
+    let finalBoard = null;
+    let aborted = false;
+    let solvedFlag = false;
 
-    if (result.solved) {
-      const finalBoard = result.board.map(row => row.slice());
-      const replay = result.moves || [];
+    if (solverMethod === "logic") {
+      // Human techniques first; fall back to MRV when logic stalls.
+      const logic = solveWithLogic(currentBoard, classicCands);
+      if (logic.solved) {
+        finalBoard = logic.board;
+        replay = logic.moves.map((m) => [m.r, m.c, m.n]);
+        solvedFlag = true;
+      } else {
+        // Logic stall → finish with the fast engine and label the takeover.
+        const fast = solveSudoku(logic.board, { nodeCap: 1000000 });
+        aborted = fast.aborted;
+        if (fast.solved) {
+          finalBoard = fast.board;
+          replay = [
+            ...logic.moves.map((m) => [m.r, m.c, m.n]),
+            ...(fast.moves || []).map(([r, c, n]) => [r, c, n]),
+          ];
+          solvedFlag = true;
+          setTechniqueBanner({
+            text: `Logic solved ${logic.moves.length} cells; fast search took over`,
+            tone: "violet",
+          });
+        } else if (!aborted) {
+          setTechniqueBanner({ text: "No solution exists — some placed digits are wrong", tone: "red" });
+        }
+      }
+    } else {
+      const fast = solveSudoku(currentBoard, { nodeCap: 1000000 });
+      aborted = fast.aborted;
+      if (fast.solved) {
+        finalBoard = fast.board;
+        replay = fast.moves || [];
+        solvedFlag = true;
+      }
+    }
+
+    if (solvedFlag) {
       // Speed adapts: 60ms/step for small solves, down to 8ms for big ones.
       const stepMs = replay.length > 70 ? 8 : replay.length > 40 ? 20 : 60;
       for (const [r, c, n] of replay) {
@@ -563,15 +614,16 @@ export default function Sudoku() {
         setHistory((prev) => [...prev, { board: finalBoard, notes: {} }]);
         if (isComplete(finalBoard, solution)) setWin(true);
       }
-    } else {
-      alert(result.aborted
-        ? "Solver ran out of its search budget without finding a solution."
-        : "No solution exists for the current board (some placed digits must be wrong).");
+    } else if (!aborted && solverMethod === "fast") {
+      alert("No solution exists for the current board (some placed digits must be wrong).");
+    } else if (aborted) {
+      alert("Solver ran out of its search budget without finding a solution.");
     }
 
     setSolving(false);
     solvingRef.current = false;
     setSelectedCell(null);
+    setTimeout(() => setTechniqueBanner(null), 4000);
   };
 
   useEffect(() => {
@@ -678,6 +730,19 @@ export default function Sudoku() {
           {manualCheckResult ? "Correct so far!" : "Mistakes found!"}
         </div>
       )}
+      {techniqueBanner && (
+        <div
+          style={{
+            position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)',
+            backgroundColor: techniqueBanner.tone === 'red' ? '#ef4444' : '#7c3aed',
+            color: '#fff', padding: '10px 20px', borderRadius: 8, zIndex: 2000,
+            boxShadow: '0 4px 12px rgba(0,0,0,0.3)', fontWeight: 'bold', cursor: 'pointer'
+          }}
+          onClick={() => setTechniqueBanner(null)}
+        >
+          {techniqueBanner.text}
+        </div>
+      )}
       <Settings
         visible={settingsVisible}
         onClose={() => setSettingsVisible(false)}
@@ -754,6 +819,8 @@ export default function Sudoku() {
         onHint={showHint}
         onVisualizeSolver={visualizeSolver}
         solving={solving}
+        solverMethod={solverMethod}
+        setSolverMethod={setSolverMethod}
         poppedButton={poppedButton}
         handleButtonClick={handleButtonClick}
         onApplySeed={handleApplySeed}

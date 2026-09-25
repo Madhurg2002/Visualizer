@@ -11,6 +11,7 @@ import {
     isComplete,
     solveKillerBoard,
 } from "./utils";
+import { solveWithLogic } from "../Sudoku/solveTechniques";
 import { solveSudoku } from "../Sudoku/sudokuSolver";
 import { THEMES } from "../Sudoku/themes";
 import Settings from "../Sudoku/Settings";
@@ -168,6 +169,8 @@ export default function KillerSudoku() {
     const [isDirty, setIsDirty] = useState(false);
     const [win, setWin] = useState(false);
     const [solving, setSolving] = useState(false);
+    const [solverMethod, setSolverMethod] = useState("logic");
+    const [techniqueBanner, setTechniqueBanner] = useState(null);
     const [isGenerating, setIsGenerating] = useState(true);
     const [generationStage, setGenerationStage] = useState("growing cages");
     const solvingRef = useRef(false);
@@ -505,6 +508,15 @@ export default function KillerSudoku() {
         setHistory((prev) => [...prev, { board, notes: newNotes }]);
     };
 
+    // Candidate digits under sudoku + cage rules (for the Logic solver).
+    const killerCands = useCallback((b, r, c) => {
+        const out = [];
+        for (let n = 1; n <= 9; n++) {
+            if (isValid(b, r, c, n) && !cageViolated(b, cages, cageIdOf, r, c, n)) out.push(n);
+        }
+        return out;
+    }, [cages, cageIdOf]);
+
     const visualizeSolver = async () => {
         if (solvingRef.current || win || !cages.length) return;
         setSolving(true);
@@ -513,16 +525,48 @@ export default function KillerSudoku() {
 
         const currentBoard = board.map((row) => row.slice());
 
-        // Engine-backed killer solver: MRV + cage sum-bound pruning, seeded
-        // with the user's digits. Solves synchronously (bounded by nodeCap),
-        // then the placement sequence is replayed with animation so the solve
-        // is both instant to compute and watchable.
-        const result = solveKillerBoard(cages, currentBoard, 2000000);
+        let replay = [];
+        let finalBoard = null;
+        let aborted = false;
+        let solvedFlag = false;
 
-        if (result.solved) {
-            const finalBoard = result.board.map((row) => row.slice());
-            const replay = result.moves || [];
-            // Speed adapts: 60ms/step for small solves, down to 8ms for big ones.
+        if (solverMethod === "logic") {
+            // Human techniques (singles with live candidate updates) first.
+            const logic = solveWithLogic(currentBoard, killerCands);
+            if (logic.solved) {
+                finalBoard = logic.board;
+                replay = logic.moves.map((m) => [m.r, m.c, m.n]);
+                solvedFlag = true;
+            } else {
+                // Logic stalls on harder cages → engine finishes the job.
+                const engine = solveKillerBoard(cages, logic.board, 2000000);
+                aborted = engine.aborted;
+                if (engine.solved) {
+                    finalBoard = engine.board;
+                    replay = [
+                        ...logic.moves.map((m) => [m.r, m.c, m.n]),
+                        ...(engine.moves || []).map(([r, c, n]) => [r, c, n]),
+                    ];
+                    solvedFlag = true;
+                    setTechniqueBanner({
+                        text: `Logic solved ${logic.moves.length} cells; engine took over`,
+                        tone: "violet",
+                    });
+                } else if (!aborted) {
+                    setTechniqueBanner({ text: "No solution exists — some placed digits are wrong", tone: "red" });
+                }
+            }
+        } else {
+            const engine = solveKillerBoard(cages, currentBoard, 2000000);
+            aborted = engine.aborted;
+            if (engine.solved) {
+                finalBoard = engine.board;
+                replay = engine.moves || [];
+                solvedFlag = true;
+            }
+        }
+
+        if (solvedFlag) {
             const stepMs = replay.length > 70 ? 8 : replay.length > 40 ? 20 : 60;
             for (const [r, c, n] of replay) {
                 if (!solvingRef.current) break; // user left/undid mid-replay
@@ -537,15 +581,16 @@ export default function KillerSudoku() {
                 setHistory((prev) => [...prev, { board: finalBoard, notes: {} }]);
                 if (solution.length && isComplete(finalBoard, solution)) setWin(true);
             }
-        } else {
-            alert(result.aborted
-                ? "Solver ran out of its search budget without finding a solution."
-                : "No solution exists for the current board (some placed digits must be wrong). Check the highlighted cage/row conflicts.");
+        } else if (aborted) {
+            alert("Solver ran out of its search budget without finding a solution.");
+        } else if (solverMethod === "fast") {
+            alert("No solution exists for the current board (some placed digits must be wrong).");
         }
 
         setSolving(false);
         solvingRef.current = false;
         setSelectedCell(null);
+        setTimeout(() => setTechniqueBanner(null), 4000);
     };
 
     useEffect(() => {
@@ -632,6 +677,19 @@ export default function KillerSudoku() {
                     onClick={() => setManualCheckResult(null)}
                 >
                     {manualCheckResult ? "Correct so far!" : "Mistakes found!"}
+                </div>
+            )}
+            {techniqueBanner && (
+                <div
+                    style={{
+                        position: "fixed", bottom: 80, left: "50%", transform: "translateX(-50%)",
+                        backgroundColor: techniqueBanner.tone === "red" ? "#ef4444" : "#7c3aed",
+                        color: "#fff", padding: "10px 20px", borderRadius: 8, zIndex: 2000,
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.3)", fontWeight: "bold", cursor: "pointer",
+                    }}
+                    onClick={() => setTechniqueBanner(null)}
+                >
+                    {techniqueBanner.text}
                 </div>
             )}
             <Settings
@@ -728,6 +786,8 @@ export default function KillerSudoku() {
                 onHint={showHint}
                 onVisualizeSolver={visualizeSolver}
                 solving={solving}
+                solverMethod={solverMethod}
+                setSolverMethod={setSolverMethod}
                 isNoteMode={isNoteMode}
                 onToggleNoteMode={() => setIsNoteMode((prev) => !prev)}
                 poppedButton={poppedButton}

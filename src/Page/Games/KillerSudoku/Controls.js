@@ -1,6 +1,7 @@
 // src/Page/Games/KillerSudoku/Controls.js
 import React from "react";
-import { Undo2, CheckCircle2, Lightbulb, RefreshCw, Settings2, Skull, Cpu, Pencil } from "lucide-react";
+import { Undo2, CheckCircle2, Lightbulb, RefreshCw, Settings2, Skull, Cpu, Pencil, ChevronDown, Brain, Zap } from "lucide-react";
+import { SOLVER_METHODS } from "../Sudoku/Controls";
 
 export default function Controls({
     difficulty,
@@ -17,6 +18,8 @@ export default function Controls({
     onHint,
     onVisualizeSolver,
     solving,
+    solverMethod = "logic",
+    setSolverMethod,
     isNoteMode,
     onToggleNoteMode,
     poppedButton,
@@ -24,6 +27,19 @@ export default function Controls({
     theme,
     themeColors,
 }) {
+    const [methodOpen, setMethodOpen] = React.useState(false);
+    const methodRef = React.useRef(null);
+
+    React.useEffect(() => {
+        if (!methodOpen) return;
+        const onDown = (e) => {
+            if (methodRef.current && !methodRef.current.contains(e.target)) setMethodOpen(false);
+        };
+        document.addEventListener("mousedown", onDown);
+        return () => document.removeEventListener("mousedown", onDown);
+    }, [methodOpen]);
+
+    const activeMethod = SOLVER_METHODS.find((m) => m.id === solverMethod) || SOLVER_METHODS[0];
     const focusRing = "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0C15]";
 
     const baseButtonStyle = {
@@ -202,24 +218,90 @@ export default function Controls({
                     <Lightbulb size={18} />
                 </button>
 
-                <button
-                    onClick={() => handleButtonClick("solver", onVisualizeSolver)}
-                    disabled={solving}
-                    style={{
-                        ...baseButtonStyle,
-                        backgroundColor: theme === "dark" ? "#4c1d95" : "#ede9fe",
-                        color: theme === "dark" ? "#c4b5fd" : "#5b21b6",
-                        opacity: solving ? 0.6 : 1,
-                        cursor: solving ? "default" : "pointer",
-                        transform: poppedButton === "solver" ? "scale(0.95)" : "scale(1)",
-                        border: theme === "dark" ? "1px solid #6d28d9" : "1px solid #a78bfa",
-                    }}
-                    className={`hover:bg-violet-900/60 hover:border-violet-500/50 ${focusRing}`}
-                    title="Watch the killer solver backtrack (disables stats for this puzzle)"
-                >
-                    <Cpu size={18} />
-                    Solver
-                </button>
+                {/* Solver: method picker + run button */}
+                <div className="flex" style={{ position: "relative" }} ref={methodRef}>
+                    <button
+                        onClick={() => handleButtonClick("solver", onVisualizeSolver)}
+                        disabled={solving}
+                        style={{
+                            ...baseButtonStyle,
+                            backgroundColor: theme === "dark" ? "#4c1d95" : "#ede9fe",
+                            color: theme === "dark" ? "#c4b5fd" : "#5b21b6",
+                            opacity: solving ? 0.6 : 1,
+                            cursor: solving ? "default" : "pointer",
+                            transform: poppedButton === "solver" ? "scale(0.95)" : "scale(1)",
+                            border: theme === "dark" ? "1px solid #6d28d9" : "1px solid #a78bfa",
+                            borderTopRightRadius: 0,
+                            borderBottomRightRadius: 0,
+                        }}
+                        className={`hover:bg-violet-900/60 hover:border-violet-500/50 ${focusRing}`}
+                        title={`${activeMethod.hint} (replay animated)`}
+                    >
+                        <activeMethod.icon size={18} />
+                        {activeMethod.label}
+                    </button>
+                    <button
+                        onClick={() => setMethodOpen((v) => !v)}
+                        aria-expanded={methodOpen}
+                        style={{
+                            ...baseButtonStyle,
+                            padding: "10px 8px",
+                            backgroundColor: theme === "dark" ? "#4c1d95" : "#ede9fe",
+                            color: theme === "dark" ? "#c4b5fd" : "#5b21b6",
+                            cursor: "pointer",
+                            border: theme === "dark" ? "1px solid #6d28d9" : "1px solid #a78bfa",
+                            borderLeft: "none",
+                            borderTopLeftRadius: 0,
+                            borderBottomLeftRadius: 0,
+                        }}
+                        className={`${focusRing}`}
+                        title="Choose solver method"
+                    >
+                        <ChevronDown size={14} />
+                    </button>
+                    {methodOpen && (
+                        <div style={{
+                            position: "absolute",
+                            top: "110%",
+                            right: 0,
+                            zIndex: 100,
+                            minWidth: 230,
+                            backgroundColor: theme === "dark" ? "#1e293b" : "#ffffff",
+                            border: theme === "dark" ? "1px solid #334155" : "1px solid #e2e8f0",
+                            borderRadius: 12,
+                            boxShadow: "0 10px 30px rgba(0,0,0,0.35)",
+                            overflow: "hidden",
+                        }}>
+                            {SOLVER_METHODS.map((m) => {
+                                const Icon = m.icon;
+                                const active = m.id === solverMethod;
+                                return (
+                                    <button
+                                        key={m.id}
+                                        onClick={() => { setSolverMethod(m.id); setMethodOpen(false); }}
+                                        style={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: 10,
+                                            width: "100%",
+                                            padding: "10px 14px",
+                                            background: active ? (theme === "dark" ? "#334155" : "#e2e8f0") : "transparent",
+                                            color: active ? (theme === "dark" ? "#f8fafc" : "#0f172a") : (theme === "dark" ? "#cbd5e1" : "#334155"),
+                                            border: "none",
+                                            cursor: "pointer",
+                                            textAlign: "left",
+                                            fontSize: 14,
+                                            fontWeight: 600,
+                                        }}
+                                    >
+                                        <Icon size={16} />
+                                        {m.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
