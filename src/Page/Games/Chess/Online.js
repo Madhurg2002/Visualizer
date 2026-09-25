@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 import { useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Copy, Check, Users, Wifi, Send, MessageSquare, RefreshCw, AlertCircle } from 'lucide-react';
 import Board from './Board';
-import { getValidMoves, checkGameState, initialBoard } from './logic';
+import { getValidMoves, executeMove as applyMove, checkGameState, initialBoard } from './logic';
 const SERVER_URL = process.env.REACT_APP_SERVER_URL || 'http://localhost:3001';
 
 
@@ -290,45 +290,13 @@ const ChessOnline = ({ onBack }) => {
     };
 
     const executeMove = (fromRow, fromCol, toRow, toCol, moveDetails) => {
-        const newBoard = board.map(r => r.map(c => c ? { ...c } : null));
-        let movingPiece = { ...newBoard[fromRow][fromCol], hasMoved: true };
+        // Bitboard-backed facade applies the move and derives the new state.
+        const res = applyMove(board, turn, fromRow, fromCol, toRow, toCol, moveDetails);
 
-        if (moveDetails.isPromotion) movingPiece.type = moveDetails.promotionType || 'q';
-
-        newBoard[fromRow][fromCol] = null;
-        newBoard[toRow][toCol] = movingPiece;
-
-        if (moveDetails.isCastling) {
-            if (toCol > fromCol) { // Kingside
-                const rook = newBoard[fromRow][7];
-                newBoard[fromRow][7] = null;
-                newBoard[fromRow][5] = { ...rook, hasMoved: true };
-            } else { // Queenside
-                const rook = newBoard[fromRow][0];
-                newBoard[fromRow][0] = null;
-                newBoard[fromRow][3] = { ...rook, hasMoved: true };
-            }
-        }
-
-        if (moveDetails.isEnPassant) {
-            const captureRow = fromRow;
-            newBoard[captureRow][toCol] = null;
-        }
-
-        const thisMove = {
-            piece: movingPiece,
-            from: { row: fromRow, col: fromCol },
-            to: { row: toRow, col: toCol },
-            isDoubleJump: moveDetails.isDoubleJump
-        };
-
-        const nextTurn = turn === 'w' ? 'b' : 'w';
-        const newState = checkGameState(newBoard, nextTurn, thisMove);
-
-        setBoard(newBoard);
-        setTurn(nextTurn);
-        setLastMove(thisMove);
-        setGameState(newState);
+        setBoard(res.board);
+        setTurn(res.turn);
+        setLastMove(res.lastMove);
+        setGameState(res.state);
         setSelectedSquare(null);
         setPossibleMoves([]);
         setPromotionSquare(null);
@@ -336,16 +304,16 @@ const ChessOnline = ({ onBack }) => {
         // Emit to Server with time
         socket.emit('chess_make_move', {
             roomId,
-            move: thisMove,
-            boardState: newBoard,
-            gameState: newState,
-            turn: nextTurn,
+            move: res.lastMove,
+            boardState: res.board,
+            gameState: res.state,
+            turn: res.turn,
             whiteTime, // My current local time
             blackTime  // Opponent's time (unchanged during my turn)
         });
 
         // If game over locally
-        if (['checkmate', 'stalemate'].includes(newState)) {
+        if (['checkmate', 'stalemate'].includes(res.state)) {
             setTimerActive(false);
         }
     };

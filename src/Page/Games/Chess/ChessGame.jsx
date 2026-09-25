@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, RefreshCw, Trophy, Users, Globe } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import Board from './Board';
-import { initialBoard, getValidMoves, checkGameState, getAlgebraicNotation } from './logic'; 
+import { initialBoard, getValidMoves, executeMove, checkGameState, getAlgebraicNotation } from './logic'; 
 
 import { evaluateBoard } from './AI';
 import Stockfish from './StockfishEngine';
@@ -197,66 +197,14 @@ const ChessGame = () => {
         return `${m}:${s < 10 ? '0' : ''}${s}`;
     };
 
-    // Core Logic: Apply move to a board and return result (Pure Function roughly)
+    // Core Logic: Apply move via the bitboard-backed facade (single source of truth).
     const calculateMoveResult = (currentBoard, currentTurn, moveDetails) => {
-        const { from, to, isEnPassant, isCastling, isPromotion, promotionType, isDoubleJump } = moveDetails;
-        const fromRow = from.row;
-        const fromCol = from.col;
-        const toRow = to.row;
-        const toCol = to.col;
-
-        // Detect Capture
-        const targetSquare = currentBoard[toRow][toCol];
-        const isCapture = !!targetSquare || isEnPassant;
-
-        const newBoard = currentBoard.map(r => r.map(c => c ? { ...c } : null));
-        let movingPiece = { ...newBoard[fromRow][fromCol], hasMoved: true };
-
-        // Handle Promotion
-        if (isPromotion) {
-            movingPiece.type = promotionType || 'q';
-        }
-
-        newBoard[fromRow][fromCol] = null;
-        newBoard[toRow][toCol] = movingPiece;
-
-        // Castling
-        if (isCastling) {
-            if (toCol > fromCol) { // Kingside
-                const rook = newBoard[fromRow][7];
-                newBoard[fromRow][7] = null;
-                newBoard[fromRow][5] = { ...rook, hasMoved: true };
-            } else { // Queenside
-                const rook = newBoard[fromRow][0];
-                newBoard[fromRow][0] = null;
-                newBoard[fromRow][3] = { ...rook, hasMoved: true };
-            }
-        }
-
-        // En Passant
-        if (isEnPassant) {
-            const captureRow = fromRow;
-            newBoard[captureRow][toCol] = null;
-        }
-
-        const thisMove = {
-            piece: movingPiece,
-            from: { row: fromRow, col: fromCol },
-            to: { row: toRow, col: toCol },
-            isDoubleJump,
-            isCapture,
-            isCastling,
-            isPromotion,
-            promotionType
-        };
-
-        const nextTurn = currentTurn === 'w' ? 'b' : 'w';
-        const state = checkGameState(newBoard, nextTurn, thisMove);
-        const isCheck = state === 'check';
-        const isCheckmate = state === 'checkmate';
-        const notation = getAlgebraicNotation(thisMove, currentBoard, isCheck, isCheckmate);
-
-        return { newBoard, nextTurn, newState: state, notation, thisMove };
+        const { from, to, promotionType } = moveDetails;
+        return executeMove(
+            currentBoard, currentTurn,
+            from.row, from.col, to.row, to.col,
+            { promotionType }
+        );
     };
 
     const executeMove = (fromRow, fromCol, toRow, toCol, moveDetails) => {
