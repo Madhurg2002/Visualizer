@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { ZoomIn, ZoomOut, Maximize, RotateCcw } from 'lucide-react';
+import { ZoomIn, ZoomOut, Maximize, RotateCcw, Play, Pause, SkipForward } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import PageHeader from '../../../Components/PageHeader';
+// Reused timing hook — same one Snake and FallingBlocks use (pass null to pause).
+import useInterval from '../../Games/Snake/hooks/useInterval';
 import { generatePrimes, getUlamCoords, getSacksCoords } from './utils';
 
 const PrimeSpirals = () => {
@@ -13,10 +15,52 @@ const PrimeSpirals = () => {
     const [maxNumber, setMaxNumber] = useState(10000);
     const [zoom, setZoom] = useState(1);
     const [themeColor, setThemeColor] = useState('#06b6d4'); // Cyan-500 default
-    
+
+    // Progressive reveal: `revealed` is how far the sweep has advanced through
+    // the integers. Starts at maxNumber so the spiral shows in full on load.
+    const [revealed, setRevealed] = useState(maxNumber);
+    const [playing, setPlaying] = useState(false);
+    const prevMaxRef = useRef(maxNumber);
+    const revealStep = Math.max(1, Math.round(maxNumber / 60));
+
     // Memoize Primes to avoid re-calculating on every render if maxNumber doesn't change drastic
     // But generating up to 100k is nearly instant (ms).
     const primes = useMemo(() => generatePrimes(maxNumber), [maxNumber]);
+
+    // Primes currently on screen (for the reveal progress readout).
+    const shownPrimes = useMemo(() => {
+        let count = 0;
+        for (let n = 2; n <= revealed; n++) if (primes[n]) count++;
+        return count;
+    }, [primes, revealed]);
+
+    // Moving the range should not un-finish a completed reveal (or clip a partial one).
+    useEffect(() => {
+        setRevealed((prev) => (prev >= prevMaxRef.current ? maxNumber : Math.min(prev, maxNumber)));
+        prevMaxRef.current = maxNumber;
+    }, [maxNumber]);
+
+    useInterval(() => {
+        setRevealed((prev) => Math.min(maxNumber, prev + revealStep));
+    }, playing ? 55 : null);
+
+    // Sweep finished: stop ticking.
+    useEffect(() => {
+        if (playing && revealed >= maxNumber) setPlaying(false);
+    }, [playing, revealed, maxNumber]);
+
+    const startReveal = () => {
+        if (revealed >= maxNumber) setRevealed(0); // replay from the start
+        setPlaying(true);
+    };
+    const stepReveal = () => {
+        setPlaying(false);
+        setRevealed((prev) => Math.min(maxNumber, prev + revealStep));
+    };
+    const showAll = () => {
+        setPlaying(false);
+        setRevealed(maxNumber);
+    };
 
     // Handle Zoom
     const handleZoom = (delta) => {
@@ -65,7 +109,7 @@ const PrimeSpirals = () => {
         // Batch drawing? 
         // Iterate only Primes to save performance
         for (let n = 1; n <= maxNumber; n++) {
-            if (primes[n]) {
+            if (n <= revealed && primes[n]) {
                 const { x, y } = mode === 'ulam' ? getUlamCoords(n) : getSacksCoords(n);
                 
                 const drawX = centerX + x * scale;
@@ -88,7 +132,7 @@ const PrimeSpirals = () => {
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(centerX - 1, centerY - 1, 2, 2);
 
-    }, [mode, maxNumber, zoom, primes, themeColor, dimensions]);
+    }, [mode, maxNumber, zoom, primes, themeColor, dimensions, revealed]);
 
 
 
@@ -183,6 +227,45 @@ const PrimeSpirals = () => {
                             onChange={(e) => setMaxNumber(Number(e.target.value))}
                             className="w-full h-1.5 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
                         />
+                    </div>
+
+                    {/* Progressive reveal: play / pause / step through the spiral */}
+                    <div className="flex flex-col gap-2">
+                        <div className="flex justify-between items-center">
+                            <span className="text-xs font-bold text-slate-500 uppercase">Reveal</span>
+                            <span className="text-xs font-mono text-cyan-400 tabular-nums">
+                                {Math.round((revealed / maxNumber) * 100)}% · {shownPrimes.toLocaleString()} primes
+                            </span>
+                        </div>
+                        <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden border border-white/5">
+                            <div
+                                className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 transition-all duration-100"
+                                style={{ width: `${(revealed / maxNumber) * 100}%` }}
+                            />
+                        </div>
+                        <div className="grid grid-cols-4 gap-2">
+                            <button
+                                onClick={playing ? () => setPlaying(false) : startReveal}
+                                title={playing ? 'Pause reveal' : 'Reveal from the start'}
+                                className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 border border-white/10 flex justify-center items-center"
+                            >
+                                {playing ? <Pause size={16} /> : <Play size={16} />}
+                            </button>
+                            <button
+                                onClick={stepReveal}
+                                title="Step the reveal forward"
+                                className="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 border border-white/10 flex justify-center items-center"
+                            >
+                                <SkipForward size={16} />
+                            </button>
+                            <button
+                                onClick={showAll}
+                                title="Show every prime immediately"
+                                className="col-span-2 px-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-300 border border-white/10 text-xs font-bold uppercase tracking-wider"
+                            >
+                                Show all
+                            </button>
+                        </div>
                     </div>
 
                     {/* Zoom & Color */}

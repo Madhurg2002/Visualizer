@@ -1,12 +1,29 @@
 
+// ── Live run statistics ─────────────────────────────────────────────────
+// Surfaced in the Sorting sidebar: useSort mirrors these into React state
+// after every step. `writes` counts element assignments made outside pair
+// swaps (shifts, merge writes, radix passes).
+export const sortStats = { comparisons: 0, swaps: 0, writes: 0 };
+
+export const resetSortStats = () => {
+  sortStats.comparisons = 0;
+  sortStats.swaps = 0;
+  sortStats.writes = 0;
+};
+
+const gt = (a, b) => { sortStats.comparisons++; return a > b; };
+const lt = (a, b) => { sortStats.comparisons++; return a < b; };
+const lte = (a, b) => { sortStats.comparisons++; return a <= b; };
+
 export function* bubbleSort(array) {
   let arr = array.slice();
   const n = arr.length;
   for (let i = 0; i < n; i++) {
     for (let j = 0; j < n - i - 1; j++) {
       yield { arr: arr.slice(), active: [j, j + 1] };
-      if (arr[j] > arr[j + 1]) {
+      if (gt(arr[j], arr[j + 1])) {
         [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
+        sortStats.swaps++;
         yield { arr: arr.slice(), active: [j, j + 1] };
       }
     }
@@ -21,12 +38,13 @@ export function* selectionSort(array) {
     let minIdx = i;
     for (let j = i + 1; j < n; j++) {
       yield { arr: arr.slice(), active: [j, minIdx] };
-      if (arr[j] < arr[minIdx]) {
+      if (lt(arr[j], arr[minIdx])) {
         minIdx = j;
       }
     }
     if (minIdx !== i) {
       [arr[i], arr[minIdx]] = [arr[minIdx], arr[i]];
+      sortStats.swaps++;
       yield { arr: arr.slice(), active: [i, minIdx] };
     }
   }
@@ -38,13 +56,15 @@ export function* insertionSort(array) {
   for (let i = 1; i < arr.length; i++) {
     let key = arr[i];
     let j = i - 1;
-    while (j >= 0 && arr[j] > key) {
+    while (j >= 0 && gt(arr[j], key)) {
       yield { arr: arr.slice(), active: [j, j + 1] };
       arr[j + 1] = arr[j];
+      sortStats.writes++;
       j--;
       yield { arr: arr.slice(), active: [j + 1] };
     }
     arr[j + 1] = key;
+    sortStats.writes++;
     yield { arr: arr.slice(), active: [j + 1] };
   }
   yield { arr: arr.slice(), active: [] };
@@ -58,13 +78,15 @@ export function* quickSort(array) {
     let i = low - 1;
     for (let j = low; j < high; j++) {
       yield { arr: arr.slice(), active: [j, high] };
-      if (arr[j] < pivot) {
+      if (lt(arr[j], pivot)) {
         i++;
         [arr[i], arr[j]] = [arr[j], arr[i]];
+        sortStats.swaps++;
         yield { arr: arr.slice(), active: [i, j] };
       }
     }
     [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
+    sortStats.swaps++;
     yield { arr: arr.slice(), active: [i + 1, high] };
     return i + 1;
   }
@@ -98,14 +120,16 @@ export function* mergeSort(array) {
       k = low;
     while (i < left.length && j < right.length) {
       yield { arr: arr.slice(), active: [k] };
-      if (left[i] <= right[j]) {
+      if (lte(left[i], right[j])) {
         arr[k++] = left[i++];
+        sortStats.writes++;
       } else {
         arr[k++] = right[j++];
+        sortStats.writes++;
       }
     }
-    while (i < left.length) arr[k++] = left[i++];
-    while (j < right.length) arr[k++] = right[j++];
+    while (i < left.length) { arr[k++] = left[i++]; sortStats.writes++; }
+    while (j < right.length) { arr[k++] = right[j++]; sortStats.writes++; }
     yield { arr: arr.slice(), active: [] };
   }
 
@@ -133,20 +157,21 @@ export function* heapSort(array) {
 
     if (left < n) {
       yield { arr: arr.slice(), active: [left, largest] };
-      if (arr[left] > arr[largest]) {
+      if (gt(arr[left], arr[largest])) {
         largest = left;
       }
     }
 
     if (right < n) {
       yield { arr: arr.slice(), active: [right, largest] };
-      if (arr[right] > arr[largest]) {
+      if (gt(arr[right], arr[largest])) {
         largest = right;
       }
     }
 
     if (largest !== i) {
       [arr[i], arr[largest]] = [arr[largest], arr[i]];
+      sortStats.swaps++;
       yield { arr: arr.slice(), active: [i, largest] };
       yield* heapify(n, largest);
     }
@@ -158,6 +183,7 @@ export function* heapSort(array) {
 
   for (let i = n - 1; i > 0; i--) {
     [arr[0], arr[i]] = [arr[i], arr[0]];
+    sortStats.swaps++;
     yield { arr: arr.slice(), active: [0, i] };
     yield* heapify(i, 0);
   }
@@ -172,12 +198,14 @@ export function* shellSort(array) {
     for (let i = gap; i < n; i += 1) {
       let temp = arr[i];
       let j;
-      for (j = i; j >= gap && arr[j - gap] > temp; j -= gap) {
+      for (j = i; j >= gap && gt(arr[j - gap], temp); j -= gap) {
         yield { arr: arr.slice(), active: [j, j - gap] };
         arr[j] = arr[j - gap];
+        sortStats.writes++;
         yield { arr: arr.slice(), active: [j] };
       }
       arr[j] = temp;
+      sortStats.writes++;
       yield { arr: arr.slice(), active: [j] };
     }
   }
@@ -197,8 +225,9 @@ export function* cocktailShakerSort(array) {
     // Forward pass
     for (let i = start; i < end; i++) {
         yield { arr: arr.slice(), active: [i, i + 1] };
-      if (arr[i] > arr[i + 1]) {
+      if (gt(arr[i], arr[i + 1])) {
         [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]];
+        sortStats.swaps++;
         yield { arr: arr.slice(), active: [i, i + 1] };
         swapped = true;
       }
@@ -212,8 +241,9 @@ export function* cocktailShakerSort(array) {
     // Backward pass
     for (let i = end - 1; i >= start; i--) {
         yield { arr: arr.slice(), active: [i, i + 1] };
-      if (arr[i] > arr[i + 1]) {
+      if (gt(arr[i], arr[i + 1])) {
         [arr[i], arr[i + 1]] = [arr[i + 1], arr[i]];
+        sortStats.swaps++;
         yield { arr: arr.slice(), active: [i, i + 1] };
         swapped = true;
       }
@@ -252,6 +282,7 @@ export function* radixSort(array) {
       for (let i = 0; i < work.length; i++) work[i] = output[i];
       for (let k = 0; k < slots.length; k++) {
         arr[slots[k]] = work[k] / MULTIPLIER;
+        sortStats.writes++;
       }
       for (const slot of slots) yield { arr: arr.slice(), active: [slot] };
     }
@@ -270,7 +301,7 @@ export function* radixSort(array) {
     // runLsd left magnitudes (positive) in the negative slots. Re-assign them
     // as descending magnitudes so the most-negative value lands first.
     const mags = negSlots.map((i) => arr[i]).sort((a, b) => b - a);
-    negSlots.forEach((slot, k) => { arr[slot] = -mags[k]; });
+    negSlots.forEach((slot, k) => { arr[slot] = -mags[k]; sortStats.writes++; });
     for (const slot of negSlots) yield { arr: arr.slice(), active: [slot] };
   }
 
@@ -287,6 +318,7 @@ export function* radixSort(array) {
   ];
   for (let i = 0; i < arr.length; i++) {
     arr[i] = finalArr[i];
+    sortStats.writes++;
     yield { arr: arr.slice(), active: [i] };
   }
 

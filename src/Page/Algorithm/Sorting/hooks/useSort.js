@@ -1,8 +1,10 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { ALGORITHMS } from '../utils/sortingAlgorithms';
+import { ALGORITHMS, sortStats, resetSortStats } from '../utils/sortingAlgorithms';
 
 const generateRandomArray = (size) => Array.from({ length: size }, () => Math.random());
+
+const zeroStats = () => ({ comparisons: 0, swaps: 0, writes: 0 });
 
 export const useSort = (initialSize = 50) => {
     const [size, setSize] = useState(initialSize);
@@ -13,6 +15,21 @@ export const useSort = (initialSize = 50) => {
     const [algorithm, setAlgorithm] = useState("Bubble Sort");
     const [speed, setSpeed] = useState(20);
     const [isSorted, setIsSorted] = useState(false);
+    const [stats, setStats] = useState(zeroStats);
+
+    // Mirror the mutable counters in sortingAlgorithms into state so the
+    // sidebar re-renders after every step.
+    const syncStats = () => setStats({ ...sortStats });
+    const clearStats = () => {
+        resetSortStats();
+        setStats(zeroStats());
+    };
+
+    // New algorithm = new baseline for the counters (select is disabled mid-run).
+    useEffect(() => {
+        resetSortStats();
+        setStats(zeroStats());
+    }, [algorithm]);
 
     const genRef = useRef(null);
     const initialArrayRef = useRef(array);
@@ -33,10 +50,12 @@ export const useSort = (initialSize = 50) => {
         setPaused(false);
         setSorting(false);
         setIsSorted(false);
+        clearStats();
     }, [size]);
 
     const startSort = () => {
         if (!genRef.current) {
+            clearStats(); // fresh run: counters start from zero
             genRef.current = ALGORITHMS[algorithm](array);
         }
         setSorting(true);
@@ -56,6 +75,7 @@ export const useSort = (initialSize = 50) => {
         setSorting(false);
         setPaused(false);
         setIsSorted(false);
+        clearStats();
     }, []);
 
     const reset = () => {
@@ -66,6 +86,7 @@ export const useSort = (initialSize = 50) => {
         genRef.current = null;
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
         setIsSorted(false);
+        clearStats();
     };
 
     const stepSort = useCallback(() => {
@@ -74,7 +95,9 @@ export const useSort = (initialSize = 50) => {
         if (!done) {
             setArray(value.arr);
             setActiveIndices(value.active);
+            syncStats();
         } else {
+            syncStats();
             setSorting(false);
             setPaused(false);
             setActiveIndices([]);
@@ -94,8 +117,10 @@ export const useSort = (initialSize = 50) => {
             if (!done) {
                 setArray(value.arr);
                 setActiveIndices(value.active);
+                syncStats();
                 timeoutRef.current = setTimeout(runStep, Math.max(1, 100 - speed));
             } else {
+                syncStats();
                 setSorting(false);
                 setPaused(false);
                 setActiveIndices([]);
@@ -123,6 +148,7 @@ export const useSort = (initialSize = 50) => {
         reset,
         stepSort,
         isSorted,
+        stats,
         applyCustomArray
     };
 };

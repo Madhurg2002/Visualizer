@@ -29,7 +29,7 @@ What each page of the Visualizer & Games Platform can do, verified against the c
 
 | Visualizer | Route | Algorithms / modes | Playback (play · pause · step) | Speed control | User input | Readouts |
 |---|---|---|---|---|---|---|
-| Sorting | `/sort` | 9: Bubble, Selection, Insertion, Quick, Merge, Heap, Shell, Cocktail Shaker, Radix | ✅ play · pause · step · reset | ✅ slider | ✅ custom array (incl. negatives), array size | ◐ run status only (no comparison/swap counters) |
+| Sorting | `/sort` | 9: Bubble, Selection, Insertion, Quick, Merge, Heap, Shell, Cocktail Shaker, Radix | ✅ play · pause · step · reset | ✅ slider | ✅ custom array (incl. negatives), array size | ✅ live comparisons / swaps / writes counters |
 | Pathfinding | `/PathFinding` | 6: Dijkstra, A*, BFS, DFS, Greedy Best-First, Bidirectional BFS + Recursive-Division maze generator | ✅ run · reset | ✅ slider (`speed`) | ✅ draw/erase walls, grid size, maze generation | ✅ visited-node legend |
 | Game of Life | `/CellularAutomata` | Conway rules | ✅ run · pause · reset | ✅ slider (100–1000 ms) | ✅ paint cells, randomize, clear | ✅ generation counter |
 | N-Pendulum | `/pendulum` | N linked segments, string / spring modes | ✅ pause (physics keeps state) | ◐ fixed simulation step (`simDt`) | ✅ N, per-segment angles, materials, draggable control panel | ✅ FPS, trails |
@@ -37,7 +37,7 @@ What each page of the Visualizer & Games Platform can do, verified against the c
 | Convex Hull | `/convex-hull` | Graham Scan, Jarvis March, Monotone Chain | ✅ run · reset | ✅ slider | ◐ regenerate point set (no free point placement) | ✅ step messages |
 | N-Queens | `/nqueens` | Backtracking search | ✅ run · pause · reset | ✅ slider | ✅ N slider (board size) | ✅ solution count, solution browser, attack-cell overlay |
 | Kinetic Clock | `/KineticClock` | 24-clock animated display | — passive animation | ❌ | ❌ | — |
-| Prime Spirals | `/prime-spirals` | Ulam spiral, Sacks (Archimedean) spiral | ❌ static render | ❌ | ✅ max number (1k–100k), zoom, theme color | ✅ prime legend/explainer |
+| Prime Spirals | `/prime-spirals` | Ulam spiral, Sacks (Archimedean) spiral | ✅ reveal sweep: play · pause · step · show all | ✅ fixed 55 ms sweep tick | ✅ max number (1k–100k), zoom, theme color | ✅ reveal progress (% + primes shown), prime legend |
 
 ---
 
@@ -75,9 +75,8 @@ What each page of the Visualizer & Games Platform can do, verified against the c
 
 - **No sound** anywhere in the frontend.
 - **No accounts** — scores and preferences live in `localStorage` only.
-- **No step button** on Prime Spirals and Kinetic Clock (static / passive pages).
-- **No gesture/touch handling** outside Flappy Bird and Falling Blocks; other games rely on tappable buttons or keyboard.
-- **No comparison/swap counters** in the Sorting visualizer despite having speed and custom input.
+- **Kinetic Clock** is a passive animation — nothing to control.
+- **No swipe gestures** outside Flappy Bird and Falling Blocks; other games (incl. Snake's D-pad) rely on tappable buttons or keyboard.
 - **Tests** cover the Killer Sudoku generator (`yarn test:killer`) only; the CRA `yarn test` suite is effectively unused.
 
 *Update this file when a page gains or loses a capability.*

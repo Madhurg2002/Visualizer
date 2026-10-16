@@ -11,7 +11,8 @@ const SortingControls = ({
     sorting, paused,
     startSort, pauseSort, resumeSort, stepSort, reset,
     array, setArray,
-    onCustomArray
+    onCustomArray,
+    stats = { comparisons: 0, swaps: 0, writes: 0 }
 }) => {
     const [showDesc, setShowDesc] = useState(false);
     const [customInput, setCustomInput] = useState("");
@@ -29,6 +30,34 @@ const SortingControls = ({
 
     return (
         <div className="flex flex-col gap-6 w-full">
+            {/* Live Stats — what the current run has cost so far */}
+            <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="bg-slate-800/60 border border-white/10 rounded-lg py-2">
+                    <div className="text-lg font-bold text-purple-400 leading-none tabular-nums">
+                        {stats.comparisons.toLocaleString()}
+                    </div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">
+                        Comparisons
+                    </div>
+                </div>
+                <div className="bg-slate-800/60 border border-white/10 rounded-lg py-2">
+                    <div className="text-lg font-bold text-blue-400 leading-none tabular-nums">
+                        {stats.swaps.toLocaleString()}
+                    </div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">
+                        Swaps
+                    </div>
+                </div>
+                <div className="bg-slate-800/60 border border-white/10 rounded-lg py-2">
+                    <div className="text-lg font-bold text-emerald-400 leading-none tabular-nums">
+                        {stats.writes.toLocaleString()}
+                    </div>
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mt-1">
+                        Writes
+                    </div>
+                </div>
+            </div>
+
             {/* Inputs Group */}
             <div className="flex flex-col gap-5 w-full">
                 

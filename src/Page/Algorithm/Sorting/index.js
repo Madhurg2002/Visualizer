@@ -19,6 +19,7 @@ const Sort = () => {
         reset,
         stepSort,
         isSorted,
+        stats,
         applyCustomArray
     } = useSort(50);
 
@@ -106,6 +107,7 @@ const Sort = () => {
                     array={array}
                     setArray={setArray}
                     onCustomArray={applyCustomArray}
+                    stats={stats}
                 />
             </div>
 
