@@ -9,6 +9,23 @@ export function randomSeed(len = 8) {
   for (let i = 0; i < len; i++) res += chars[Math.floor(Math.random() * chars.length)];
   return res;
 }
+
+/** Seed for the Daily puzzle: same for everyone on a given local date. */
+export function dailySeed(d = new Date()) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `daily-${y}-${m}-${day}`;
+}
+
+/** Human label for a daily seed, e.g. "daily-2026-10-16" -> "Oct 16". */
+export function dailyLabelFromSeed(seed) {
+  const m = /^daily-(\d{4})-(\d{2})-(\d{2})$/.exec(seed || "");
+  if (!m) return null;
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
 export function createSeededRNG(seed) {
   let h = 2166136261 >>> 0;
   for (let i = 0; i < seed.length; i++) {

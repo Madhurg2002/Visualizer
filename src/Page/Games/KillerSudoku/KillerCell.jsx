@@ -10,7 +10,7 @@ const KillerCell = React.memo(({
     r, c, val,
     isGiven, isWrong, isHint, isError, isSelected, isHighlight, isGuide,
     isCagePeer, isCageDone,
-    notes, themeColors, theme,
+    notes, highlightValue, themeColors, theme,
     onCellClick,
     win,
     isCageTopLeft, cageSum, cageProgress,

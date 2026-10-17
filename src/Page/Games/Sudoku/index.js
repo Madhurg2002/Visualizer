@@ -6,8 +6,11 @@ import React, {
   useCallback,
 } from "react";
 import { useNavigate } from "react-router-dom";
+import { HelpCircle } from "lucide-react";
 import {
   randomSeed,
+  dailySeed,
+  dailyLabelFromSeed,
   generateFull,
   puzzleFromFull,
   isComplete,
@@ -19,6 +22,7 @@ import SudokuBoard from "./SudokuBoard";
 import { solveSudoku } from "./sudokuSolver";
 import { solveWithLogic } from "./solveTechniques";
 import Controls from "./Controls";
+import RulesPanel from "./RulesPanel";
 
 import WinningModal from "./WinningModal";
 import NumberSelector from "./NumberSelector";
@@ -118,7 +122,11 @@ export default function Sudoku() {
   const [seed, setSeed] = useState(initialSeed);
 
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const [rulesOpen, setRulesOpen] = useState(query.get("rules") === "1");
   const [theme, setTheme] = useState(urlTheme);
+
+  const isDaily = seed.startsWith("daily-");
+  const dailyLabel = dailyLabelFromSeed(seed);
 
   const [continuousCheck, setContinuousCheck] = useState(() => {
     const val = query.get("continuousCheck");
@@ -260,6 +268,23 @@ export default function Sudoku() {
       setSeed(seedInput.trim());
     }
   };
+
+  // Today's Daily puzzle: same board for everyone until midnight.
+  const handlePlayDaily = () => {
+    if (isDaily) return;
+    if (isDirty && !window.confirm("You have made progress. Play today's Daily puzzle? Your current board will be lost.")) {
+      return;
+    }
+    const ds = dailySeed();
+    setSeed(ds);
+    setSeedInput(ds);
+  };
+
+  const filledCells = useMemo(() => {
+    let n = 0;
+    for (const row of board) for (const v of row) if (v !== 0) n++;
+    return n;
+  }, [board]);
 
   useEffect(() => {
     if (win) {
@@ -462,6 +487,7 @@ export default function Sudoku() {
 
   const hintTimeoutRef = useRef(null);
   const errorTimeoutRef = useRef(null);
+  const hintBannerTimeoutRef = useRef(null);
 
   const showHint = () => {
     // 1. Check for mistakes first
@@ -486,20 +512,33 @@ export default function Sudoku() {
       return;
     }
 
-    // 2. Normal hint logic
-    const emptyCells = [];
-    board.forEach((row, r) =>
-      row.forEach((val, c) => {
-        if (val === 0) emptyCells.push([r, c]);
-      })
-    );
-    if (!emptyCells.length) {
-      alert("No empty cells to hint.");
-      return;
+    // 2. Prefer a logically forced move and explain the deduction.
+    const logic = solveWithLogic(board, classicCands, { maxSteps: 1 });
+    let r, c;
+    let explanation = null;
+    if (logic.moves.length > 0) {
+      const mv = logic.moves[0];
+      r = mv.r;
+      c = mv.c;
+      const technique = mv.technique === "naked single" ? "Naked single" : "Hidden single";
+      explanation = `${technique} at row ${r + 1}, column ${c + 1} — ${mv.detail}`;
+    } else {
+      // 3. No forced move left: reveal a random empty cell.
+      const emptyCells = [];
+      board.forEach((row, rr) =>
+        row.forEach((val, cc) => {
+          if (val === 0) emptyCells.push([rr, cc]);
+        })
+      );
+      if (!emptyCells.length) {
+        alert("No empty cells to hint.");
+        return;
+      }
+      const idx = Math.floor(Math.random() * emptyCells.length);
+      [r, c] = emptyCells[idx];
+      explanation = "No forced deduction left — revealing a random cell";
     }
-    const idx = Math.floor(Math.random() * emptyCells.length);
-    const [r, c] = emptyCells[idx];
-    
+
     // Fill the cell
     fillCell(r, c, solution[r][c]);
     
@@ -512,6 +551,10 @@ export default function Sudoku() {
     hintTimeoutRef.current = setTimeout(() => {
       setHintCell(null);
     }, 3000);
+
+    setTechniqueBanner({ text: explanation, tone: "amber" });
+    if (hintBannerTimeoutRef.current) clearTimeout(hintBannerTimeoutRef.current);
+    hintBannerTimeoutRef.current = setTimeout(() => setTechniqueBanner(null), 4000);
   };
 
   const autoFillNotes = () => {
@@ -734,7 +777,7 @@ export default function Sudoku() {
         <div
           style={{
             position: 'fixed', bottom: 80, left: '50%', transform: 'translateX(-50%)',
-            backgroundColor: techniqueBanner.tone === 'red' ? '#ef4444' : '#7c3aed',
+            backgroundColor: techniqueBanner.tone === 'red' ? '#ef4444' : techniqueBanner.tone === 'amber' ? '#b45309' : '#7c3aed',
             color: '#fff', padding: '10px 20px', borderRadius: 8, zIndex: 2000,
             boxShadow: '0 4px 12px rgba(0,0,0,0.3)', fontWeight: 'bold', cursor: 'pointer'
           }}
@@ -770,19 +813,37 @@ export default function Sudoku() {
           title="Sudoku"
           backTo="/"
           subtitle={
-            <Pill>{difficulty}</Pill>
+            <>
+              <Pill>{difficulty}</Pill>
+              {isDaily && dailyLabel && <Pill className="!text-amber-400">Daily · {dailyLabel}</Pill>}
+              <Pill>{filledCells}/81</Pill>
+              {isNoteMode && <Pill className="!text-indigo-400">notes on</Pill>}
+            </>
           }
           right={
-            <button
-              onClick={() => setSettingsVisible(true)}
-              className="flex items-center justify-center p-3 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0C15]"
-              title="Open game settings"
-            >
-              <SettingsIcon size={20} />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setRulesOpen(true)}
+                className="flex items-center justify-center p-3 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0C15]"
+                title="How to play"
+                aria-label="How to play"
+              >
+                <HelpCircle size={20} />
+              </button>
+              <button
+                onClick={() => setSettingsVisible(true)}
+                className="flex items-center justify-center p-3 bg-slate-800/80 hover:bg-slate-700/90 backdrop-blur-md rounded-full border border-white/10 text-slate-300 hover:text-white transition-all shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0B0C15]"
+                title="Open game settings"
+              >
+                <SettingsIcon size={20} />
+              </button>
+            </div>
           }
         />
       </div>
+
+      <RulesPanel forceOpen={rulesOpen} onClose={() => setRulesOpen(false)} />
+
       {/* Controls below numbers */}
       <Controls
         difficulty={difficulty}
@@ -824,6 +885,9 @@ export default function Sudoku() {
         poppedButton={poppedButton}
         handleButtonClick={handleButtonClick}
         onApplySeed={handleApplySeed}
+        onPlayDaily={handlePlayDaily}
+        isDaily={isDaily}
+        dailyLabel={dailyLabel}
         isNoteMode={isNoteMode}
         onToggleNoteMode={() => setIsNoteMode(prev => !prev)}
         theme={theme}

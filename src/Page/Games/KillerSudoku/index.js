@@ -11,6 +11,7 @@ import {
     isComplete,
     solveKillerBoard,
 } from "./utils";
+import { dailySeed, dailyLabelFromSeed } from "../Sudoku/utils";
 import { solveWithLogic } from "../Sudoku/solveTechniques";
 import { solveSudoku } from "../Sudoku/sudokuSolver";
 import { THEMES } from "../Sudoku/themes";
@@ -23,6 +24,7 @@ import KillerBoard from "./KillerBoard";
 import Controls from "./Controls";
 import NumberSelector from "./NumberSelector";
 import RulesPanel from "./RulesPanel";
+import CageReadout from "./CageReadout";
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -101,6 +103,9 @@ export default function KillerSudoku() {
 
     const [settingsVisible, setSettingsVisible] = useState(false);
     const [rulesOpen, setRulesOpen] = useState(urlRules);
+
+    const isDaily = seed.startsWith("daily-");
+    const dailyLabel = dailyLabelFromSeed(seed);
 
     const [continuousCheck, setContinuousCheck] = useState(() => {
         const val = query.get("continuousCheck");
@@ -253,6 +258,31 @@ export default function KillerSudoku() {
     const handleApplySeed = () => {
         if (seedInput.trim() && seedInput !== seed) setSeed(seedInput.trim());
     };
+
+    // Today's Daily Killer puzzle: same cages for everyone until midnight.
+    const handlePlayDaily = () => {
+        if (isDaily) return;
+        if (isDirty && !window.confirm("You have made progress. Play today's Daily puzzle? Your current board will be lost.")) {
+            return;
+        }
+        const ds = dailySeed();
+        setSeed(ds);
+        setSeedInput(ds);
+    };
+
+    const filledCells = useMemo(() => {
+        let n = 0;
+        for (const row of board) for (const v of row) if (v !== 0) n++;
+        return n;
+    }, [board]);
+
+    // Cage of the selected cell, for the readout bar.
+    const selectedCage = useMemo(() => {
+        if (!selectedCell || !cageIdOf || !cages.length) return null;
+        const id = cageIdOf[selectedCell[0]] ? cageIdOf[selectedCell[0]][selectedCell[1]] : -1;
+        if (id < 0) return null;
+        return cages.find((cg) => cg.id === id) || null;
+    }, [selectedCell, cageIdOf, cages]);
 
     useEffect(() => {
         if (win) {
@@ -458,6 +488,7 @@ export default function KillerSudoku() {
 
     const hintTimeoutRef = useRef(null);
     const errorTimeoutRef = useRef(null);
+    const hintBannerTimeoutRef = useRef(null);
 
     const showHint = () => {
         // 1. Flag mistakes first.
@@ -477,12 +508,27 @@ export default function KillerSudoku() {
             return;
         }
 
-        // 2. Reveal a random empty cell.
-        const emptyCells = [];
-        board.forEach((row, r) => row.forEach((val, c) => { if (val === 0) emptyCells.push([r, c]); }));
-        if (!emptyCells.length) return;
-        const idx = Math.floor(Math.random() * emptyCells.length);
-        const [r, c] = emptyCells[idx];
+        if (!solution.length) return;
+
+        // 2. Prefer a logically forced move (singles under cage rules) and explain it.
+        const logic = solveWithLogic(board, killerCands, { maxSteps: 1 });
+        let r, c;
+        let explanation;
+        if (logic.moves.length > 0) {
+            const mv = logic.moves[0];
+            r = mv.r;
+            c = mv.c;
+            const technique = mv.technique === "naked single" ? "Naked single" : "Hidden single";
+            explanation = `${technique} at row ${r + 1}, column ${c + 1} — ${mv.detail}`;
+        } else {
+            // 3. No forced move left: reveal a random empty cell.
+            const emptyCells = [];
+            board.forEach((row, rr) => row.forEach((val, cc) => { if (val === 0) emptyCells.push([rr, cc]); }));
+            if (!emptyCells.length) return;
+            const idx = Math.floor(Math.random() * emptyCells.length);
+            [r, c] = emptyCells[idx];
+            explanation = "No forced deduction left — revealing a random cell";
+        }
 
         fillCell(r, c, solution[r][c]);
         setHintCell(`${r}-${c}`);
@@ -490,6 +536,10 @@ export default function KillerSudoku() {
 
         if (hintTimeoutRef.current) clearTimeout(hintTimeoutRef.current);
         hintTimeoutRef.current = setTimeout(() => setHintCell(null), 3000);
+
+        setTechniqueBanner({ text: explanation, tone: "amber" });
+        if (hintBannerTimeoutRef.current) clearTimeout(hintBannerTimeoutRef.current);
+        hintBannerTimeoutRef.current = setTimeout(() => setTechniqueBanner(null), 4000);
     };
 
     const autoFillNotes = () => {
@@ -683,7 +733,7 @@ export default function KillerSudoku() {
                 <div
                     style={{
                         position: "fixed", bottom: 80, left: "50%", transform: "translateX(-50%)",
-                        backgroundColor: techniqueBanner.tone === "red" ? "#ef4444" : "#7c3aed",
+                        backgroundColor: techniqueBanner.tone === "red" ? "#ef4444" : techniqueBanner.tone === "amber" ? "#b45309" : "#7c3aed",
                         color: "#fff", padding: "10px 20px", borderRadius: 8, zIndex: 2000,
                         boxShadow: "0 4px 12px rgba(0,0,0,0.3)", fontWeight: "bold", cursor: "pointer",
                     }}
@@ -723,6 +773,9 @@ export default function KillerSudoku() {
                             <Pill>{difficulty}</Pill>
                             {cages.length > 0 && <Pill className="!text-cyan-400">{cages.length} cages</Pill>}
                             {givenCells.size > 0 && <Pill>{givenCells.size} givens</Pill>}
+                            {isDaily && dailyLabel && <Pill className="!text-amber-400">Daily · {dailyLabel}</Pill>}
+                            <Pill>{filledCells}/81</Pill>
+                            {isNoteMode && <Pill className="!text-indigo-400">notes on</Pill>}
                         </>
                     }
                     right={
@@ -757,6 +810,9 @@ export default function KillerSudoku() {
                 setSeedInput={setSeedInput}
                 currentSeed={seed}
                 onApplySeed={handleApplySeed}
+                onPlayDaily={handlePlayDaily}
+                isDaily={isDaily}
+                dailyLabel={dailyLabel}
                 onRandomize={() => {
                     if (isDirty) {
                         if (!window.confirm("You have made progress. Are you sure you want to randomize? Your current board will be lost.")) {
@@ -824,6 +880,9 @@ export default function KillerSudoku() {
                         cageIdOf={cageIdOf}
                         cageWrongCells={cageWrongCells}
                     />
+                )}
+                {!isGenerating && (
+                    <CageReadout cage={selectedCage} board={board} theme={theme} />
                 )}
                 {isGenerating && (
                     <div

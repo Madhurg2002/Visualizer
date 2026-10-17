@@ -1,6 +1,6 @@
 // src/Page/Sudoku/Controls.js
 import React from "react";
-import { Undo2, CheckCircle2, Lightbulb, RefreshCw, Settings2, Cpu, ChevronDown, Brain, Zap } from "lucide-react";
+import { Undo2, CheckCircle2, Lightbulb, RefreshCw, Settings2, Cpu, ChevronDown, Brain, Zap, CalendarDays } from "lucide-react";
 import { PencilIcon } from "./Icons";
 
 export const SOLVER_METHODS = [
@@ -28,6 +28,9 @@ export default function Controls({
     poppedButton,
     handleButtonClick,
     onApplySeed,
+    onPlayDaily,
+    isDaily = false,
+    dailyLabel = null,
     isNoteMode,
     onToggleNoteMode,
     theme,
@@ -125,6 +128,25 @@ export default function Controls({
                         <RefreshCw size={16} className={poppedButton === "new" ? "animate-spin-fast" : ""} />
                         Random
                     </button>
+
+                    {typeof onPlayDaily === "function" && (
+                        <button
+                            onClick={() => handleButtonClick("daily", onPlayDaily)}
+                            style={{
+                                ...baseButtonStyle,
+                                backgroundColor: isDaily ? "#78350f" : (theme === "dark" ? "#334155" : "#e2e8f0"),
+                                color: isDaily ? "#fcd34d" : (theme === "dark" ? "#f8fafc" : "#0f172a"),
+                                border: isDaily ? "1px solid #92400e" : "none",
+                                transform: poppedButton === "daily" ? "scale(0.95)" : "scale(1)",
+                                flex: 1,
+                            }}
+                            title={isDaily ? `Playing today's Daily puzzle (${dailyLabel})` : "Play today's Daily puzzle — same board for everyone"}
+                            className={focusRing}
+                        >
+                            <CalendarDays size={16} />
+                            {isDaily && dailyLabel ? dailyLabel : "Daily"}
+                        </button>
+                    )}
 
                     <button
                         onClick={() => {
